@@ -36,6 +36,7 @@ namespace Notemeow.Core.Tests
             Ui = new FakeUi();
             St = new MeowState();
             Rc.SetForTest(new Rc.Config());
+            Engine.RepeatMap = null;
         }
 
         protected Ctx Ctx()

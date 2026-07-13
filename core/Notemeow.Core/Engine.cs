@@ -27,6 +27,8 @@ namespace Notemeow.Core
 
         private const int MaxReplayDepth = 8;
 
+        public static Dictionary<char, Rc.Binding> RepeatMap;
+
         public static void EnterKeypad(Ctx ctx)
         {
             MeowState st = ctx.St;
@@ -66,8 +68,8 @@ namespace Notemeow.Core
 
             Pending? pend = st.Pending;
             Rc.Binding repeatBinding = null;
-            if (pend == null && st.RepeatMap != null) st.RepeatMap.TryGetValue(c, out repeatBinding);
-            if (pend == null && repeatBinding == null) st.RepeatMap = null;
+            if (pend == null && RepeatMap != null) RepeatMap.TryGetValue(c, out repeatBinding);
+            if (pend == null && repeatBinding == null) RepeatMap = null;
             bool motionish = st.Mode == MeowMode.Motion;
             Rc.Binding binding =
                 pend == null
@@ -171,8 +173,7 @@ namespace Notemeow.Core
             Dispatch(ctx, b);
             Dictionary<char, Rc.Binding> map = Rc.RepeatMapFor(b);
             if (map == null) return;
-            MeowState st = ctx.St;
-            if (st.RepeatMap == null)
+            if (RepeatMap == null)
             {
                 var keys = new StringBuilder();
                 foreach (char k in map.Keys)
@@ -182,7 +183,7 @@ namespace Notemeow.Core
                 }
                 ctx.Ui.Hint("Repeat with " + keys);
             }
-            st.RepeatMap = map;
+            RepeatMap = map;
         }
 
         private static void Dispatch(Ctx ctx, Rc.Binding b)
@@ -238,7 +239,7 @@ namespace Notemeow.Core
                 return true;
             }
             st.Pending = null;
-            st.RepeatMap = null;
+            RepeatMap = null;
             ctx.Ui.HideWhichKey();
             ctx.Ui.ClearExpandHints();
             if (st.Mode == MeowMode.Insert)

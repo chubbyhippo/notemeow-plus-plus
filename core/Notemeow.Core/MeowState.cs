@@ -46,8 +46,6 @@ namespace Notemeow.Core
 
         public AvySession Avy;
 
-        public Dictionary<char, Rc.Binding> RepeatMap;
-
         public StringBuilder Keypad = new StringBuilder();
 
         public MeowMode KeypadPreviousState = MeowMode.Normal;

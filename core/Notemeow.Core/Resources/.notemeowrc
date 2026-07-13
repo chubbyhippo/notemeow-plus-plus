@@ -113,6 +113,8 @@ map <leader>xr <action>(IDM_FILE_RELOAD)
 desc <leader>w windows
 map <leader>wn <action>(IDM_VIEW_TAB_NEXT)
 map <leader>wp <action>(IDM_VIEW_TAB_PREV)
+map <leader>w. <action>(IDM_VIEW_TAB_NEXT)
+map <leader>w, <action>(IDM_VIEW_TAB_PREV)
 " w = focus the other view, W = send the document to the other view
 map <leader>ww <action>(IDM_VIEW_SWITCHTO_OTHER_VIEW)
 map <leader>wW <action>(IDM_VIEW_GOTO_ANOTHER_VIEW)
@@ -175,10 +177,13 @@ map <leader>sr <action>(IDM_SEARCH_REPLACE)
 map <leader>sf <action>(IDM_SEARCH_FINDINFILES)
 
 " SPC . / SPC , — next / prev change (walks Notepad++'s change history)
-desc <leader>. next (change)
+" and tab
+desc <leader>. next (change / tab)
 map <leader>.c <action>(IDM_SEARCH_CHANGED_NEXT)
-desc <leader>, previous (change)
+map <leader>.t <action>(IDM_VIEW_TAB_NEXT)
+desc <leader>, previous (change / tab)
 map <leader>,c <action>(IDM_SEARCH_CHANGED_PREV)
+map <leader>,t <action>(IDM_VIEW_TAB_PREV)
 
 " ============================================================================
 " Repeat groups — tap-to-continue transient maps
@@ -203,3 +208,5 @@ repeat zoom u <action>(IDM_VIEW_ZOOMRESTORE)
 repeat zoom 0 <action>(IDM_VIEW_ZOOMRESTORE)
 repeat tab n <action>(IDM_VIEW_TAB_NEXT)
 repeat tab p <action>(IDM_VIEW_TAB_PREV)
+repeat tab . <action>(IDM_VIEW_TAB_NEXT)
+repeat tab , <action>(IDM_VIEW_TAB_PREV)

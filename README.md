@@ -8,7 +8,7 @@ emulation in the middle. Just meow: select first, then act.
 ## Where this stands
 
 The engine — the part that decides what every key does — is complete for
-everything it tests: 281 behavior specs, every one cross-checked against
+everything it tests: 282 behavior specs, every one cross-checked against
 meow's own source, running headless in a fraction of a second. The Notepad++
 plugin around it is young: check the notes in
 [plugin/BUILD.md](plugin/BUILD.md) for what is wired and what is still

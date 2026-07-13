@@ -100,7 +100,10 @@ namespace Notemeow.Core.Tests
             Dictionary<char, Rc.Binding> g = Rc.Defaults().Repeat["tab"];
             Assert.Equal("IDM_VIEW_TAB_NEXT", g['n'].Action);
             Assert.Equal("IDM_VIEW_TAB_PREV", g['p'].Action);
-            Assert.True(new HashSet<char>(g.Keys).SetEquals(new[] { 'n', 'p' }));
+            Assert.Equal("IDM_VIEW_TAB_NEXT", g['.'].Action);
+            Assert.Equal("IDM_VIEW_TAB_PREV", g[','].Action);
+            Assert.True(
+                new HashSet<char>(g.Keys).SetEquals(new[] { 'n', 'p', '.', ',' }));
         }
 
         [Fact(DisplayName = "given a repeat line edit then the reload button sees a change")]
@@ -146,10 +149,10 @@ namespace Notemeow.Core.Tests
             Given("four lines", "<caret>one\ntwo\nthree\nfour");
             GivenRc(NavRc);
             WhenKeys(" tn");
-            Assert.NotNull(St.RepeatMap);
+            Assert.NotNull(Engine.RepeatMap);
             WhenKeys("w");
             ThenSelection("two");
-            Assert.Null(St.RepeatMap);
+            Assert.Null(Engine.RepeatMap);
         }
 
         [Fact(DisplayName = "given the run over then the member keys mean their normal commands again")]
@@ -171,9 +174,9 @@ namespace Notemeow.Core.Tests
             Given("four lines", "<caret>one\ntwo\nthree\nfour");
             GivenRc(NavRc);
             WhenKeys(" tn");
-            Assert.NotNull(St.RepeatMap);
+            Assert.NotNull(Engine.RepeatMap);
             PressEsc();
-            Assert.Null(St.RepeatMap);
+            Assert.Null(Engine.RepeatMap);
             WhenKeys(".");
             Assert.Equal(Pending.Bounds, St.Pending);
             ThenCaretLine(1);
@@ -201,16 +204,28 @@ namespace Notemeow.Core.Tests
             ThenCaretLine(3);
         }
 
+        [Fact(DisplayName = "given a run then a member tap continues after an editor switch")]
+        public void MemberTapContinuesAfterEditorSwitch()
+        {
+            Given("four lines", "<caret>one\ntwo\nthree\nfour");
+            GivenRc(NavRc);
+            WhenKeys(" tn");
+            ThenCaretLine(1);
+            St = new MeowState();
+            WhenKeys(".");
+            ThenCaretLine(2);
+        }
+
         [Fact(DisplayName = "given a run then the armed keys are the group members")]
         public void ArmedKeysAreGroupMembers()
         {
             Given("four lines", "<caret>one\ntwo\nthree\nfour");
             GivenRc(NavRc);
             WhenKeys(" tn");
-            Assert.NotNull(St.RepeatMap);
-            Assert.True(new HashSet<char>(St.RepeatMap.Keys).SetEquals(new[] { '.', ',' }));
+            Assert.NotNull(Engine.RepeatMap);
+            Assert.True(new HashSet<char>(Engine.RepeatMap.Keys).SetEquals(new[] { '.', ',' }));
             WhenKeys("w");
-            Assert.Null(St.RepeatMap);
+            Assert.Null(Engine.RepeatMap);
         }
     }
 }
