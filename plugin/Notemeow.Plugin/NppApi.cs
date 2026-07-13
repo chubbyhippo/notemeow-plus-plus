@@ -25,9 +25,12 @@ namespace Notemeow.Plugin
         internal const int NppMsg = 0x400 + 1000;
         internal const int NppmGetCurrentScintilla = NppMsg + 4;
         internal const int NppmSetStatusBar = NppMsg + 24;
+        internal const int NppmSaveCurrentFile = NppMsg + 38;
         internal const int NppmMenuCommand = NppMsg + 48;
         internal const int NppmGetCurrentBufferId = NppMsg + 60;
         internal const int NppmDoOpen = NppMsg + 77;
+        internal const int RunCommandUser = 0x400 + 3000;
+        internal const int NppmGetFullCurrentPath = RunCommandUser + 1;
 
         internal const int StatusBarDocType = 0;
         internal const int StatusBarTypingMode = 5;
@@ -46,6 +49,7 @@ namespace Notemeow.Plugin
         internal const int SciGetCodePage = 2137;
         internal const int SciGetReadOnly = 2140;
         internal const int SciGetFirstVisibleLine = 2152;
+        internal const int SciGetModify = 2159;
         internal const int SciScrollCaret = 2169;
         internal const int SciUndo = 2176;
         internal const int SciGetText = 2182;

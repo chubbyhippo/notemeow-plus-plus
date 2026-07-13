@@ -127,6 +127,19 @@ namespace Notemeow.Core.Tests
             ThenCaretAt(0);
         }
 
+        [Fact(DisplayName = "given S then the input timeout is awaited only once a char is typed (avy-timeout-seconds)")]
+        public void TimeoutAwaitedOnlyAfterFirstChar()
+        {
+            Given("words", "<caret>foo foo foo");
+            WhenKeys("S");
+            Assert.False(Avy.AwaitingTimeout(St));
+            WhenKeys("f");
+            Assert.True(Avy.AwaitingTimeout(St));
+            Timeout();
+            Assert.False(Avy.AwaitingTimeout(St));
+            Assert.NotNull(St.Avy);
+        }
+
         [Fact(DisplayName = "given Q then visible lines are labeled and a key jumps to that line")]
         public void QLabelsVisibleLinesJump()
         {

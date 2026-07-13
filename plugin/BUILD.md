@@ -93,7 +93,9 @@ NORMAL.
   (`SPC ?` cheatsheet, `SPC /` describe still answer).
 - `<action>(...)` targets take a numeric Notepad++ menu command id for
   now (the values from `menuCmdID.h`), e.g.
-  `map <leader>xk <action>(41003)` for File → Close.
+  `map <leader>xk <action>(41003)` for File → Close. The plugin's own
+  named ids work too: `notemeow.editRc` / `notemeow.reloadRc`, bundled as
+  `SPC c m` / `SPC c M`; reload saves a dirty `~/.notemeowrc` tab first.
 
 ## License
 

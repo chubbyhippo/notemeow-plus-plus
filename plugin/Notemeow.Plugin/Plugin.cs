@@ -146,7 +146,7 @@ namespace Notemeow.Plugin
 
         private static void ArmAvyTimer(IntPtr hwnd)
         {
-            if (Avy.IsCollecting(CurrentState()))
+            if (Avy.AwaitingTimeout(CurrentState()))
             {
                 NppApi.SetTimer(hwnd, NppApi.AvyTimerId, NppApi.AvyTimeoutMs, IntPtr.Zero);
             }
@@ -340,14 +340,44 @@ namespace Notemeow.Plugin
             NppApi.MessageBox(nppData.NppHandle, sb.ToString(), "notemeow++", 0);
         }
 
+        private static void EditRc()
+        {
+            string path = RcPath();
+            if (!File.Exists(path)) File.WriteAllLines(path, Rc.BundledLines());
+            NppApi.SendMessageStr(nppData.NppHandle, NppApi.NppmDoOpen, IntPtr.Zero, path);
+        }
+
+        private static void ReloadRc()
+        {
+            SaveRcEditorIfDirty();
+            LoadUserRc(true);
+        }
+
+        private static void SaveRcEditorIfDirty()
+        {
+            const int pathCapacity = 1024;
+            char* buf = stackalloc char[pathCapacity];
+            IntPtr got = NppApi.SendMessage(
+                nppData.NppHandle,
+                NppApi.NppmGetFullCurrentPath,
+                (IntPtr)pathCapacity,
+                (IntPtr)buf);
+            if (got == IntPtr.Zero) return;
+            string current = new string(buf);
+            if (!string.Equals(current, RcPath(), StringComparison.OrdinalIgnoreCase)) return;
+            IntPtr modified = NppApi.SendMessage(
+                ActiveScintilla(), (uint)NppApi.SciGetModify, IntPtr.Zero, IntPtr.Zero);
+            if (modified == IntPtr.Zero) return;
+            NppApi.SendMessage(
+                nppData.NppHandle, NppApi.NppmSaveCurrentFile, IntPtr.Zero, IntPtr.Zero);
+        }
+
         [UnmanagedCallersOnly]
         private static void MenuEditRc()
         {
             try
             {
-                string path = RcPath();
-                if (!File.Exists(path)) File.WriteAllLines(path, Rc.BundledLines());
-                NppApi.SendMessageStr(nppData.NppHandle, NppApi.NppmDoOpen, IntPtr.Zero, path);
+                EditRc();
             }
             catch (Exception e)
             {
@@ -360,7 +390,7 @@ namespace Notemeow.Plugin
         {
             try
             {
-                LoadUserRc(true);
+                ReloadRc();
             }
             catch (Exception e)
             {
@@ -380,7 +410,7 @@ namespace Notemeow.Plugin
             NppApi.MessageBox(
                 nppData.NppHandle,
                 "notemeow++ — meow modal editing for Notepad++\n"
-                    + "Engine: Notemeow.Core (120 behavior specs)\n"
+                    + "Engine: Notemeow.Core (132 behavior specs)\n"
                     + "License: GPL-3.0-or-later",
                 "About notemeow++",
                 0);
@@ -487,6 +517,16 @@ namespace Notemeow.Plugin
 
             public void RunCommand(string idText)
             {
+                if (idText == "notemeow.editRc")
+                {
+                    EditRc();
+                    return;
+                }
+                if (idText == "notemeow.reloadRc")
+                {
+                    ReloadRc();
+                    return;
+                }
                 if (!int.TryParse(idText, out int id))
                 {
                     throw new InvalidOperationException("not a menu command id: " + idText);

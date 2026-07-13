@@ -276,9 +276,11 @@ namespace Notemeow.Core
             ctx.St.Avy = null;
         }
 
-        public static bool IsCollecting(MeowState st)
+        public static bool AwaitingTimeout(MeowState st)
         {
-            return st.Avy != null && st.Avy.CurrentPhase == AvySession.Phase.Collecting;
+            return st.Avy != null
+                && st.Avy.CurrentPhase == AvySession.Phase.Collecting
+                && st.Avy.Input.Length > 0;
         }
 
         private static int[] VisibleLines(Ctx ctx)

@@ -8,7 +8,7 @@ emulation in the middle. Just meow: select first, then act.
 ## Where this stands
 
 The engine — the part that decides what every key does — is complete for
-everything it tests: 120 behavior specs, every one cross-checked against
+everything it tests: 132 behavior specs, every one cross-checked against
 meow's own source, running headless in a third of a second. The Notepad++
 plugin around it is young: check the notes in
 [plugin/BUILD.md](plugin/BUILD.md) for what is wired and what is still
@@ -35,7 +35,9 @@ The states you know from meow:
 - **NORMAL** — keys are commands. You start here.
 - **INSERT** — keys type text. `i a c I A` get you in, `ESC` gets you out.
 - **KEYPAD** — `SPC` as the leader. Digit arguments, the `?` cheatsheet and
-  `/` describe-key all work; the bundled command table starts empty — add
+  `/` describe-key all work; the bundled table ships a `c` (config) group —
+  `SPC c m` opens your `~/.notemeowrc` (seeding it from the bundled copy
+  first), `SPC c M` reloads it, saving a dirty rc tab first — and you add
   your own `map <leader>...` lines with Notepad++ menu command ids.
 - **MOTION** — meow's reduced state, present in the engine, unused on this
   platform so far.

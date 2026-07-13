@@ -79,3 +79,8 @@ nmap y meow-save
 nmap Y meow-sync-grab
 nmap z meow-pop-selection
 nmap ' repeat
+
+" keypad
+desc <leader>c config
+map <leader>cm <action>(notemeow.editRc)
+map <leader>cM <action>(notemeow.reloadRc)
