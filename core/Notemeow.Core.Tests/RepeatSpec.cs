@@ -94,6 +94,15 @@ namespace Notemeow.Core.Tests
             Assert.False(d.ContainsKey("expand"));
         }
 
+        [Fact(DisplayName = "given the bundled rc then the tab repeat group cycles editor tabs")]
+        public void BundledRcTabGroupCyclesTabs()
+        {
+            Dictionary<char, Rc.Binding> g = Rc.Defaults().Repeat["tab"];
+            Assert.Equal("IDM_VIEW_TAB_NEXT", g['n'].Action);
+            Assert.Equal("IDM_VIEW_TAB_PREV", g['p'].Action);
+            Assert.True(new HashSet<char>(g.Keys).SetEquals(new[] { 'n', 'p' }));
+        }
+
         [Fact(DisplayName = "given a repeat line edit then the reload button sees a change")]
         public void RepeatLineEditLightsReload()
         {
