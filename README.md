@@ -99,13 +99,19 @@ Toolchain pinned in `mise.toml` (.NET SDK 10):
 
 ```bash
 cd notemeow-plus-plus
-./setup.sh          # run the behavior suite (about 0.3 s)
+./setup.sh                  # run the behavior suite (about 0.3 s)
+./setup.sh plugin           # WSL: build the Notepad++ DLL via the Windows .NET SDK
+./setup.sh plugin install   # ...and copy it into Notepad++'s plugins folder
 ```
 
 On machines without libicu, `mise.toml` sets
 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` so the SDK runs anyway;
 `apt install libicu-dev` is the clean fix. Building and installing the
-Notepad++ plugin itself is covered in [plugin/BUILD.md](plugin/BUILD.md).
+Notepad++ plugin natively on Windows is covered in
+[plugin/BUILD.md](plugin/BUILD.md); from WSL, `./setup.sh plugin` drives
+the same build through the Windows .NET SDK, so the Windows-side
+requirements (a .NET 10 SDK and the Visual Studio C++ build tools) still
+apply.
 
 ## ~/.notemeowrc — configuring everything
 
