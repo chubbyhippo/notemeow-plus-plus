@@ -65,6 +65,18 @@ NORMAL.
   yellow, pause 0.25 s, then jump labels appear; type the label to jump.
   `Q` (goto-line) labels the visible lines. Labels paint in a layered
   overlay window over the editor; a single match jumps without a label
+- the **SPC keypad table** of Notepad++ menu commands by `menuCmdID.h` name
+  — the full 8.9.6.4 `IDM_*` name→id map ships inside the DLL, raw numbers
+  still work — with the **which-key panel** over the editor after
+  `timeoutlen` ms, and **repeat groups**: `SPC w i` then `i i i` keeps
+  zooming, `SPC . c` then `. . ,` walks the change history
+- **windmove**: `SPC w h/j/k/l` crosses to the other view by direction
+  (side-by-side or stacked splits both understood), answering with Emacs'
+  exact "No window left from selected window" when there isn't one
+- **input prompts**: `v` (visit regexp), `X` (goto line) and avy's
+  digit→line-number path ask in a small modal input box
+- **expand hints**: after a line/word expand, digit labels paint at the
+  next expansion targets
 - per-buffer state, the cheatsheet, one-undo edit groups,
   system-clipboard kill ring
 - offsets converted between Scintilla's UTF-8 bytes and the engine's
@@ -78,24 +90,24 @@ NORMAL.
   keys before the editor sees them. Clear the conflicting entries in
   *Settings → Shortcut Mapper* and the chords come alive; keep them and
   Notepad++ wins — your call, both are fine.
-- **The avy label overlay is load-verified, not eye-verified** — the DLL
-  loads and the engine is fully tested, but the label window's on-screen
-  painting (position, color-key transparency, DPI) hasn't been watched
-  live. If labels don't appear, `S`/`Q` still jump whenever your input
-  narrows to a single match (that path needs no label), and the yellow
-  match boxes still show where candidates are.
-- **No input prompts yet** — `X` (goto line via `meow-goto-line`), `v`
-  (visit regexp), and `Q`'s digit→line-number shortcut ask for text; the
-  plugin has no minibuffer, so those show a status-bar note and stop.
-  `Q`'s label jump and `S` need no prompt. A small modal input box unlocks
-  the three text paths; it's the next UI piece.
-- Which-key and expand hints are not drawn yet; the keypad works blind
-  (`SPC ?` cheatsheet, `SPC /` describe still answer).
-- `<action>(...)` targets take a numeric Notepad++ menu command id for
-  now (the values from `menuCmdID.h`), e.g.
-  `map <leader>xk <action>(41003)` for File → Close. The plugin's own
-  named ids work too: `notemeow.editRc` / `notemeow.reloadRc`, bundled as
-  `SPC c m` / `SPC c M`; reload saves a dirty `~/.notemeowrc` tab first.
+- **The overlay and dialog surfaces are load-verified, not eye-verified**
+  — the DLL loads and the engine is fully tested, but the avy labels, the
+  which-key panel, the expand-hint digits and the input box haven't been
+  watched live (position, color-key transparency, DPI). If avy labels
+  don't appear, `S`/`Q` still jump whenever your input narrows to a single
+  match (that path needs no label), and the yellow match boxes still show
+  where candidates are; the keypad also answers blind (`SPC ?` cheatsheet,
+  `SPC /` describe).
+- **MOTION mode has nowhere to run yet** — Notepad++'s panels and trees
+  (Function List, Folder as Workspace…) are not intercepted, so the
+  bundled `mmap` block and the `notemeow.hideView` / `notemeow.tree.*`
+  ids it references are inert vocabulary until a tree hook lands.
+- `<action>(...)` targets take any `IDM_*` name from `menuCmdID.h`
+  (verified against Notepad++ 8.9.6.4 and mapped inside the DLL) or a raw
+  numeric id, e.g. `map <leader>xk <action>(IDM_FILE_CLOSE)`. The plugin's
+  own named ids work too: `notemeow.editRc` / `notemeow.reloadRc`, bundled
+  as `SPC c m` / `SPC c M` (reload saves a dirty `~/.notemeowrc` tab
+  first), and `notemeow.windmoveLeft/Down/Up/Right` behind `SPC w hjkl`.
 
 ## License
 

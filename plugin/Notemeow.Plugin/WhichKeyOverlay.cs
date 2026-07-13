@@ -18,73 +18,87 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Notemeow.Core;
 
 namespace Notemeow.Plugin
 {
-    internal static unsafe class AvyOverlay
+    internal static unsafe class WhichKeyOverlay
     {
-        internal sealed class Label
-        {
-            public Label(string text, int x, int y)
-            {
-                Text = text;
-                X = x;
-                Y = y;
-            }
-
-            public string Text { get; }
-            public int X { get; }
-            public int Y { get; }
-        }
-
         private const uint WsPopup = 0x80000000;
-        private const uint WsExLayered = 0x00080000;
-        private const uint WsExTransparent = 0x00000020;
         private const uint WsExNoActivate = 0x08000000;
         private const uint WsExToolWindow = 0x00000080;
         private const int SwHide = 0;
         private const int SwShowNa = 8;
-        private const uint LwaColorKey = 1;
-        private const int ColorKey = 0x00010101;
-        private const int LabelBg = 0x00502BE5;
-        private const int LabelFg = 0x00FFFFFF;
+        private const int PanelBg = 0x00332B21;
+        private const int KeyFg = 0x0060C6F2;
+        private const int LabelFg = 0x00E8E8E8;
+        private const int TitleFg = 0x0060E260;
         private const int TransparentBkMode = 1;
-        private const int AnsiFixedFont = 11;
+        private const int DefaultGuiFont = 17;
+        private const int ColumnWidth = 240;
+        private const int Padding = 6;
 
         private static IntPtr classNamePtr;
         private static ushort classAtom;
         private static IntPtr overlay;
-        private static List<Label> current = new List<Label>();
-        private static int lineHeight = 14;
-        private static int boxColor = LabelBg;
+        private static string currentTitle = "";
+        private static IReadOnlyList<WhichKey.Row> currentRows = new List<WhichKey.Row>();
 
-        internal static void Show(IntPtr sci, List<Label> labels, int height)
+        internal static void Show(IntPtr sci, string title, IReadOnlyList<WhichKey.Row> rows)
         {
-            Show(sci, labels, height, LabelBg);
-        }
-
-        internal static void Show(IntPtr sci, List<Label> labels, int height, int box)
-        {
-            current = labels ?? new List<Label>();
-            boxColor = box;
-            if (height > 0) lineHeight = height;
+            currentTitle = title ?? "";
+            currentRows = rows ?? new List<WhichKey.Row>();
+            if (currentRows.Count == 0)
+            {
+                Hide();
+                return;
+            }
             if (!EnsureWindow()) return;
 
             RECT rc;
             if (!GetClientRect(sci, out rc)) return;
             POINT origin = default;
             ClientToScreen(sci, ref origin);
-            int w = rc.Right - rc.Left;
-            int h = rc.Bottom - rc.Top;
-            MoveWindow(overlay, origin.X, origin.Y, w, h, false);
+            int width = rc.Right - rc.Left;
+
+            int lineHeight = MeasureLineHeight();
+            int columns = Math.Max(1, Math.Min(width / ColumnWidth, currentRows.Count));
+            int rowsPerColumn = (currentRows.Count + columns - 1) / columns;
+            int height = (rowsPerColumn + 1) * lineHeight + Padding * 2;
+
+            MoveWindow(
+                overlay,
+                origin.X,
+                origin.Y + (rc.Bottom - rc.Top) - height,
+                width,
+                height,
+                false);
             ShowWindow(overlay, SwShowNa);
-            Paint();
+            Paint(lineHeight, rowsPerColumn);
         }
 
         internal static void Hide()
         {
-            current = new List<Label>();
+            currentRows = new List<WhichKey.Row>();
             if (overlay != IntPtr.Zero) ShowWindow(overlay, SwHide);
+        }
+
+        private static int MeasureLineHeight()
+        {
+            IntPtr hdc = GetDC(IntPtr.Zero);
+            if (hdc == IntPtr.Zero) return 16;
+            try
+            {
+                IntPtr oldFont = SelectObject(hdc, GetStockObject(DefaultGuiFont));
+                SIZE ext;
+                GetTextExtentPoint32W(hdc, "Mg", 2, out ext);
+                SelectObject(hdc, oldFont);
+                return ext.Cy + 2;
+            }
+            finally
+            {
+                ReleaseDC(IntPtr.Zero, hdc);
+            }
         }
 
         private static bool EnsureWindow()
@@ -93,20 +107,20 @@ namespace Notemeow.Plugin
             IntPtr hInstance = GetModuleHandleW(IntPtr.Zero);
             if (classAtom == 0)
             {
-                classNamePtr = Marshal.StringToHGlobalUni("NotemeowAvyOverlay");
+                classNamePtr = Marshal.StringToHGlobalUni("NotemeowWhichKey");
                 var wc = new WNDCLASSW
                 {
                     style = 0,
                     lpfnWndProc = (IntPtr)(delegate* unmanaged<IntPtr, uint, IntPtr, IntPtr, IntPtr>)&WndProc,
                     hInstance = hInstance,
-                    hbrBackground = CreateSolidBrush(ColorKey),
+                    hbrBackground = CreateSolidBrush(PanelBg),
                     lpszClassName = classNamePtr,
                 };
                 classAtom = RegisterClassW(ref wc);
                 if (classAtom == 0) return false;
             }
             overlay = CreateWindowExW(
-                WsExLayered | WsExTransparent | WsExNoActivate | WsExToolWindow,
+                WsExNoActivate | WsExToolWindow,
                 classNamePtr,
                 IntPtr.Zero,
                 WsPopup,
@@ -118,12 +132,10 @@ namespace Notemeow.Plugin
                 IntPtr.Zero,
                 hInstance,
                 IntPtr.Zero);
-            if (overlay == IntPtr.Zero) return false;
-            SetLayeredWindowAttributes(overlay, ColorKey, 0, LwaColorKey);
-            return true;
+            return overlay != IntPtr.Zero;
         }
 
-        private static void Paint()
+        private static void Paint(int lineHeight, int rowsPerColumn)
         {
             if (overlay == IntPtr.Zero) return;
             IntPtr hdc = GetDC(overlay);
@@ -132,33 +144,32 @@ namespace Notemeow.Plugin
             {
                 RECT rc;
                 GetClientRect(overlay, out rc);
-                IntPtr bg = CreateSolidBrush(ColorKey);
+                IntPtr bg = CreateSolidBrush(PanelBg);
                 FillRect(hdc, ref rc, bg);
                 DeleteObject(bg);
 
-                IntPtr font = GetStockObject(AnsiFixedFont);
-                IntPtr oldFont = SelectObject(hdc, font);
+                IntPtr oldFont = SelectObject(hdc, GetStockObject(DefaultGuiFont));
                 SetBkMode(hdc, TransparentBkMode);
-                IntPtr box = CreateSolidBrush(boxColor);
-                foreach (Label lb in current)
+
+                SetTextColor(hdc, TitleFg);
+                TextOutW(hdc, Padding, Padding, currentTitle, currentTitle.Length);
+
+                for (int i = 0; i < currentRows.Count; i++)
                 {
-                    string text = lb.Text ?? "";
-                    if (text.Length == 0) continue;
+                    WhichKey.Row row = currentRows[i];
+                    int column = i / rowsPerColumn;
+                    int rowInColumn = i % rowsPerColumn;
+                    int x = Padding + column * ColumnWidth;
+                    int y = Padding + (rowInColumn + 1) * lineHeight;
+                    string key = row.Key ?? "";
+                    string label = " " + (row.Label ?? "");
+                    SetTextColor(hdc, KeyFg);
+                    TextOutW(hdc, x, y, key, key.Length);
                     SIZE ext;
-                    GetTextExtentPoint32W(hdc, text, text.Length, out ext);
-                    int boxH = Math.Max(ext.Cy, lineHeight);
-                    var r = new RECT
-                    {
-                        Left = lb.X,
-                        Top = lb.Y,
-                        Right = lb.X + ext.Cx + 4,
-                        Bottom = lb.Y + boxH,
-                    };
-                    FillRect(hdc, ref r, box);
+                    GetTextExtentPoint32W(hdc, "SPC", 3, out ext);
                     SetTextColor(hdc, LabelFg);
-                    TextOutW(hdc, lb.X + 2, lb.Y, text, text.Length);
+                    TextOutW(hdc, x + ext.Cx, y, label, label.Length);
                 }
-                DeleteObject(box);
                 SelectObject(hdc, oldFont);
             }
             finally
@@ -243,9 +254,6 @@ namespace Notemeow.Plugin
 
         [DllImport("user32.dll")]
         private static extern bool ClientToScreen(IntPtr hwnd, ref POINT pt);
-
-        [DllImport("user32.dll")]
-        private static extern bool SetLayeredWindowAttributes(IntPtr hwnd, int key, byte alpha, uint flags);
 
         [DllImport("user32.dll")]
         private static extern IntPtr DefWindowProcW(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);

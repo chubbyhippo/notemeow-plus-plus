@@ -31,7 +31,8 @@ namespace Notemeow.Plugin
             new Dictionary<ulong, MeowState>();
         private static bool swallowEscChar;
         private static bool swallowSysChar;
-        private static bool promptHintShown;
+        private static string whichKeyKind;
+        private static string whichKeyBuffer;
 
         private static readonly IntPtr NameBuf = Marshal.StringToHGlobalUni("notemeow++");
 
@@ -156,6 +157,38 @@ namespace Notemeow.Plugin
             }
         }
 
+        private static void ShowWhichKey(IntPtr sci)
+        {
+            string kind = whichKeyKind;
+            if (kind == null) return;
+            string buffer = whichKeyBuffer ?? "";
+            IReadOnlyList<WhichKey.Row> rows =
+                kind == "things" ? WhichKey.Things : WhichKey.KeypadRows(buffer);
+            string title =
+                kind == "things"
+                    ? "thing:"
+                    : buffer.Length == 0 ? "SPC" : "SPC " + string.Join(" ", buffer.ToCharArray());
+            WhichKeyOverlay.Show(sci, title, rows);
+        }
+
+        private static Windmove.ViewLayout CurrentViewLayout()
+        {
+            IntPtr main = nppData.ScintillaMainHandle;
+            IntPtr second = nppData.ScintillaSecondHandle;
+            bool twoViews = NppApi.IsWindowVisible(main) && NppApi.IsWindowVisible(second);
+            if (!twoViews) return new Windmove.ViewLayout(false, false, false);
+            NppApi.Rect mainRect;
+            NppApi.Rect secondRect;
+            NppApi.GetWindowRect(main, out mainRect);
+            NppApi.GetWindowRect(second, out secondRect);
+            bool stacked = mainRect.Top != secondRect.Top;
+            bool onSecond =
+                ActiveScintilla() == main
+                    ? stacked ? mainRect.Top > secondRect.Top : mainRect.Left > secondRect.Left
+                    : stacked ? secondRect.Top > mainRect.Top : secondRect.Left > mainRect.Left;
+            return new Windmove.ViewLayout(true, stacked, onSecond);
+        }
+
         private static void ShowMode(MeowState st, IntPtr sci)
         {
             NppApi.SendMessageStr(
@@ -200,6 +233,12 @@ namespace Notemeow.Plugin
                         {
                             NppApi.KillTimer(hwnd, NppApi.AvyTimerId);
                             Avy.FinishInput(MakeCtx(hwnd));
+                            return IntPtr.Zero;
+                        }
+                        if ((nuint)(long)wParam == NppApi.WhichKeyTimerId)
+                        {
+                            NppApi.KillTimer(hwnd, NppApi.WhichKeyTimerId);
+                            ShowWhichKey(hwnd);
                             return IntPtr.Zero;
                         }
                         break;
@@ -410,7 +449,7 @@ namespace Notemeow.Plugin
             NppApi.MessageBox(
                 nppData.NppHandle,
                 "notemeow++ — meow modal editing for Notepad++\n"
-                    + "Engine: Notemeow.Core (132 behavior specs)\n"
+                    + "Engine: Notemeow.Core (280 behavior specs)\n"
                     + "License: GPL-3.0-or-later",
                 "About notemeow++",
                 0);
@@ -478,6 +517,8 @@ namespace Notemeow.Plugin
 
         private sealed class NppUi : IUiPort
         {
+            private const int ExpandHintBg = 0x00B25D2B;
+
             private readonly IntPtr npp;
             private readonly IntPtr sci;
             private readonly ScintillaPort port;
@@ -507,12 +548,7 @@ namespace Notemeow.Plugin
 
             public string Input(string prompt, string initial)
             {
-                if (!promptHintShown)
-                {
-                    promptHintShown = true;
-                    Status("meow — " + prompt + " (prompts are not wired up yet)");
-                }
-                return null;
+                return InputBox.Show(npp, prompt, initial);
             }
 
             public void RunCommand(string idText)
@@ -527,27 +563,75 @@ namespace Notemeow.Plugin
                     ReloadRc();
                     return;
                 }
-                if (!int.TryParse(idText, out int id))
+                if (idText == "notemeow.windmoveLeft")
+                {
+                    WindmoveTo(Windmove.Dir.Left);
+                    return;
+                }
+                if (idText == "notemeow.windmoveDown")
+                {
+                    WindmoveTo(Windmove.Dir.Down);
+                    return;
+                }
+                if (idText == "notemeow.windmoveUp")
+                {
+                    WindmoveTo(Windmove.Dir.Up);
+                    return;
+                }
+                if (idText == "notemeow.windmoveRight")
+                {
+                    WindmoveTo(Windmove.Dir.Right);
+                    return;
+                }
+                if (idText == Windmove.FocusOtherView)
+                {
+                    RunCommand("IDM_VIEW_SWITCHTO_OTHER_VIEW");
+                    return;
+                }
+                int id;
+                if (!NppMenuIds.TryGet(idText, out id) && !int.TryParse(idText, out id))
                 {
                     throw new InvalidOperationException("not a menu command id: " + idText);
                 }
                 NppApi.SendMessage(npp, NppApi.NppmMenuCommand, IntPtr.Zero, (IntPtr)id);
             }
 
+            private void WindmoveTo(Windmove.Dir dir)
+            {
+                string plan = Windmove.Plan(dir, CurrentViewLayout());
+                if (plan == null) Hint(Windmove.NoWindowMessage(dir));
+                else RunCommand(plan);
+            }
+
             public void ScheduleWhichKey(string kind, string buffer)
             {
+                if (!Rc.WhichKeyEnabled()) return;
+                whichKeyKind = kind;
+                whichKeyBuffer = buffer;
+                NppApi.SetTimer(
+                    sci, NppApi.WhichKeyTimerId, (uint)Rc.WhichKeyDelayMs(), IntPtr.Zero);
             }
 
             public void HideWhichKey()
             {
+                NppApi.KillTimer(sci, NppApi.WhichKeyTimerId);
+                WhichKeyOverlay.Hide();
             }
 
             public void ShowExpandHints(List<int> positions)
             {
+                var labels = new List<AvyLabel>();
+                for (int i = 0; i < positions.Count; i++)
+                {
+                    labels.Add(new AvyLabel(positions[i], ((i + 1) % 10).ToString()));
+                }
+                AvyOverlay.Show(
+                    port.Handle, port.ResolveLabels(labels), port.TextHeight(), ExpandHintBg);
             }
 
             public void ClearExpandHints()
             {
+                AvyOverlay.Hide();
             }
 
             public void ShowAvyMatches(List<OffsetRange> matches)

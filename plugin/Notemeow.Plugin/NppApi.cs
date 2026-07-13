@@ -92,6 +92,22 @@ namespace Notemeow.Plugin
         internal const uint WmTimer = 0x0113;
         internal const nuint AvyTimerId = 0xA5EF;
         internal const uint AvyTimeoutMs = 250;
+        internal const nuint WhichKeyTimerId = 0xA5F0;
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct Rect
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        [DllImport("user32.dll")]
+        internal static extern bool IsWindowVisible(IntPtr hwnd);
+
+        [DllImport("user32.dll")]
+        internal static extern bool GetWindowRect(IntPtr hwnd, out Rect rc);
 
         [DllImport("user32.dll")]
         internal static extern nuint SetTimer(IntPtr hwnd, nuint id, uint elapseMs, IntPtr callback);

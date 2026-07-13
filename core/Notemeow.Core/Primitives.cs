@@ -27,6 +27,19 @@ namespace Notemeow.Core
 
         public int Anchor { get; }
         public int Active { get; }
+
+        public override bool Equals(object obj)
+        {
+            return obj is SelRange other && Anchor == other.Anchor && Active == other.Active;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return Anchor * 31 + Active;
+            }
+        }
     }
 
     public sealed class TextEdit

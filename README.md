@@ -8,8 +8,8 @@ emulation in the middle. Just meow: select first, then act.
 ## Where this stands
 
 The engine — the part that decides what every key does — is complete for
-everything it tests: 132 behavior specs, every one cross-checked against
-meow's own source, running headless in a third of a second. The Notepad++
+everything it tests: 280 behavior specs, every one cross-checked against
+meow's own source, running headless in a fraction of a second. The Notepad++
 plugin around it is young: check the notes in
 [plugin/BUILD.md](plugin/BUILD.md) for what is wired and what is still
 ahead.
@@ -24,9 +24,13 @@ What the engine covers today:
   and blocks, search, grab and beacon
 - the **avy jumps** — `S` (goto-char-timer) and `Q` (goto-line), a native
   port of avy 0.5.0's label tree, timer, and subdivision
+- the platform decision logic the plugin maps: **windmove** between the two
+  Notepad++ views, the panel double-`ESC` pairing, tree motions for the
+  MOTION map, and the attach policy
 
-Not yet: window/panel keys, and the text-input prompts a few commands want
-(see [plugin/BUILD.md](plugin/BUILD.md)).
+Still ahead (see [plugin/BUILD.md](plugin/BUILD.md)): live keystroke
+verification of the newest UI surfaces, and intercepting Notepad++'s panels
+and trees so MOTION mode has somewhere to run.
 
 ## What you get
 
@@ -35,10 +39,14 @@ The states you know from meow:
 - **NORMAL** — keys are commands. You start here.
 - **INSERT** — keys type text. `i a c I A` get you in, `ESC` gets you out.
 - **KEYPAD** — `SPC` as the leader. Digit arguments, the `?` cheatsheet and
-  `/` describe-key all work; the bundled table ships a `c` (config) group —
+  `/` describe-key all work; the bundled table ships whole groups of
+  Notepad++ menu commands by their `menuCmdID.h` names — `SPC x s` saves,
+  `SPC w i` zooms in (and `i i i` keeps zooming — a repeat group),
+  `SPC . c` walks the change history, `SPC b m` toggles a bookmark,
+  `SPC a u` focuses the Function List — plus the `c` (config) group:
   `SPC c m` opens your `~/.notemeowrc` (seeding it from the bundled copy
-  first), `SPC c M` reloads it, saving a dirty rc tab first — and you add
-  your own `map <leader>...` lines with Notepad++ menu command ids.
+  first), `SPC c M` reloads it, saving a dirty rc tab first. Add your own
+  `map <leader>...` lines with `IDM_*` names or raw numeric ids.
 - **MOTION** — meow's reduced state, present in the engine, unused on this
   platform so far.
 - **BEACON** — grab a region with `G`, select something inside it, and a
@@ -126,7 +134,7 @@ rather than fatal.
 |---|---|
 | `" text` or `# text` | comment (also at the end of a line) |
 | `nmap <key> <meow-command>` | bind a NORMAL key to a named meow command, e.g. `nmap n meow-mark-word` — this is how you remap the layout itself |
-| `nmap <key> <action>(command.id)` | NORMAL key runs a Notepad++ menu command |
+| `nmap <key> <action>(IDM_FILE_SAVE)` | NORMAL key runs a Notepad++ menu command — any `menuCmdID.h` name or raw numeric id |
 | `nmap <key> <keys>` | NORMAL key replays a meow key sequence, e.g. `nmap Z ,b` |
 | `nnoremap` / `noremap` | like `nmap`/`map`, but the replayed keys resolve through the bundled defaults, ignoring your other mappings |
 | `mmap` / `mnoremap` | the same target forms, for MOTION mode |
@@ -189,6 +197,8 @@ through rc bindings.
 | `Search.cs` | meow-search / meow-visit and the shared regexp ring |
 | `Structures.cs` / `Things.cs` | the char-thing table, blocks, join / what a "thing" is |
 | `Grab.cs` | grab / swap / sync and the beacon reaction |
+| `Avy.cs` | the `S`/`Q` jumps: label tree, subdivision, the goto-char timer, goto-line |
+| `AttachPolicy.cs` / `ToolWindowEscape.cs` / `Windmove.cs` / `TreeMeow.cs` | the platform decision logic the plugin maps: where meow attaches, double-ESC pairing, two-view windmove, tree motions |
 | `Edits.cs` | everything that mutates text, including the chord-layer case/kill commands |
 | `Rc.cs` / `RcParser.cs` / `RcFileState.cs` | the two rc layers, the line syntax, the parse-hash reload check |
 | `Keypad.cs` / `WhichKey.cs` / `Hints.cs` | the SPC leader, the popup rows, the digit-expand hint positions |

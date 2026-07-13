@@ -1,10 +1,14 @@
 " ============================================================================
 " .notemeowrc — THE default keymap of the notemeow++ plugin
 " ----------------------------------------------------------------------------
-" The plugin binds no keys in code: these lines ARE the default NORMAL layout
-" (meow's suggested QWERTY). A ~/.notemeowrc overrides this file entry by
-" entry — only the lines you change matter; a deleted line falls back to the
-" bundled default (bind `ignore` to disable a key).
+" The plugin binds no keys in code: these lines ARE the default NORMAL/MOTION
+" layout (meow's suggested QWERTY), plus the SPC keypad <action> table of
+" Notepad++ menu commands (IDM_* names from menuCmdID.h, or raw numeric ids).
+" A ~/.notemeowrc overrides this file entry by entry — only the lines you
+" change matter; a deleted line falls back to the bundled default (bind
+" `ignore` to disable a key). Open it with SPC c m — the first press creates
+" ~/.notemeowrc as a full copy of this file; reload after editing with
+" SPC c M.
 " Within this file, a later line for the same key wins.
 " ============================================================================
 
@@ -80,7 +84,120 @@ nmap Y meow-sync-grab
 nmap z meow-pop-selection
 nmap ' repeat
 
-" keypad
+" MOTION mode — the keymap of Notepad++ panels (Function List, Folder as
+" Workspace, Document List, ...): j/k/h/l move, q hides the panel, every
+" unmapped key keeps its native meaning
+mmap j meow-next
+mmap k meow-prev
+mmap h meow-left
+mmap l meow-right
+mmap q <action>(notemeow.hideView)
+
+" ── SPC keypad table ────────────────────────────────────────────────────────
+" SPC is the leader; these sequences dispatch Notepad++ menu commands by
+" their menuCmdID.h name (a raw numeric id works too).
+" SPC 1-9 = digit argument, SPC ? = cheatsheet, SPC / = describe-key
+" (handled in code).
+map <leader><Space> <action>(IDM_VIEW_SWITCHTO_DOCLIST)
+desc <leader><Space> document list
+
+desc <leader>x files
+map <leader>xn <action>(IDM_FILE_NEW)
+map <leader>xf <action>(IDM_FILE_OPEN)
+map <leader>xs <action>(IDM_FILE_SAVE)
+map <leader>xS <action>(IDM_FILE_SAVEALL)
+map <leader>xk <action>(IDM_FILE_CLOSE)
+map <leader>xK <action>(IDM_FILE_CLOSEALL)
+map <leader>xr <action>(IDM_FILE_RELOAD)
+
+desc <leader>w windows
+map <leader>wn <action>(IDM_VIEW_TAB_NEXT)
+map <leader>wp <action>(IDM_VIEW_TAB_PREV)
+" w = focus the other view, W = send the document to the other view
+map <leader>ww <action>(IDM_VIEW_SWITCHTO_OTHER_VIEW)
+map <leader>wW <action>(IDM_VIEW_GOTO_ANOTHER_VIEW)
+" h/j/k/l: directional view focus from the caret (main <-> second view)
+map <leader>wh <action>(notemeow.windmoveLeft)
+map <leader>wj <action>(notemeow.windmoveDown)
+map <leader>wk <action>(notemeow.windmoveUp)
+map <leader>wl <action>(notemeow.windmoveRight)
+map <leader>wi <action>(IDM_VIEW_ZOOMIN)
+map <leader>w= <action>(IDM_VIEW_ZOOMIN)
+map <leader>wo <action>(IDM_VIEW_ZOOMOUT)
+map <leader>w- <action>(IDM_VIEW_ZOOMOUT)
+map <leader>wu <action>(IDM_VIEW_ZOOMRESTORE)
+map <leader>w0 <action>(IDM_VIEW_ZOOMRESTORE)
+
+desc <leader>e edit
+map <leader>eu <action>(IDM_EDIT_UNDO)
+map <leader>er <action>(IDM_EDIT_REDO)
+map <leader>ef <action>(IDM_SEARCH_REPLACE)
+
+desc <leader>j jump
+map <leader>jl <action>(IDM_SEARCH_GOTOLINE)
+map <leader>jb <action>(IDM_SEARCH_GOTOMATCHINGBRACE)
+
+" SPC c m / M — edit and reload ~/.notemeowrc; reload saves a dirty rc tab
+" first
 desc <leader>c config
 map <leader>cm <action>(notemeow.editRc)
 map <leader>cM <action>(notemeow.reloadRc)
+
+" SPC m = M-: meta — m o / m g = the avy jumps on this prefix
+desc <leader>m meta
+map <leader>mo avy-goto-char-timer
+map <leader>mg avy-goto-line
+
+" SPC b — bookmarks: m toggles a line bookmark, n/p jump, c clears them all
+desc <leader>b bookmark (m set / n,p jump)
+map <leader>bm <action>(IDM_SEARCH_TOGGLE_BOOKMARK)
+map <leader>bn <action>(IDM_SEARCH_NEXT_BOOKMARK)
+map <leader>bp <action>(IDM_SEARCH_PREV_BOOKMARK)
+map <leader>bc <action>(IDM_SEARCH_CLEAR_BOOKMARKS)
+
+desc <leader>a activate panel
+map <leader>ad <action>(IDM_VIEW_SWITCHTO_DOCLIST)
+map <leader>af <action>(IDM_VIEW_SWITCHTO_FILEBROWSER)
+map <leader>au <action>(IDM_VIEW_SWITCHTO_FUNC_LIST)
+map <leader>ap <action>(IDM_VIEW_SWITCHTO_PROJECT_PANEL_1)
+map <leader>am <action>(IDM_VIEW_DOC_MAP)
+
+desc <leader>; settings / UI
+map <leader>;d <action>(IDM_VIEW_DISTRACTIONFREE)
+map <leader>;f <action>(IDM_VIEW_FULLSCREENTOGGLE)
+map <leader>;t <action>(IDM_VIEW_ALWAYSONTOP)
+map <leader>;w <action>(IDM_VIEW_WRAP)
+map <leader>;s <action>(IDM_VIEW_ALL_CHARACTERS)
+
+desc <leader>s search
+map <leader>ss <action>(IDM_SEARCH_FIND)
+map <leader>sr <action>(IDM_SEARCH_REPLACE)
+map <leader>sf <action>(IDM_SEARCH_FINDINFILES)
+
+" SPC . / SPC , — next / prev change (walks Notepad++'s change history)
+desc <leader>. next (change)
+map <leader>.c <action>(IDM_SEARCH_CHANGED_NEXT)
+desc <leader>, previous (change)
+map <leader>,c <action>(IDM_SEARCH_CHANGED_PREV)
+
+" ============================================================================
+" Repeat groups — tap-to-continue transient maps
+" ----------------------------------------------------------------------------
+" After any binding whose TARGET is listed in a group below (membership is
+" the target, not the key), the next keypress is first looked up in that
+" group: a member key re-dispatches its target and keeps the run alive; any
+" other key (or ESC) ends the run and keeps its normal meaning — nothing is
+" swallowed, and there is no timeout. The entering keypad key needn't be a
+" member. So: SPC . c then . . , walks changes; SPC w i then i i i keeps
+" zooming. Syntax:
+"   repeat <group> <key> <target>     target grammar = the map-line RHS
+"   repeat <group> <key> ignore       give a bundled group's key back
+" ============================================================================
+repeat change . <action>(IDM_SEARCH_CHANGED_NEXT)
+repeat change , <action>(IDM_SEARCH_CHANGED_PREV)
+repeat zoom i <action>(IDM_VIEW_ZOOMIN)
+repeat zoom = <action>(IDM_VIEW_ZOOMIN)
+repeat zoom o <action>(IDM_VIEW_ZOOMOUT)
+repeat zoom - <action>(IDM_VIEW_ZOOMOUT)
+repeat zoom u <action>(IDM_VIEW_ZOOMRESTORE)
+repeat zoom 0 <action>(IDM_VIEW_ZOOMRESTORE)
