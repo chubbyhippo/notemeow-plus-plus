@@ -128,10 +128,11 @@ namespace Notemeow.Plugin
 
         private static Ctx MakeCtx(IntPtr sciHwnd)
         {
+            var port = new ScintillaPort(sciHwnd, nppData.NppHandle);
             return new Ctx(
-                new ScintillaPort(sciHwnd, nppData.NppHandle),
+                port,
                 new Win32Clipboard(nppData.NppHandle),
-                new NppUi(nppData.NppHandle, sciHwnd),
+                new NppUi(nppData.NppHandle, sciHwnd, port),
                 CurrentState());
         }
 
@@ -424,11 +425,13 @@ namespace Notemeow.Plugin
         {
             private readonly IntPtr npp;
             private readonly IntPtr sci;
+            private readonly ScintillaPort port;
 
-            internal NppUi(IntPtr npp, IntPtr sci)
+            internal NppUi(IntPtr npp, IntPtr sci, ScintillaPort port)
             {
                 this.npp = npp;
                 this.sci = sci;
+                this.port = port;
             }
 
             private void Status(string text)
@@ -502,6 +505,7 @@ namespace Notemeow.Plugin
             public void Refresh(MeowState st)
             {
                 ShowMode(st, sci);
+                port.HighlightGrab(st.Grab);
             }
         }
     }

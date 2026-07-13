@@ -253,5 +253,27 @@ namespace Notemeow.Plugin
         {
             return null;
         }
+
+        private bool grabIndicatorReady;
+
+        internal void HighlightGrab(OffsetRange grab)
+        {
+            if (!grabIndicatorReady)
+            {
+                Send(NppApi.SciIndicSetStyle, NppApi.GrabIndicator, NppApi.IndicStraightBox);
+                Send(NppApi.SciIndicSetFore, NppApi.GrabIndicator, 0x33CC33);
+                Send(NppApi.SciIndicSetAlpha, NppApi.GrabIndicator, 60);
+                Send(NppApi.SciIndicSetUnder, NppApi.GrabIndicator, 1);
+                grabIndicatorReady = true;
+            }
+            int len = (int)Send(NppApi.SciGetLength);
+            Send(NppApi.SciSetIndicatorCurrent, NppApi.GrabIndicator);
+            Send(NppApi.SciIndicatorClearRange, 0, len);
+            if (grab == null || grab.End <= grab.Start) return;
+            Mapping m = Load();
+            int sb = ToByte(m, grab.Start);
+            int eb = ToByte(m, grab.End);
+            Send(NppApi.SciIndicatorFillRange, sb, eb - sb);
+        }
     }
 }

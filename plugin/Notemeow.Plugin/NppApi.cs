@@ -63,9 +63,24 @@ namespace Notemeow.Plugin
         internal const int SciDeleteRange = 2645;
         internal const int SciSetTargetRange = 2686;
         internal const int SciSetCaretStyle = 2512;
+        internal const int SciIndicSetStyle = 2080;
+        internal const int SciIndicSetFore = 2082;
+        internal const int SciIndicSetUnder = 2510;
+        internal const int SciSetIndicatorCurrent = 2500;
+        internal const int SciIndicatorFillRange = 2504;
+        internal const int SciIndicatorClearRange = 2505;
+        internal const int SciIndicSetAlpha = 2523;
 
         internal const int CaretStyleLine = 1;
         internal const int CaretStyleBlock = 2;
+
+        internal const int IndicStraightBox = 8;
+
+        // Scintilla indicator slot for the grab highlight. 0-7 are lexer
+        // indicators and Notepad++'s own smart-highlight/mark features cluster
+        // in 27-31, so this sits in the free middle band; change it if a
+        // plugin you use claims it.
+        internal const int GrabIndicator = 12;
 
         internal const uint WmChar = 0x0102;
         internal const uint WmKeyDown = 0x0100;

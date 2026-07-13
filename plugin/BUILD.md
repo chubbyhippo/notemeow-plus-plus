@@ -51,6 +51,9 @@ NORMAL.
   (`SCI_SETCARETSTYLE`), plus `MEOW NORMAL` / `MEOW INSERT` in the status
   bar's typing-mode field (the one that normally reads INS/OVR, so it
   doesn't fight the language label)
+- **grab + beacon**: `G` grabs the selection and the region is boxed with a
+  Scintilla indicator; select inside it (`w`, `x`, `f`…) and a caret lands
+  on every match (native multi-selection); `ESC` collapses
 - per-buffer state, the cheatsheet, one-undo edit groups,
   system-clipboard kill ring
 - offsets converted between Scintilla's UTF-8 bytes and the engine's
@@ -65,7 +68,14 @@ NORMAL.
   *Settings → Shortcut Mapper* and the chords come alive; keep them and
   Notepad++ wins — your call, both are fine.
 - **No input prompts yet** — `Q`/`X` (goto line) and `v` (visit regexp)
-  show a status-bar note instead of a minibuffer.
+  call `meow-goto-line`/`meow-visit`, which ask for a line number or
+  regexp; the plugin has no minibuffer, so they show a status-bar note and
+  stop. Wiring a small modal input box unlocks all three; it's the next
+  UI piece.
+- **avy (`S`, and `Q` as avy-goto-line) is not ported** — the bundled rc
+  leaves `S` unbound and binds `Q` to `meow-goto-line`. avy needs to paint
+  jump labels over candidate positions, i.e. the label overlay below, so
+  it lands with that work (dbmeow's `Avy.java` is the port source).
 - Which-key, expand hints, and the avy overlays are not drawn yet; the
   keypad works blind (`SPC ?` cheatsheet, `SPC /` describe still answer).
 - `<action>(...)` targets take a numeric Notepad++ menu command id for
