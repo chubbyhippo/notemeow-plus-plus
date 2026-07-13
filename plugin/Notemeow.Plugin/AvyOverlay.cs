@@ -44,12 +44,15 @@ namespace Notemeow.Plugin
         private const uint WsExToolWindow = 0x00000080;
         private const int SwHide = 0;
         private const int SwShowNa = 8;
+        private const uint WmPaint = 0x000F;
         private const uint LwaColorKey = 1;
         private const int ColorKey = 0x00010101;
         private const int LabelBg = 0x00502BE5;
         private const int LabelFg = 0x00FFFFFF;
         private const int TransparentBkMode = 1;
-        private const int AnsiFixedFont = 11;
+        private const int BoldWeight = 700;
+        private const uint ClearTypeQuality = 5;
+        private const uint FixedPitch = 1;
 
         private static IntPtr classNamePtr;
         private static ushort classAtom;
@@ -57,6 +60,31 @@ namespace Notemeow.Plugin
         private static List<Label> current = new List<Label>();
         private static int lineHeight = 14;
         private static int boxColor = LabelBg;
+        private static IntPtr labelFont;
+        private static int labelFontLineHeight;
+
+        private static IntPtr LabelFont()
+        {
+            if (labelFont != IntPtr.Zero && labelFontLineHeight == lineHeight) return labelFont;
+            if (labelFont != IntPtr.Zero) DeleteObject(labelFont);
+            labelFont = CreateFontW(
+                -(lineHeight * 3 / 4),
+                0,
+                0,
+                0,
+                BoldWeight,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                ClearTypeQuality,
+                FixedPitch,
+                "Consolas");
+            labelFontLineHeight = lineHeight;
+            return labelFont;
+        }
 
         internal static void Show(IntPtr sci, List<Label> labels, int height)
         {
@@ -78,7 +106,8 @@ namespace Notemeow.Plugin
             int h = rc.Bottom - rc.Top;
             MoveWindow(overlay, origin.X, origin.Y, w, h, false);
             ShowWindow(overlay, SwShowNa);
-            Paint();
+            InvalidateRect(overlay, IntPtr.Zero, true);
+            UpdateWindow(overlay);
         }
 
         internal static void Hide()
@@ -123,53 +152,53 @@ namespace Notemeow.Plugin
             return true;
         }
 
-        private static void Paint()
+        private static void PaintInto(IntPtr hdc)
         {
-            if (overlay == IntPtr.Zero) return;
-            IntPtr hdc = GetDC(overlay);
-            if (hdc == IntPtr.Zero) return;
-            try
-            {
-                RECT rc;
-                GetClientRect(overlay, out rc);
-                IntPtr bg = CreateSolidBrush(ColorKey);
-                FillRect(hdc, ref rc, bg);
-                DeleteObject(bg);
+            RECT rc;
+            GetClientRect(overlay, out rc);
+            IntPtr bg = CreateSolidBrush(ColorKey);
+            FillRect(hdc, ref rc, bg);
+            DeleteObject(bg);
 
-                IntPtr font = GetStockObject(AnsiFixedFont);
-                IntPtr oldFont = SelectObject(hdc, font);
-                SetBkMode(hdc, TransparentBkMode);
-                IntPtr box = CreateSolidBrush(boxColor);
-                foreach (Label lb in current)
-                {
-                    string text = lb.Text ?? "";
-                    if (text.Length == 0) continue;
-                    SIZE ext;
-                    GetTextExtentPoint32W(hdc, text, text.Length, out ext);
-                    int boxH = Math.Max(ext.Cy, lineHeight);
-                    var r = new RECT
-                    {
-                        Left = lb.X,
-                        Top = lb.Y,
-                        Right = lb.X + ext.Cx + 4,
-                        Bottom = lb.Y + boxH,
-                    };
-                    FillRect(hdc, ref r, box);
-                    SetTextColor(hdc, LabelFg);
-                    TextOutW(hdc, lb.X + 2, lb.Y, text, text.Length);
-                }
-                DeleteObject(box);
-                SelectObject(hdc, oldFont);
-            }
-            finally
+            IntPtr oldFont = SelectObject(hdc, LabelFont());
+            SetBkMode(hdc, TransparentBkMode);
+            IntPtr box = CreateSolidBrush(boxColor);
+            foreach (Label lb in current)
             {
-                ReleaseDC(overlay, hdc);
+                string text = lb.Text ?? "";
+                if (text.Length == 0) continue;
+                SIZE ext;
+                GetTextExtentPoint32W(hdc, text, text.Length, out ext);
+                int boxH = Math.Max(ext.Cy, lineHeight);
+                var r = new RECT
+                {
+                    Left = lb.X,
+                    Top = lb.Y,
+                    Right = lb.X + ext.Cx + 4,
+                    Bottom = lb.Y + boxH,
+                };
+                FillRect(hdc, ref r, box);
+                SetTextColor(hdc, LabelFg);
+                TextOutW(hdc, lb.X + 2, lb.Y, text, text.Length);
             }
+            DeleteObject(box);
+            SelectObject(hdc, oldFont);
         }
 
         [UnmanagedCallersOnly]
         private static IntPtr WndProc(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
+            if (msg == WmPaint && hwnd == overlay)
+            {
+                PAINTSTRUCT ps;
+                IntPtr hdc = BeginPaint(hwnd, &ps);
+                if (hdc != IntPtr.Zero)
+                {
+                    PaintInto(hdc);
+                    EndPaint(hwnd, &ps);
+                }
+                return IntPtr.Zero;
+            }
             return DefWindowProcW(hwnd, msg, wParam, lParam);
         }
 
@@ -211,6 +240,17 @@ namespace Notemeow.Plugin
             public int Cy;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        private unsafe struct PAINTSTRUCT
+        {
+            public IntPtr Hdc;
+            public int Erase;
+            public RECT Paint;
+            public int Restore;
+            public int IncUpdate;
+            public fixed byte Reserved[32];
+        }
+
         [DllImport("kernel32.dll")]
         private static extern IntPtr GetModuleHandleW(IntPtr name);
 
@@ -248,6 +288,18 @@ namespace Notemeow.Plugin
         private static extern bool SetLayeredWindowAttributes(IntPtr hwnd, int key, byte alpha, uint flags);
 
         [DllImport("user32.dll")]
+        private static extern bool InvalidateRect(IntPtr hwnd, IntPtr rc, bool erase);
+
+        [DllImport("user32.dll")]
+        private static extern bool UpdateWindow(IntPtr hwnd);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr BeginPaint(IntPtr hwnd, PAINTSTRUCT* ps);
+
+        [DllImport("user32.dll")]
+        private static extern bool EndPaint(IntPtr hwnd, PAINTSTRUCT* ps);
+
+        [DllImport("user32.dll")]
         private static extern IntPtr DefWindowProcW(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll")]
@@ -265,8 +317,22 @@ namespace Notemeow.Plugin
         [DllImport("gdi32.dll")]
         private static extern bool DeleteObject(IntPtr obj);
 
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr GetStockObject(int obj);
+        [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr CreateFontW(
+            int height,
+            int width,
+            int escapement,
+            int orientation,
+            int weight,
+            uint italic,
+            uint underline,
+            uint strikeOut,
+            uint charSet,
+            uint outPrecision,
+            uint clipPrecision,
+            uint quality,
+            uint pitchAndFamily,
+            string faceName);
 
         [DllImport("gdi32.dll")]
         private static extern IntPtr SelectObject(IntPtr hdc, IntPtr obj);
