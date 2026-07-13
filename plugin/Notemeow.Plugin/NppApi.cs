@@ -63,6 +63,9 @@ namespace Notemeow.Plugin
         internal const int SciDeleteRange = 2645;
         internal const int SciSetTargetRange = 2686;
         internal const int SciSetCaretStyle = 2512;
+        internal const int SciPointXFromPosition = 2164;
+        internal const int SciPointYFromPosition = 2165;
+        internal const int SciTextHeight = 2279;
         internal const int SciIndicSetStyle = 2080;
         internal const int SciIndicSetFore = 2082;
         internal const int SciIndicSetUnder = 2510;
@@ -76,11 +79,21 @@ namespace Notemeow.Plugin
 
         internal const int IndicStraightBox = 8;
 
-        // Scintilla indicator slot for the grab highlight. 0-7 are lexer
-        // indicators and Notepad++'s own smart-highlight/mark features cluster
-        // in 27-31, so this sits in the free middle band; change it if a
-        // plugin you use claims it.
+        // Scintilla indicator slots. 0-7 are lexer indicators and Notepad++'s
+        // own smart-highlight/mark features cluster in 27-31, so these sit in
+        // the free middle band; change them if a plugin you use claims them.
         internal const int GrabIndicator = 12;
+        internal const int AvyMatchIndicator = 13;
+
+        internal const uint WmTimer = 0x0113;
+        internal const nuint AvyTimerId = 0xA5EF;
+        internal const uint AvyTimeoutMs = 250;
+
+        [DllImport("user32.dll")]
+        internal static extern nuint SetTimer(IntPtr hwnd, nuint id, uint elapseMs, IntPtr callback);
+
+        [DllImport("user32.dll")]
+        internal static extern bool KillTimer(IntPtr hwnd, nuint id);
 
         internal const uint WmChar = 0x0102;
         internal const uint WmKeyDown = 0x0100;

@@ -275,5 +275,59 @@ namespace Notemeow.Plugin
             int eb = ToByte(m, grab.End);
             Send(NppApi.SciIndicatorFillRange, sb, eb - sb);
         }
+
+        private bool matchIndicatorReady;
+
+        internal void HighlightMatches(List<OffsetRange> ranges)
+        {
+            if (!matchIndicatorReady)
+            {
+                Send(NppApi.SciIndicSetStyle, NppApi.AvyMatchIndicator, NppApi.IndicStraightBox);
+                Send(NppApi.SciIndicSetFore, NppApi.AvyMatchIndicator, 0x00D7FF);
+                Send(NppApi.SciIndicSetAlpha, NppApi.AvyMatchIndicator, 70);
+                Send(NppApi.SciIndicSetUnder, NppApi.AvyMatchIndicator, 1);
+                matchIndicatorReady = true;
+            }
+            int len = (int)Send(NppApi.SciGetLength);
+            Send(NppApi.SciSetIndicatorCurrent, NppApi.AvyMatchIndicator);
+            Send(NppApi.SciIndicatorClearRange, 0, len);
+            if (ranges == null || ranges.Count == 0) return;
+            Mapping m = Load();
+            foreach (OffsetRange r in ranges)
+            {
+                int sb = ToByte(m, r.Start);
+                int eb = ToByte(m, r.End);
+                if (eb > sb) Send(NppApi.SciIndicatorFillRange, sb, eb - sb);
+            }
+        }
+
+        internal void ClearMatches()
+        {
+            int len = (int)Send(NppApi.SciGetLength);
+            Send(NppApi.SciSetIndicatorCurrent, NppApi.AvyMatchIndicator);
+            Send(NppApi.SciIndicatorClearRange, 0, len);
+        }
+
+        internal int TextHeight()
+        {
+            return (int)Send(NppApi.SciTextHeight, 0);
+        }
+
+        internal List<AvyOverlay.Label> ResolveLabels(List<AvyLabel> labels)
+        {
+            var outLabels = new List<AvyOverlay.Label>();
+            if (labels == null || labels.Count == 0) return outLabels;
+            Mapping m = Load();
+            foreach (AvyLabel lb in labels)
+            {
+                int b = ToByte(m, lb.Offset);
+                int x = (int)Send(NppApi.SciPointXFromPosition, 0, b);
+                int y = (int)Send(NppApi.SciPointYFromPosition, 0, b);
+                outLabels.Add(new AvyOverlay.Label(lb.Label, x, y));
+            }
+            return outLabels;
+        }
+
+        internal IntPtr Handle => sci;
     }
 }

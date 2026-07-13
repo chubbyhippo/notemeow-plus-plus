@@ -144,6 +144,18 @@ namespace Notemeow.Plugin
             return view == 0 ? nppData.ScintillaMainHandle : nppData.ScintillaSecondHandle;
         }
 
+        private static void ArmAvyTimer(IntPtr hwnd)
+        {
+            if (Avy.IsCollecting(CurrentState()))
+            {
+                NppApi.SetTimer(hwnd, NppApi.AvyTimerId, NppApi.AvyTimeoutMs, IntPtr.Zero);
+            }
+            else
+            {
+                NppApi.KillTimer(hwnd, NppApi.AvyTimerId);
+            }
+        }
+
         private static void ShowMode(MeowState st, IntPtr sci)
         {
             NppApi.SendMessageStr(
@@ -176,9 +188,21 @@ namespace Notemeow.Plugin
                                 break;
                             }
                             if (c < ' ') break;
-                            if (Engine.HandleChar(MakeCtx(hwnd), c)) return IntPtr.Zero;
+                            if (Engine.HandleChar(MakeCtx(hwnd), c))
+                            {
+                                ArmAvyTimer(hwnd);
+                                return IntPtr.Zero;
+                            }
                             break;
                         }
+                    case NppApi.WmTimer:
+                        if ((nuint)(long)wParam == NppApi.AvyTimerId)
+                        {
+                            NppApi.KillTimer(hwnd, NppApi.AvyTimerId);
+                            Avy.FinishInput(MakeCtx(hwnd));
+                            return IntPtr.Zero;
+                        }
+                        break;
                     case NppApi.WmKeyDown:
                         {
                             int vk = (int)(long)wParam;
@@ -186,6 +210,7 @@ namespace Notemeow.Plugin
                             {
                                 if (Engine.EscapeKey(MakeCtx(hwnd)))
                                 {
+                                    NppApi.KillTimer(hwnd, NppApi.AvyTimerId);
                                     swallowEscChar = true;
                                     return IntPtr.Zero;
                                 }
@@ -487,14 +512,18 @@ namespace Notemeow.Plugin
 
             public void ShowAvyMatches(List<OffsetRange> matches)
             {
+                port.HighlightMatches(matches);
             }
 
             public void ShowAvyLabels(List<AvyLabel> labels)
             {
+                AvyOverlay.Show(port.Handle, port.ResolveLabels(labels), port.TextHeight());
             }
 
             public void ClearAvy()
             {
+                port.ClearMatches();
+                AvyOverlay.Hide();
             }
 
             public void ModeChanged(MeowState st)

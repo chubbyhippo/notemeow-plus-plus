@@ -44,7 +44,7 @@ namespace Notemeow.Core
 
         public OffsetRange Grab;
 
-        public object Avy;
+        public AvySession Avy;
 
         public Dictionary<char, Rc.Binding> RepeatMap;
 

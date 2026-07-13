@@ -22,9 +22,11 @@ What the engine covers today:
   meow's extend-an-active-selection behavior
 - the `.notemeowrc` two-layer keymap, the keypad and repeat engines, things
   and blocks, search, grab and beacon
+- the **avy jumps** — `S` (goto-char-timer) and `Q` (goto-line), a native
+  port of avy 0.5.0's label tree, timer, and subdivision
 
-Not yet: the avy jumps (`S` is unbound, `Q` is a plain goto-line for now)
-and window/panel keys.
+Not yet: window/panel keys, and the text-input prompts a few commands want
+(see [plugin/BUILD.md](plugin/BUILD.md)).
 
 ## What you get
 
@@ -160,8 +162,10 @@ All deliberate, none accidental:
   consecutive kills.
 - Block/string/defun "things" use a text scan (same-line strings skipped),
   with a hook for the host to supply a smarter defun range.
-- The avy jumps are not in yet — `S` is unbound and `Q` goes to a plain
-  goto-line prompt until they land.
+- The avy jumps (`S`/`Q`) are a native port of avy 0.5.0's goto-char-timer
+  and goto-line: same label keys (`a s d f g h j k l`), same label tree and
+  subdivision, scoped to the visible area of the current editor. Labels
+  paint in an overlay over the editor.
 
 ## Hacking on it
 

@@ -31,6 +31,7 @@ namespace Notemeow.Core
             foreach (var e in Search.Commands) commands[e.Key] = e.Value;
             foreach (var e in Structures.Commands) commands[e.Key] = e.Value;
             foreach (var e in Grab.Commands) commands[e.Key] = e.Value;
+            foreach (var e in Avy.Commands) commands[e.Key] = e.Value;
             foreach (var e in Edits.Commands) commands[e.Key] = e.Value;
             commands["meow-negative-argument"] = ctx => ctx.St.Negative = true;
             commands["negative-argument"] = ctx => ctx.St.Negative = true;

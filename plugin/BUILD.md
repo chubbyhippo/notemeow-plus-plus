@@ -54,6 +54,10 @@ NORMAL.
 - **grab + beacon**: `G` grabs the selection and the region is boxed with a
   Scintilla indicator; select inside it (`w`, `x`, `f`…) and a caret lands
   on every match (native multi-selection); `ESC` collapses
+- **avy jumps**: `S` (goto-char-timer) — type a few chars, matches box in
+  yellow, pause 0.25 s, then jump labels appear; type the label to jump.
+  `Q` (goto-line) labels the visible lines. Labels paint in a layered
+  overlay window over the editor; a single match jumps without a label
 - per-buffer state, the cheatsheet, one-undo edit groups,
   system-clipboard kill ring
 - offsets converted between Scintilla's UTF-8 bytes and the engine's
@@ -67,17 +71,19 @@ NORMAL.
   keys before the editor sees them. Clear the conflicting entries in
   *Settings → Shortcut Mapper* and the chords come alive; keep them and
   Notepad++ wins — your call, both are fine.
-- **No input prompts yet** — `Q`/`X` (goto line) and `v` (visit regexp)
-  call `meow-goto-line`/`meow-visit`, which ask for a line number or
-  regexp; the plugin has no minibuffer, so they show a status-bar note and
-  stop. Wiring a small modal input box unlocks all three; it's the next
-  UI piece.
-- **avy (`S`, and `Q` as avy-goto-line) is not ported** — the bundled rc
-  leaves `S` unbound and binds `Q` to `meow-goto-line`. avy needs to paint
-  jump labels over candidate positions, i.e. the label overlay below, so
-  it lands with that work (dbmeow's `Avy.java` is the port source).
-- Which-key, expand hints, and the avy overlays are not drawn yet; the
-  keypad works blind (`SPC ?` cheatsheet, `SPC /` describe still answer).
+- **The avy label overlay is load-verified, not eye-verified** — the DLL
+  loads and the engine is fully tested, but the label window's on-screen
+  painting (position, color-key transparency, DPI) hasn't been watched
+  live. If labels don't appear, `S`/`Q` still jump whenever your input
+  narrows to a single match (that path needs no label), and the yellow
+  match boxes still show where candidates are.
+- **No input prompts yet** — `X` (goto line via `meow-goto-line`), `v`
+  (visit regexp), and `Q`'s digit→line-number shortcut ask for text; the
+  plugin has no minibuffer, so those show a status-bar note and stop.
+  `Q`'s label jump and `S` need no prompt. A small modal input box unlocks
+  the three text paths; it's the next UI piece.
+- Which-key and expand hints are not drawn yet; the keypad works blind
+  (`SPC ?` cheatsheet, `SPC /` describe still answer).
 - `<action>(...)` targets take a numeric Notepad++ menu command id for
   now (the values from `menuCmdID.h`), e.g.
   `map <leader>xk <action>(41003)` for File → Close.
