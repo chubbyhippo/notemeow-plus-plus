@@ -1,0 +1,6 @@
+* text=auto
+*.cs text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+.notemeowrc text eol=lf
+*.csproj text eol=lf
