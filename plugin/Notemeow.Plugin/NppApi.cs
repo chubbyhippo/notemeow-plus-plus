@@ -40,6 +40,9 @@ namespace Notemeow.Plugin
         internal const int NppnShutdown = NppnFirst + 9;
         internal const int NppnBufferActivated = NppnFirst + 10;
 
+        internal const int ScnUpdateUi = 2007;
+        internal const uint ModeRefreshMsg = 0x8000 + 1;
+
         internal const int IdmFileClose = 40000 + 1000 + 3;
 
         internal const int SciInsertText = 2003;
@@ -48,6 +51,7 @@ namespace Notemeow.Plugin
         internal const int SciEndUndoAction = 2079;
         internal const int SciGetCodePage = 2137;
         internal const int SciGetReadOnly = 2140;
+        internal const int SciGetOvertype = 2187;
         internal const int SciGetFirstVisibleLine = 2152;
         internal const int SciGetModify = 2159;
         internal const int SciScrollCaret = 2169;
@@ -151,6 +155,9 @@ namespace Notemeow.Plugin
 
         [DllImport("user32.dll", EntryPoint = "SendMessageW", CharSet = CharSet.Unicode)]
         internal static extern IntPtr SendMessageStr(IntPtr hwnd, uint msg, IntPtr wParam, string lParam);
+
+        [DllImport("user32.dll")]
+        internal static extern bool PostMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll")]
         internal static extern short GetKeyState(int vKey);

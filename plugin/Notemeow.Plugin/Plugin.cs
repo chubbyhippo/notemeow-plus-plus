@@ -82,6 +82,14 @@ namespace Notemeow.Plugin
             {
                 ShowMode(CurrentState(), ActiveScintilla());
             }
+            else if (
+                hdr.Code == NppApi.ScnUpdateUi
+                && (hdr.HwndFrom == nppData.ScintillaMainHandle
+                    || hdr.HwndFrom == nppData.ScintillaSecondHandle))
+            {
+                NppApi.PostMessage(
+                    ActiveScintilla(), NppApi.ModeRefreshMsg, IntPtr.Zero, IntPtr.Zero);
+            }
         }
 
         [UnmanagedCallersOnly(EntryPoint = "messageProc")]
@@ -191,11 +199,25 @@ namespace Notemeow.Plugin
 
         private static void ShowMode(MeowState st, IntPtr sci)
         {
+            string mode = st.Mode.ToString().ToUpperInvariant();
+            NppApi.SendMessageStr(
+                nppData.NppHandle,
+                NppApi.NppmSetStatusBar,
+                (IntPtr)NppApi.StatusBarDocType,
+                "MEOW " + mode);
+            string typing =
+                st.Mode == MeowMode.Insert
+                    ? NppApi.SendMessage(
+                            sci, (uint)NppApi.SciGetOvertype, IntPtr.Zero, IntPtr.Zero)
+                        != IntPtr.Zero
+                        ? "OVR"
+                        : "INS"
+                    : mode.Substring(0, 3);
             NppApi.SendMessageStr(
                 nppData.NppHandle,
                 NppApi.NppmSetStatusBar,
                 (IntPtr)NppApi.StatusBarTypingMode,
-                "MEOW " + st.Mode.ToString().ToUpperInvariant());
+                typing);
             int style = st.Mode == MeowMode.Insert ? NppApi.CaretStyleLine : NppApi.CaretStyleBlock;
             NppApi.SendMessage(sci, (uint)NppApi.SciSetCaretStyle, (IntPtr)style, IntPtr.Zero);
         }
@@ -296,6 +318,9 @@ namespace Notemeow.Plugin
                             return IntPtr.Zero;
                         }
                         break;
+                    case NppApi.ModeRefreshMsg:
+                        ShowMode(CurrentState(), hwnd);
+                        return IntPtr.Zero;
                     default:
                         break;
                 }
