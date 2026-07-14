@@ -37,15 +37,15 @@ windows_home() {
   wslpath "$raw"
 }
 
+dotnet_has_sdk() {
+  [ -x "$1" ] && [ -n "$("$1" --list-sdks 2>/dev/null)" ]
+}
+
 windows_dotnet() {
   found=$(command -v dotnet.exe 2>/dev/null) || found=""
-  if [ -n "$found" ]; then
-    echo "$found"
-    return 0
-  fi
   home=$(windows_home) || home=""
-  for exe in "$home/scoop/apps/dotnet-sdk/current/dotnet.exe" "/mnt/c/Program Files/dotnet/dotnet.exe"; do
-    if [ -x "$exe" ]; then
+  for exe in "$found" "$home/scoop/apps/dotnet-sdk/current/dotnet.exe" "/mnt/c/Program Files/dotnet/dotnet.exe"; do
+    if dotnet_has_sdk "$exe"; then
       echo "$exe"
       return 0
     fi
@@ -70,7 +70,13 @@ build_plugin() {
     echo "the Notepad++ DLL is NativeAOT and must link on Windows: install a .NET 10 SDK there (scoop install dotnet-sdk) plus the Visual Studio C++ build tools, or build natively per plugin/BUILD.md" >&2
     exit 1
   }
-  "$dotnet_exe" publish plugin/Notemeow.Plugin -r win-x64 -c Release
+  sdk_line=$("$dotnet_exe" --list-sdks 2>/dev/null | tr -d '\r' | tail -1)
+  sdk_ver=${sdk_line%% *}
+  sdk_base=${sdk_line#*\[}
+  sdk_base=${sdk_base%\]*}
+  DOTNET_ROOT="${sdk_base%\\sdk}" MSBuildSDKsPath="$sdk_base\\$sdk_ver\\Sdks" \
+    WSLENV="${WSLENV:+$WSLENV:}DOTNET_ROOT:MSBuildSDKsPath" \
+    "$dotnet_exe" publish plugin/Notemeow.Plugin -r win-x64 -c Release
   echo "built $published_dll"
 }
 
