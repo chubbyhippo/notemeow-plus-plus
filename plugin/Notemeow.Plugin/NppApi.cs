@@ -130,6 +130,7 @@ namespace Notemeow.Plugin
         internal const int VkMenu = 0x12;
         internal const int VkOemComma = 0xBC;
         internal const int VkOemPeriod = 0xBE;
+        internal const int VkOemSemicolon = 0xBA;
 
         internal const uint CfUnicodeText = 13;
         internal const uint GmemMoveable = 0x0002;

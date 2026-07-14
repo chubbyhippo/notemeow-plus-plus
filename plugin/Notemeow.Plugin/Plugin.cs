@@ -297,6 +297,13 @@ namespace Notemeow.Plugin
                     case NppApi.WmSysKeyDown:
                         {
                             int vk = (int)(long)wParam;
+                            bool ctrlHeld = NppApi.GetKeyState(NppApi.VkControl) < 0;
+                            if (vk == NppApi.VkOemSemicolon && !ctrlHeld)
+                            {
+                                Engine.EnterKeypad(MakeCtx(hwnd));
+                                swallowSysChar = true;
+                                return IntPtr.Zero;
+                            }
                             bool shift = NppApi.GetKeyState(NppApi.VkShift) < 0;
                             string cmd = AltChord(vk, shift);
                             if (cmd != null)

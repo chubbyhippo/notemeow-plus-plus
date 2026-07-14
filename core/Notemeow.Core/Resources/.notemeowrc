@@ -101,7 +101,7 @@ mmap q <action>(notemeow.hideView)
 map <leader><Space> <action>(IDM_VIEW_SWITCHTO_DOCLIST)
 desc <leader><Space> document list
 
-desc <leader>x files
+desc <leader>x files / macro
 map <leader>xn <action>(IDM_FILE_NEW)
 map <leader>xf <action>(IDM_FILE_OPEN)
 map <leader>xs <action>(IDM_FILE_SAVE)
@@ -109,15 +109,21 @@ map <leader>xS <action>(IDM_FILE_SAVEALL)
 map <leader>xk <action>(IDM_FILE_CLOSE)
 map <leader>xK <action>(IDM_FILE_CLOSEALL)
 map <leader>xr <action>(IDM_FILE_RELOAD)
+map <leader>xd <action>(IDM_VIEW_SWITCHTO_FILEBROWSER)
+" x e = C-x e: replay the last recorded macro (Macro menu records with
+" Ctrl+Shift+R)
+map <leader>xe <action>(IDM_MACRO_PLAYBACKRECORDEDMACRO)
 
 desc <leader>w windows
 map <leader>wn <action>(IDM_VIEW_TAB_NEXT)
 map <leader>wp <action>(IDM_VIEW_TAB_PREV)
 map <leader>w. <action>(IDM_VIEW_TAB_NEXT)
 map <leader>w, <action>(IDM_VIEW_TAB_PREV)
-" w = focus the other view, W = send the document to the other view
+" w = focus the other view, W = send the document to the other view,
+" v = clone it there (the split-editor analog: same document in both views)
 map <leader>ww <action>(IDM_VIEW_SWITCHTO_OTHER_VIEW)
 map <leader>wW <action>(IDM_VIEW_GOTO_ANOTHER_VIEW)
+map <leader>wv <action>(IDM_VIEW_CLONE_TO_ANOTHER_VIEW)
 " h/j/k/l: directional view focus from the caret (main <-> second view)
 map <leader>wh <action>(notemeow.windmoveLeft)
 map <leader>wj <action>(notemeow.windmoveDown)
@@ -139,19 +145,45 @@ desc <leader>j jump
 map <leader>jl <action>(IDM_SEARCH_GOTOLINE)
 map <leader>jb <action>(IDM_SEARCH_GOTOMATCHINGBRACE)
 
-" SPC c m / M — edit and reload ~/.notemeowrc; reload saves a dirty rc tab
-" first
-desc <leader>c config
+" SPC c — C-c commands; c m / c M edit and reload ~/.notemeowrc (reload
+" saves a dirty rc tab first), c l copies the full path (CopyReference)
+desc <leader>c C-c · commands / config
+map <leader>cf <action>(IDM_FILE_OPEN)
+map <leader>cs <action>(IDM_FILE_SAVEALL)
+map <leader>ck <action>(IDM_FILE_CLOSE)
+map <leader>cr <action>(IDM_SEARCH_FINDINFILES)
+map <leader>cl <action>(IDM_EDIT_FULLPATHTOCLIP)
 map <leader>cm <action>(notemeow.editRc)
 map <leader>cM <action>(notemeow.reloadRc)
+
+desc <leader>cj C-c j · avy jump
+map <leader>cjw avy-goto-char-timer
+map <leader>cjc avy-goto-char-timer
+map <leader>cjl avy-goto-line
 
 " SPC m = M-: meta — m o / m g = the avy jumps on this prefix
 desc <leader>m meta
 map <leader>mo avy-goto-char-timer
 map <leader>mg avy-goto-line
 
+desc <leader>h post-it (hide all UI)
+map <leader>h <action>(IDM_VIEW_POSTIT)
+
+desc <leader>o open
+map <leader>of <action>(IDM_FILE_OPEN)
+map <leader>oe <action>(IDM_FILE_OPEN_FOLDER)
+map <leader>ot <action>(IDM_FILE_OPEN_CMD)
+
+desc <leader>q close editor tab
+map <leader>q <action>(IDM_FILE_CLOSE)
+
+desc <leader>r run
+map <leader>rr <action>(IDM_EXECUTE)
+map <leader>rm <action>(IDM_MACRO_RUNMULTIMACRODLG)
+
 " SPC b — bookmarks: m toggles a line bookmark, n/p jump, c clears them all
-desc <leader>b bookmark (m set / n,p jump)
+desc <leader>b bookmark (m set / n,p jump) · b buffers
+map <leader>bb <action>(IDM_VIEW_SWITCHTO_DOCLIST)
 map <leader>bm <action>(IDM_SEARCH_TOGGLE_BOOKMARK)
 map <leader>bn <action>(IDM_SEARCH_NEXT_BOOKMARK)
 map <leader>bp <action>(IDM_SEARCH_PREV_BOOKMARK)
