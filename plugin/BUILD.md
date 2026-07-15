@@ -17,12 +17,12 @@ dotnet publish plugin\Notemeow.Plugin -r win-x64 -c Release
 The native DLL lands at
 `plugin\Notemeow.Plugin\bin\Release\net10.0\win-x64\publish\Notemeow.dll`.
 
-From WSL on the same machine, the repo root's `./setup.sh plugin` runs
+From WSL on the same machine, the repo root's `./setup.sh --build-only` runs
 this same publish through the Windows .NET SDK (scoop's `dotnet-sdk` or
-`C:\Program Files\dotnet` — the requirements above still apply), and
-`./setup.sh plugin install` copies the result into a scoop or standard
-`plugins\Notemeow\`. Close Notepad++ before installing; a running
-instance locks the loaded DLL.
+`C:\Program Files\dotnet` — the requirements above still apply); a bare
+`./setup.sh` builds and then copies the result into a scoop or standard
+`plugins\Notemeow\` (add `--skip-build` to install a DLL you already built).
+Close Notepad++ before installing; a running instance locks the loaded DLL.
 
 ## Install
 

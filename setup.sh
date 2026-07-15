@@ -22,9 +22,11 @@ cd "$(dirname "$0")"
 published_dll="plugin/Notemeow.Plugin/bin/Release/net10.0/win-x64/publish/Notemeow.dll"
 
 usage() {
-  echo "usage: ./setup.sh                 run the engine behavior suite"
-  echo "       ./setup.sh plugin          build the Notepad++ DLL (from WSL, via the Windows .NET SDK)"
-  echo "       ./setup.sh plugin install  build, then copy the DLL into Notepad++'s plugins folder"
+  echo "usage: ./setup.sh              run the suite, build the Notepad++ DLL, and install it"
+  echo "       ./setup.sh --core-only  only the engine behavior suite (no Notepad++ needed)"
+  echo "       ./setup.sh --build-only build the DLL, install nothing"
+  echo "       ./setup.sh --skip-build install the already-built DLL"
+  echo "       ./setup.sh -h           show this help and exit"
 }
 
 run_suite() {
@@ -81,6 +83,10 @@ build_plugin() {
 }
 
 install_plugin() {
+  [ -f "$published_dll" ] || {
+    echo "error: $published_dll not built — run without --skip-build" >&2
+    exit 1
+  }
   plugins_dir=$(notepadplusplus_plugins_dir) || {
     echo "error: no Notepad++ found under scoop or Program Files; copy $published_dll into <Notepad++>/plugins/Notemeow/ yourself" >&2
     exit 1
@@ -94,15 +100,31 @@ install_plugin() {
   fi
 }
 
-case "${1:-}" in
-  "") run_suite ;;
-  plugin)
-    case "${2:-}" in
-      "") build_plugin ;;
-      install) build_plugin; install_plugin ;;
-      *) usage >&2; exit 1 ;;
-    esac
-    ;;
-  help|-h|--help) usage ;;
-  *) usage >&2; exit 1 ;;
-esac
+core_only=0 do_build=1 do_install=1
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --core-only)  core_only=1 ;;
+    --build-only) do_install=0 ;;
+    --skip-build) do_build=0 ;;
+    -h|--help)    usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+  shift
+done
+
+run_suite
+
+if [ "$core_only" -eq 1 ]; then
+  exit 0
+fi
+
+if [ "$do_build" -eq 1 ]; then
+  build_plugin
+fi
+
+if [ "$do_install" -eq 0 ]; then
+  echo "install later with: ./setup.sh --skip-build"
+  exit 0
+fi
+
+install_plugin

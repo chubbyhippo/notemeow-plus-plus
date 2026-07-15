@@ -109,16 +109,17 @@ Toolchain pinned in `mise.toml` (.NET SDK 10):
 
 ```bash
 cd notemeow-plus-plus
-./setup.sh                  # run the behavior suite (about 0.3 s)
-./setup.sh plugin           # WSL: build the Notepad++ DLL via the Windows .NET SDK
-./setup.sh plugin install   # ...and copy it into Notepad++'s plugins folder
+./setup.sh                  # run the suite, build the DLL, and install it into Notepad++
+./setup.sh --core-only      # just the behavior suite (about 0.3 s; no Notepad++ needed)
+./setup.sh --build-only     # build the DLL via the Windows .NET SDK, install nothing
+./setup.sh --skip-build     # install the already-built DLL
 ```
 
 On machines without libicu, `mise.toml` sets
 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` so the SDK runs anyway;
 `apt install libicu-dev` is the clean fix. Building and installing the
 Notepad++ plugin natively on Windows is covered in
-[plugin/BUILD.md](plugin/BUILD.md); from WSL, `./setup.sh plugin` drives
+[plugin/BUILD.md](plugin/BUILD.md); from WSL, `./setup.sh --build-only` drives
 the same build through the Windows .NET SDK, so the Windows-side
 requirements (a .NET 10 SDK and the Visual Studio C++ build tools) still
 apply.
@@ -207,7 +208,7 @@ through rc bindings.
 Behavior is pinned by the specs in `core/Notemeow.Core.Tests`
 (given/whenKeys/then…), cross-checked against meow's source. Treat a red
 spec as "you changed meow's semantics", not "update the test". Run them
-with `./setup.sh`.
+with `./setup.sh --core-only`.
 
 ## License
 
