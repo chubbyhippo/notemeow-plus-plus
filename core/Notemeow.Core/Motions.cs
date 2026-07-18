@@ -48,8 +48,16 @@ namespace Notemeow.Core
                 ["meow-till"] = ctx => ctx.St.Pending = Pending.Till,
                 ["forward-char"] = ctx => CharOrExpand(ctx, ctx.St.TakeCount(1)),
                 ["backward-char"] = ctx => CharOrExpand(ctx, -ctx.St.TakeCount(1)),
-                ["next-line"] = ctx => LineOrExpand(ctx, ctx.St.TakeCount(1)),
-                ["previous-line"] = ctx => LineOrExpand(ctx, -ctx.St.TakeCount(1)),
+                ["next-line"] = ctx =>
+                {
+                    LineOrExpand(ctx, ctx.St.TakeCount(1));
+                    ctx.St.LastCommand = "next-line";
+                },
+                ["previous-line"] = ctx =>
+                {
+                    LineOrExpand(ctx, -ctx.St.TakeCount(1));
+                    ctx.St.LastCommand = "previous-line";
+                },
                 ["move-beginning-of-line"] = ctx => MoveToOrExpand(ctx, SelType.Char, LineStartTarget),
                 ["move-end-of-line"] = ctx => MoveToOrExpand(ctx, SelType.Char, LineEndTarget),
                 ["forward-word"] = ctx => WordOrExpand(ctx, ctx.St.TakeCount(1)),
@@ -140,7 +148,7 @@ namespace Notemeow.Core
                     int len = text.Length;
                     if (!counted) return top ? 0 : len;
                     int tenth = len * n / 10;
-                    int raw = Text.Clamp(top ? 1 + tenth : len - tenth, 0, len);
+                    int raw = Text.Clamp(top ? tenth : len - tenth, 0, len);
                     return NextLineStart(text, raw);
                 });
         }
@@ -160,6 +168,7 @@ namespace Notemeow.Core
         private static readonly HashSet<string> Vertical = new HashSet<string>
         {
             "meow-next", "meow-prev", "meow-next-expand", "meow-prev-expand",
+            "next-line", "previous-line",
         };
 
         private static bool CharSelActive(Ctx ctx)
