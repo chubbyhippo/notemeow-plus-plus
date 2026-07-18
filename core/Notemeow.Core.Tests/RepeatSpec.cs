@@ -227,5 +227,21 @@ namespace Notemeow.Core.Tests
             WhenKeys("w");
             Assert.Null(Engine.RepeatMap);
         }
+
+        [Fact(DisplayName =
+            "given the bundled rc then SPC x z repeats the last command and bare z keeps repeating like Emacs C-x z")]
+        public void SpcXzRepeatsAndBareZContinues()
+        {
+            Given("delete run", "<caret>aaaaa");
+            WhenKeys("d");
+            ThenText("aaaa");
+            WhenKeys(" xz");
+            ThenText("aaa");
+            WhenKeys("z");
+            ThenText("aa");
+            WhenKeys("z");
+            ThenText("a");
+            ThenMode(MeowMode.Normal);
+        }
     }
 }

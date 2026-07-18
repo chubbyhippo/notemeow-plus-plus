@@ -104,6 +104,8 @@ desc <leader><Space> document list
 desc <leader>x files / macro
 map <leader>xn <action>(IDM_FILE_NEW)
 map <leader>xf <action>(IDM_FILE_OPEN)
+" SPC x z = C-x z: repeat the last command (then bare z keeps repeating)
+map <leader>xz repeat
 map <leader>xs <action>(IDM_FILE_SAVE)
 map <leader>xS <action>(IDM_FILE_SAVEALL)
 map <leader>xk <action>(IDM_FILE_CLOSE)
@@ -242,3 +244,6 @@ repeat tab n <action>(IDM_VIEW_TAB_NEXT)
 repeat tab p <action>(IDM_VIEW_TAB_PREV)
 repeat tab . <action>(IDM_VIEW_TAB_NEXT)
 repeat tab , <action>(IDM_VIEW_TAB_PREV)
+
+" Emacs C-x z: after repeat (SPC x z or '), bare z keeps repeating
+repeat replay z repeat
