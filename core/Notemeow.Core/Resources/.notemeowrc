@@ -123,7 +123,7 @@ map <leader>w. <action>(IDM_VIEW_TAB_NEXT)
 map <leader>w, <action>(IDM_VIEW_TAB_PREV)
 " w = focus the other view, W = send the document to the other view,
 " v = clone it there (the split-editor analog: same document in both views)
-map <leader>ww <action>(IDM_VIEW_SWITCHTO_OTHER_VIEW)
+map <leader>ww <action>(notemeow.aceWindow)
 map <leader>wW <action>(IDM_VIEW_GOTO_ANOTHER_VIEW)
 map <leader>wv <action>(IDM_VIEW_CLONE_TO_ANOTHER_VIEW)
 " h/j/k/l: directional view focus from the caret (main <-> second view)

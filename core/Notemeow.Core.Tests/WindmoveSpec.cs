@@ -101,5 +101,14 @@ namespace Notemeow.Core.Tests
             Assert.Equal("notemeow.windmoveUp", d.Keypad["wk"].Action);
             Assert.Equal("notemeow.windmoveRight", d.Keypad["wl"].Action);
         }
+
+        [Fact(DisplayName = "given one two or many windows then ace-window plans self other or labels")]
+        public void AceWindowPlansSelfOtherOrLabels()
+        {
+            Assert.Equal(AceWindow.Plan.None, AceWindow.PlanFor(1));
+            Assert.Equal(AceWindow.Plan.Other, AceWindow.PlanFor(2));
+            Assert.Equal(AceWindow.Plan.Labels, AceWindow.PlanFor(3));
+            Assert.Equal(AceWindow.Plan.Labels, AceWindow.PlanFor(9));
+        }
     }
 }

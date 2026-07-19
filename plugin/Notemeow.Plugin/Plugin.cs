@@ -597,6 +597,11 @@ namespace Notemeow.Plugin
                     ReloadRc();
                     return;
                 }
+                if (idText == "notemeow.aceWindow")
+                {
+                    AceWindowRun();
+                    return;
+                }
                 if (idText == "notemeow.windmoveLeft")
                 {
                     WindmoveTo(Windmove.Dir.Left);
@@ -635,6 +640,15 @@ namespace Notemeow.Plugin
                 string plan = Windmove.Plan(dir, CurrentViewLayout());
                 if (plan == null) Hint(Windmove.NoWindowMessage(dir));
                 else RunCommand(plan);
+            }
+
+            private void AceWindowRun()
+            {
+                int windowCount = CurrentViewLayout().TwoViews ? 2 : 1;
+                if (AceWindow.PlanFor(windowCount) == AceWindow.Plan.Other)
+                {
+                    RunCommand("notemeow.focusOtherView");
+                }
             }
 
             public void ScheduleWhichKey(string kind, string buffer)
