@@ -66,6 +66,8 @@ namespace Notemeow.Core
                 ["backward-sentence"] = ctx => SentenceOrExpand(ctx, -ctx.St.TakeCount(1)),
                 ["beginning-of-buffer"] = ctx => BufferBoundary(ctx, true),
                 ["end-of-buffer"] = ctx => BufferBoundary(ctx, false),
+                ["forward-paragraph"] = ctx => ParagraphOrExpand(ctx, ctx.St.TakeCount(1)),
+                ["backward-paragraph"] = ctx => ParagraphOrExpand(ctx, -ctx.St.TakeCount(1)),
             };
             return commands;
         }
@@ -134,6 +136,17 @@ namespace Notemeow.Core
                     n >= 0
                         ? Text.NextSentenceEnd(text, off, n)
                         : Text.PrevSentenceStart(text, off, -n));
+        }
+
+        private static void ParagraphOrExpand(Ctx ctx, int n)
+        {
+            MoveToOrExpand(
+                ctx,
+                SelType.Char,
+                (text, off) =>
+                    n >= 0
+                        ? Text.NextParagraphEnd(text, off, n)
+                        : Text.PrevParagraphStart(text, off, -n));
         }
 
         private static void BufferBoundary(Ctx ctx, bool top)

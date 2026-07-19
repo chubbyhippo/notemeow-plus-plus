@@ -366,6 +366,8 @@ namespace Notemeow.Plugin
                 case 'D': return "kill-word";
                 case NppApi.VkOemComma: return shift ? "beginning-of-buffer" : null;
                 case NppApi.VkOemPeriod: return shift ? "end-of-buffer" : null;
+                case NppApi.VkOemOpenBracket: return shift ? "backward-paragraph" : null;
+                case NppApi.VkOemCloseBracket: return shift ? "forward-paragraph" : null;
                 default: return null;
             }
         }

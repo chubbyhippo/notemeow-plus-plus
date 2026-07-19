@@ -89,7 +89,10 @@ it, anchored exactly like meow's own `H J K L` expand — so `w` then
 `Ctrl+f Ctrl+f` grows the marked word one character at a time, and `;`
 flips which end subsequent chords grow from. `Alt+Shift+,` / `Alt+Shift+.`
 are `beginning/end-of-buffer` (a count lands N/10 of the way in, snapping
-to the next line start), `Alt+u` / `Alt+l` / `Alt+c` are
+to the next line start), `Alt+Shift+[` / `Alt+Shift+]` are
+`backward/forward-paragraph` (blank-line-delimited paragraphs — forward
+lands on the separator line, backward on the paragraph start), `Alt+u` /
+`Alt+l` / `Alt+c` are
 `upcase/downcase/capitalize-word` (a negative count — `-` then the chord —
 reaches back without moving the caret), and `Alt+d` is `kill-word` (into
 the clipboard). The chords answer in NORMAL and yield to Notepad++'s own

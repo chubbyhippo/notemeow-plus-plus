@@ -150,6 +150,67 @@ namespace Notemeow.Core
             return i;
         }
 
+        private static int LineStartAt(string text, int offset)
+        {
+            int i = offset;
+            while (i > 0 && text[i - 1] != '\n') i--;
+            return i;
+        }
+
+        private static int FollowingLineStart(string text, int bol)
+        {
+            int i = bol;
+            while (i < text.Length && text[i] != '\n') i++;
+            return i < text.Length ? i + 1 : i;
+        }
+
+        private static bool BlankLineAt(string text, int bol)
+        {
+            int i = bol;
+            while (i < text.Length && text[i] != '\n')
+            {
+                if (!char.IsWhiteSpace(text[i])) return false;
+                i++;
+            }
+            return true;
+        }
+
+        public static int NextParagraphEnd(string text, int from, int n)
+        {
+            int pos = Clamp(from, 0, text.Length);
+            for (int k = 0; k < n; k++)
+            {
+                int i = LineStartAt(text, pos);
+                while (i < text.Length && BlankLineAt(text, i)) i = FollowingLineStart(text, i);
+                while (i < text.Length && !BlankLineAt(text, i)) i = FollowingLineStart(text, i);
+                pos = i;
+            }
+            return pos;
+        }
+
+        public static int PrevParagraphStart(string text, int from, int n)
+        {
+            int pos = Clamp(from, 0, text.Length);
+            for (int k = 0; k < n; k++)
+            {
+                if (pos > 0)
+                {
+                    int start = ParagraphStartBefore(text, pos);
+                    pos = start < pos ? start : ParagraphStartBefore(text, start - 1);
+                }
+            }
+            return pos;
+        }
+
+        private static int ParagraphStartBefore(string text, int offset)
+        {
+            int i = LineStartAt(text, offset);
+            while (i > 0 && BlankLineAt(text, i)) i = LineStartAt(text, i - 1);
+            while (i > 0 && !BlankLineAt(text, LineStartAt(text, i - 1))) i = LineStartAt(text, i - 1);
+            bool prevLineEmpty = i > 0 && text[i - 1] == '\n' && (i == 1 || text[i - 2] == '\n');
+            return prevLineEmpty ? i - 1 : i;
+        }
+
         public static class Words
         {
             public static int NextEnd(string text, int from, int n, Func<char, bool> pred)

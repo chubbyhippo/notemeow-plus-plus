@@ -51,7 +51,8 @@ NORMAL.
 - `ESC` back to NORMAL (and collapsing extra selections)
 - the **Alt chord layer** in NORMAL: `Alt+f/b` word, `Alt+a/e` sentence,
   `Alt+u/l/c` case, `Alt+d` kill-word, `Alt+Shift+,` / `Alt+Shift+.`
-  buffer start/end — consumed before the menu bar sees them, so `Alt+f`
+  buffer start/end, `Alt+Shift+[` / `Alt+Shift+]` paragraph back/forward —
+  consumed before the menu bar sees them, so `Alt+f`
   moves instead of opening the File menu (INSERT gives them back)
 - the mode shown two ways, the Emacs+meow way: a **block caret** in
   NORMAL / MOTION / KEYPAD and a **line caret** in INSERT

@@ -359,5 +359,111 @@ namespace Notemeow.Core.Tests
             ThenCaretAt(22);
             ThenNoSelection();
         }
+
+        [Fact(DisplayName =
+            "given no selection when forward-paragraph then the caret lands on the separator blank line")]
+        public void ForwardParagraphLandsOnSeparatorBlankLine()
+        {
+            Given("two paragraphs", "a<caret>aa\nbbb\n\nccc");
+            WhenCommand("forward-paragraph");
+            ThenCaretAt(8);
+            ThenNoSelection();
+        }
+
+        [Fact(DisplayName =
+            "given no selection when backward-paragraph then the caret lands on the empty line joining the paragraph start")]
+        public void BackwardParagraphLandsOnEmptyLineJoiningStart()
+        {
+            Given("two paragraphs", "aaa\n\nbb<caret>b");
+            WhenCommand("backward-paragraph");
+            ThenCaretAt(4);
+            ThenNoSelection();
+        }
+
+        [Fact(DisplayName =
+            "given a caret on a blank line when forward-paragraph then it crosses to the next paragraph end")]
+        public void ForwardParagraphFromBlankLineCrossesToNextEnd()
+        {
+            Given("blank line between paragraphs", "aaa\n<caret>\nbbb\n\nccc");
+            WhenCommand("forward-paragraph");
+            ThenCaretAt(9);
+            ThenNoSelection();
+        }
+
+        [Fact(DisplayName =
+            "given a caret on a blank line when backward-paragraph then it lands at the previous paragraph start")]
+        public void BackwardParagraphFromBlankLineLandsAtPreviousStart()
+        {
+            Given("blank line after two-line paragraph", "aaa\nbbb\n<caret>\nccc");
+            WhenCommand("backward-paragraph");
+            ThenCaretAt(0);
+            ThenNoSelection();
+        }
+
+        [Fact(DisplayName =
+            "given a whitespace-only separator when backward-paragraph then the caret stops at the paragraph text start")]
+        public void BackwardParagraphStopsAtTextStartAfterWhitespaceSeparator()
+        {
+            Given("space-only separator line", "aaa\n \nbb<caret>b");
+            WhenCommand("backward-paragraph");
+            ThenCaretAt(6);
+            ThenNoSelection();
+        }
+
+        [Fact(DisplayName =
+            "given consecutive empty lines when backward-paragraph then only the adjacent one joins the paragraph start")]
+        public void BackwardParagraphJoinsOnlyAdjacentEmptyLine()
+        {
+            Given("two empty separator lines", "aaa\n\n\nbb<caret>b");
+            WhenCommand("backward-paragraph");
+            ThenCaretAt(5);
+            ThenNoSelection();
+        }
+
+        [Fact(DisplayName =
+            "given a count when forward-paragraph then the caret walks that many paragraph ends")]
+        public void CountedForwardParagraphWalksParagraphEnds()
+        {
+            Given("three paragraphs", "a<caret>aa\n\nbbb\n\nccc");
+            WhenKeys("2");
+            WhenCommand("forward-paragraph");
+            ThenCaretAt(9);
+            ThenNoSelection();
+        }
+
+        [Fact(DisplayName =
+            "given the last paragraph when forward-paragraph then the caret goes to point-max")]
+        public void ForwardParagraphAtLastParagraphGoesToPointMax()
+        {
+            Given("two paragraphs", "aaa\n\nbb<caret>b");
+            WhenCommand("forward-paragraph");
+            ThenCaretAt(8);
+            ThenNoSelection();
+        }
+
+        [Fact(DisplayName =
+            "given w then forward-paragraph extends the selection through the paragraph end")]
+        public void ForwardParagraphExtendsSelectionThroughEnd()
+        {
+            Given("paragraph then another", "<caret>hello world\n\nnext");
+            WhenKeys("w");
+            ThenSelection("hello");
+            WhenCommand("forward-paragraph");
+            ThenSelection("hello world\n");
+            ThenSelType(SelType.Char);
+            ThenCaretAtSelectionEnd();
+        }
+
+        [Fact(DisplayName =
+            "given w then backward-paragraph extends the selection back past the paragraph start")]
+        public void BackwardParagraphExtendsSelectionBackPastStart()
+        {
+            Given("paragraph after a blank line", "aaa\n\nhello wo<caret>rld");
+            WhenKeys("w");
+            ThenSelection("world");
+            WhenCommand("backward-paragraph");
+            ThenSelection("\nhello ");
+            ThenCaretAtSelectionStart();
+        }
     }
 }
