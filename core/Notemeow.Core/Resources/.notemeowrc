@@ -105,6 +105,7 @@ desc <leader>x files / macro
 map <leader>xn <action>(IDM_FILE_NEW)
 map <leader>xf <action>(IDM_FILE_OPEN)
 map <leader>xj <action>(IDM_FILE_CONTAININGFOLDERASWORKSPACE)
+map <leader>xq <action>(IDM_EDIT_TOGGLEREADONLY)
 " SPC x z = C-x z: repeat the last command (then bare z keeps repeating)
 map <leader>xz repeat
 map <leader>xs <action>(IDM_FILE_SAVE)
