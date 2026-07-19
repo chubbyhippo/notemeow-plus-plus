@@ -80,7 +80,16 @@ namespace Notemeow.Plugin
             }
             else if (hdr.Code == NppApi.NppnBufferActivated || hdr.Code == NppApi.NppnReady)
             {
+                ScintillaPort.Invalidate(nppData.ScintillaMainHandle);
+                ScintillaPort.Invalidate(nppData.ScintillaSecondHandle);
                 ShowMode(CurrentState(), ActiveScintilla());
+            }
+            else if (
+                hdr.Code == NppApi.ScnModified
+                && (hdr.HwndFrom == nppData.ScintillaMainHandle
+                    || hdr.HwndFrom == nppData.ScintillaSecondHandle))
+            {
+                ScintillaPort.Invalidate(hdr.HwndFrom);
             }
             else if (
                 hdr.Code == NppApi.ScnUpdateUi

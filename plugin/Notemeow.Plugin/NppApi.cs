@@ -41,6 +41,7 @@ namespace Notemeow.Plugin
         internal const int NppnBufferActivated = NppnFirst + 10;
 
         internal const int ScnUpdateUi = 2007;
+        internal const int ScnModified = 2008;
         internal const uint ModeRefreshMsg = 0x8000 + 1;
 
         internal const int IdmFileClose = 40000 + 1000 + 3;

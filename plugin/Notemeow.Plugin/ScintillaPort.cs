@@ -56,8 +56,17 @@ namespace Notemeow.Plugin
             public int[] ByteToChar;
         }
 
+        private static readonly Dictionary<IntPtr, Mapping> Cache =
+            new Dictionary<IntPtr, Mapping>();
+
+        internal static void Invalidate(IntPtr sciHwnd)
+        {
+            Cache.Remove(sciHwnd);
+        }
+
         private unsafe Mapping Load()
         {
+            if (Cache.TryGetValue(sci, out Mapping cached)) return cached;
             int byteLen = (int)Send(NppApi.SciGetLength);
             var bytes = new byte[byteLen];
             if (byteLen > 0)
@@ -111,12 +120,14 @@ namespace Notemeow.Plugin
             }
             byteToChar[byteLen] = sb.Length;
             charToByteList.Add(byteLen);
-            return new Mapping
+            var mapping = new Mapping
             {
                 Text = sb.ToString(),
                 CharToByte = charToByteList.ToArray(),
                 ByteToChar = byteToChar,
             };
+            Cache[sci] = mapping;
+            return mapping;
         }
 
         private static int Utf8SeqLen(byte b)
@@ -222,6 +233,7 @@ namespace Notemeow.Plugin
             finally
             {
                 Send(NppApi.SciEndUndoAction);
+                Invalidate(sci);
             }
         }
 

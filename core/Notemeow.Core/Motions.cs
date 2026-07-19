@@ -319,7 +319,10 @@ namespace Notemeow.Core
             int e = b[1];
             if (neg) Selections.Select(ctx, WordType(symbol), e, s, true);
             else Selections.Select(ctx, WordType(symbol), s, e, true);
-            Search.Push(ctx.St, "\\b" + Text.EscapeRegExp(text.Substring(s, e - s)) + "\\b");
+            string quoted = Text.EscapeRegExp(text.Substring(s, e - s));
+            string pattern =
+                symbol ? "(?<![\\w$])" + quoted + "(?![\\w$])" : "\\b" + quoted + "\\b";
+            Search.Push(ctx.St, pattern);
         }
 
         private static void Line(Ctx ctx)

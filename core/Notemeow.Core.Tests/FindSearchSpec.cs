@@ -178,5 +178,16 @@ namespace Notemeow.Core.Tests
             WhenKeys("vn");
             Assert.Equal(17, SelMin());
         }
+
+        [Fact(DisplayName = "given W on a dollar symbol then n finds the next symbol occurrence")]
+        public void DollarSymbolMarkThenNFindsNext()
+        {
+            Given("dollar symbols", "$<caret>foo bar $foo");
+            WhenKeys("W");
+            ThenSelection("$foo");
+            WhenKeys("n");
+            ThenSelection("$foo");
+            ThenCaretAt(13);
+        }
     }
 }
