@@ -465,5 +465,14 @@ namespace Notemeow.Core.Tests
             ThenSelection("\nhello ");
             ThenCaretAtSelectionStart();
         }
+
+        [Fact(DisplayName = "given a CRLF document when move-end-of-line then the caret stops before the carriage return")]
+        public void CrlfMoveEndOfLineStopsBeforeCarriageReturn()
+        {
+            Given("two crlf lines", "a<caret>b\r\ncd");
+            WhenCommand("move-end-of-line");
+            ThenCaretAt(2);
+            ThenNoSelection();
+        }
     }
 }

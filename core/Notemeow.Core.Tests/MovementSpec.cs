@@ -166,5 +166,15 @@ namespace Notemeow.Core.Tests
             WhenKeys("k");
             ThenCaretAt(0);
         }
+
+        [Fact(DisplayName = "given a CRLF document then the goal column clamps before the carriage return")]
+        public void CrlfGoalColumnClampsBeforeCarriageReturn()
+        {
+            Given("crlf long short long", "abc<caret>d\r\nx\r\nefgh");
+            WhenKeys("j");
+            ThenCaretAt(7);
+            WhenKeys("j");
+            ThenCaretAt(12);
+        }
     }
 }

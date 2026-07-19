@@ -376,5 +376,13 @@ namespace Notemeow.Core.Tests
             WhenKeys("g");
             ThenNoSelection();
         }
+
+        [Fact(DisplayName = "given a CRLF document then x selects the line content without the delimiter")]
+        public void CrlfLineSelectsContentWithoutDelimiter()
+        {
+            Given("two crlf lines", "a<caret>b\r\ncd");
+            WhenKeys("x");
+            ThenSelection("ab");
+        }
     }
 }

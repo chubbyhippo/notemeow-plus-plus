@@ -457,5 +457,22 @@ namespace Notemeow.Core.Tests
             ThenCaretAt(6);
             ThenClipboard("world");
         }
+
+        [Fact(DisplayName = "given a CRLF document then killing a line selection takes the whole delimiter")]
+        public void CrlfKillLineSelectionTakesWholeDelimiter()
+        {
+            Given("two crlf lines", "a<caret>b\r\ncd");
+            WhenKeys("xs");
+            ThenText("cd");
+            ThenClipboard("ab\r\n");
+        }
+
+        [Fact(DisplayName = "given a CRLF document then kill-line at the content end removes the whole delimiter")]
+        public void CrlfKillLineAtContentEndRemovesWholeDelimiter()
+        {
+            Given("two crlf lines", "ab<caret>\r\ncd");
+            WhenKeys("s");
+            ThenText("abcd");
+        }
     }
 }

@@ -68,7 +68,8 @@ namespace Notemeow.Core
         {
             int s = LineStart(text, line);
             int nl = text.IndexOf('\n', Math.Min(s, text.Length));
-            return nl < 0 ? text.Length : nl;
+            if (nl < 0) return text.Length;
+            return nl > s && text[nl - 1] == '\r' ? nl - 1 : nl;
         }
 
         public static bool IsWordChar(char c)

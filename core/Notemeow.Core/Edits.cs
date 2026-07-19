@@ -240,13 +240,14 @@ namespace Notemeow.Core
             ctx.St.SelType = SelType.None;
         }
 
-        private static int[] KillRange(Ctx ctx, SelRange sel, int textLen)
+        private static int[] KillRange(Ctx ctx, SelRange sel, string text)
         {
             int lo = Math.Min(sel.Anchor, sel.Active);
             int hi = Math.Max(sel.Anchor, sel.Active);
-            if (ctx.St.SelType == SelType.Line && sel.Active >= sel.Anchor && hi < textLen)
+            if (ctx.St.SelType == SelType.Line && sel.Active >= sel.Anchor && hi < text.Length)
             {
-                hi++;
+                if (text[hi] == '\r') hi++;
+                if (hi < text.Length && text[hi] == '\n') hi++;
             }
             return new[] { lo, hi };
         }
@@ -268,7 +269,7 @@ namespace Notemeow.Core
             var joined = new StringBuilder();
             for (int i = 0; i < regions.Count; i++)
             {
-                int[] r = KillRange(ctx, regions[i], text.Length);
+                int[] r = KillRange(ctx, regions[i], text);
                 if (i > 0) joined.Append('\n');
                 joined.Append(text, r[0], r[1] - r[0]);
             }
@@ -295,7 +296,7 @@ namespace Notemeow.Core
                     (sel, lo, hi) =>
                     {
                         if (lo == hi) return new Computed(null, sel);
-                        int[] r = KillRange(ctx, sel, text.Length);
+                        int[] r = KillRange(ctx, sel, text);
                         return new Computed(
                             new TextEdit(r[0], r[1], ""), new SelRange(r[0], r[0]));
                     });
@@ -304,8 +305,9 @@ namespace Notemeow.Core
             }
             if (text.Length == 0) return;
             int caret = prim.Active;
-            int eol = Text.LineEnd(text, Text.LineOfOffset(text, caret));
-            int end = caret == eol ? Math.Min(eol + 1, text.Length) : eol;
+            int ln = Text.LineOfOffset(text, caret);
+            int eol = Text.LineEnd(text, ln);
+            int end = caret == eol ? Text.LineStart(text, ln + 1) : eol;
             if (end > caret)
             {
                 ctx.Clipboard.Write(text.Substring(caret, end - caret));
@@ -350,7 +352,7 @@ namespace Notemeow.Core
                     collapsed.Add(s);
                     continue;
                 }
-                int[] r = KillRange(ctx, s, text.Length);
+                int[] r = KillRange(ctx, s, text);
                 int caret = s.Active >= s.Anchor ? r[1] : r[0];
                 collapsed.Add(new SelRange(caret, caret));
             }

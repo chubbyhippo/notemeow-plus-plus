@@ -317,5 +317,13 @@ namespace Notemeow.Core.Tests
             ThenSelType(SelType.Join);
             ThenSelection("\n  ");
         }
+
+        [Fact(DisplayName = "given a CRLF document then the line thing bounds include the whole delimiter")]
+        public void CrlfLineThingBoundsIncludeWholeDelimiter()
+        {
+            Given("two crlf lines", "a<caret>b\r\ncd");
+            WhenKeys(".l");
+            ThenSelection("ab\r\n");
+        }
     }
 }

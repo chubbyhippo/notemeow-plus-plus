@@ -210,7 +210,7 @@ namespace Notemeow.Core
             int end = Text.LineEnd(text, ln);
             return inner
                 ? new OffsetRange(Text.LineStart(text, ln), end)
-                : new OffsetRange(Text.LineStart(text, ln), Math.Min(end + 1, text.Length));
+                : new OffsetRange(Text.LineStart(text, ln), Text.LineStart(text, ln + 1));
         }
 
         private static OffsetRange Defun(Ctx ctx, string text, int offset)
