@@ -56,6 +56,8 @@ namespace Notemeow.Core
                 switch (cmd)
                 {
                     case "let":
+                    case "cmap":
+                    case "cnoremap":
                         break;
                     case "set":
                         ParseSet(c, rest);

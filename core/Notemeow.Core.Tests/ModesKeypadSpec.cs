@@ -183,5 +183,34 @@ namespace Notemeow.Core.Tests
             PressEsc();
             Assert.Equal(new List<MeowMode> { MeowMode.Insert, MeowMode.Normal }, Ui.Modes);
         }
+
+        [Fact(DisplayName =
+            "given the bundled defaults then SPC m exposes the M- motion and edit layer")]
+        public void BundledDefaultsExposeMetaLayerOnSpcM()
+        {
+            var keypad = Rc.Keypad();
+            Assert.Equal("backward-sentence", keypad["ma"].Command);
+            Assert.Equal("backward-word", keypad["mb"].Command);
+            Assert.Equal("capitalize-word", keypad["mc"].Command);
+            Assert.Equal("kill-word", keypad["md"].Command);
+            Assert.Equal("forward-sentence", keypad["me"].Command);
+            Assert.Equal("forward-word", keypad["mf"].Command);
+            Assert.Equal("downcase-word", keypad["ml"].Command);
+            Assert.Equal("upcase-word", keypad["mu"].Command);
+            Assert.Equal("beginning-of-buffer", keypad["m<"].Command);
+            Assert.Equal("end-of-buffer", keypad["m>"].Command);
+            Assert.Equal("backward-paragraph", keypad["m{"].Command);
+            Assert.Equal("forward-paragraph", keypad["m}"].Command);
+        }
+
+        [Fact(DisplayName =
+            "given the SPC m keypad then a meta word motion runs and returns to NORMAL")]
+        public void SpcMMetaWordMotionRunsAndReturnsToNormal()
+        {
+            Given("two words", "<caret>hello world");
+            WhenKeys(" mf");
+            Assert.True(Editor.Sels[0].Active > 0, "caret advanced");
+            ThenMode(MeowMode.Normal);
+        }
     }
 }

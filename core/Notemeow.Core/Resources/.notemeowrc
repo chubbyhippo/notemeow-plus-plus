@@ -128,6 +128,8 @@ map <leader>w, <action>(IDM_VIEW_TAB_PREV)
 map <leader>ww <action>(notemeow.aceWindow)
 map <leader>wW <action>(IDM_VIEW_GOTO_ANOTHER_VIEW)
 map <leader>wv <action>(IDM_VIEW_CLONE_TO_ANOTHER_VIEW)
+" r = ace-resize: Notepad++ has no split-resize command, so SPC w r only hints
+map <leader>wr <action>(notemeow.aceResize)
 " h/j/k/l: directional view focus from the caret (main <-> second view)
 map <leader>wh <action>(notemeow.windmoveLeft)
 map <leader>wj <action>(notemeow.windmoveDown)
@@ -169,6 +171,22 @@ map <leader>cjl avy-goto-line
 desc <leader>m meta
 map <leader>mo avy-goto-char-timer
 map <leader>mg avy-goto-line
+" the M- word/edit chords mirrored onto the keypad so SPC m reaches them
+" too (SPC m f = M-f = forward-word): a/e sentence back/forward, b/f word
+" back/forward, c/u/l capitalize/upcase/downcase-word, d kill-word,
+" < / > buffer ends, { / } paragraph
+map <leader>ma backward-sentence
+map <leader>mb backward-word
+map <leader>mc capitalize-word
+map <leader>md kill-word
+map <leader>me forward-sentence
+map <leader>mf forward-word
+map <leader>ml downcase-word
+map <leader>mu upcase-word
+map <leader>m< beginning-of-buffer
+map <leader>m> end-of-buffer
+map <leader>m{ backward-paragraph
+map <leader>m} forward-paragraph
 
 desc <leader>h post-it (hide all UI)
 map <leader>h <action>(IDM_VIEW_POSTIT)

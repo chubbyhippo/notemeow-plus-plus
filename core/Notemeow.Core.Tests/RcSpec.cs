@@ -96,6 +96,16 @@ namespace Notemeow.Core.Tests
             Assert.Contains("meow-frobnicate", c.Errors[0]);
         }
 
+        [Fact(DisplayName = "given a cmap or cnoremap line then the rc loads it without error")]
+        public void CmapCnoremapLoadsWithoutError()
+        {
+            Rc.Config c = Rc.Parse(new List<string> { "cmap kj <Esc>", "cnoremap <C-a> <Home>" });
+            Assert.Empty(c.Errors);
+            Assert.Empty(c.Normal);
+            Assert.Empty(c.Motion);
+            Assert.Empty(c.Keypad);
+        }
+
         [Fact(DisplayName = "given leader mappings and descriptions then the keypad table extends")]
         public void LeaderMappingsExtendKeypad()
         {
@@ -175,6 +185,7 @@ namespace Notemeow.Core.Tests
             Assert.Equal("IDM_VIEW_SWITCHTO_DOCLIST", d.Keypad[" "].Action);
             Assert.Equal("notemeow.editRc", d.Keypad["cm"].Action);
             Assert.Equal("notemeow.reloadRc", d.Keypad["cM"].Action);
+            Assert.Equal("notemeow.aceResize", d.Keypad["wr"].Action);
             Assert.Equal("IDM_FILE_SAVE", d.Keypad["xs"].Action);
             Assert.True(d.Keypad.Count > 25);
         }

@@ -611,6 +611,11 @@ namespace Notemeow.Plugin
                     AceWindowRun();
                     return;
                 }
+                if (idText == "notemeow.aceResize")
+                {
+                    Hint("ace-resize has no Notepad++ split-resize API");
+                    return;
+                }
                 if (idText == "notemeow.windmoveLeft")
                 {
                     WindmoveTo(Windmove.Dir.Left);
