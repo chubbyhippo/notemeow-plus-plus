@@ -101,8 +101,8 @@ namespace Notemeow.Core
                     : st.SearchHistory[st.SearchHistory.Count - 1];
             if (Selections.HasSelection(sel))
             {
-                int lo = Math.Min(sel.Anchor, sel.Active);
-                int hi = Math.Max(sel.Anchor, sel.Active);
+                int lo = sel.Lo();
+                int hi = sel.Hi();
                 string selText = ctx.Port.GetText().Substring(lo, hi - lo);
                 if (selText.Length != 0 && (pattern == null || !FullyMatches(pattern, selText)))
                 {

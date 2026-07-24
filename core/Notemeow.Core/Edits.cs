@@ -99,14 +99,14 @@ namespace Notemeow.Core
             for (int i = 0; i < sels.Count; i++)
             {
                 SelRange sel = sels[i];
-                order.Add(new Item(sel, i, Math.Min(sel.Anchor, sel.Active)));
+                order.Add(new Item(sel, i, sel.Lo()));
             }
             order.Sort((a, b) => b.Lo.CompareTo(a.Lo));
             var edits = new List<TextEdit>();
             var results = new Computed[sels.Count];
             foreach (Item item in order)
             {
-                int hi = Math.Max(item.Sel.Anchor, item.Sel.Active);
+                int hi = item.Sel.Hi();
                 Computed r = compute(item.Sel, item.Lo, hi);
                 if (r.Edit != null) edits.Add(r.Edit);
                 results[item.Index] = r;
@@ -136,7 +136,7 @@ namespace Notemeow.Core
             var collapsed = new List<SelRange>();
             foreach (SelRange s in ctx.Port.GetSelections())
             {
-                int o = Math.Min(s.Anchor, s.Active);
+                int o = s.Lo();
                 collapsed.Add(new SelRange(o, o));
             }
             ctx.Port.SetSelections(collapsed);
@@ -150,7 +150,7 @@ namespace Notemeow.Core
             var collapsed = new List<SelRange>();
             foreach (SelRange s in ctx.Port.GetSelections())
             {
-                int o = Math.Max(s.Anchor, s.Active);
+                int o = s.Hi();
                 collapsed.Add(new SelRange(o, o));
             }
             ctx.Port.SetSelections(collapsed);
@@ -242,8 +242,8 @@ namespace Notemeow.Core
 
         private static int[] KillRange(Ctx ctx, SelRange sel, string text)
         {
-            int lo = Math.Min(sel.Anchor, sel.Active);
-            int hi = Math.Max(sel.Anchor, sel.Active);
+            int lo = sel.Lo();
+            int hi = sel.Hi();
             if (ctx.St.SelType == SelType.Line && sel.Active >= sel.Anchor && hi < text.Length)
             {
                 if (text[hi] == '\r') hi++;
@@ -260,7 +260,7 @@ namespace Notemeow.Core
                 if (s.Anchor != s.Active) regions.Add(s);
             }
             regions.Sort(
-                (a, b) => Math.Min(a.Anchor, a.Active).CompareTo(Math.Min(b.Anchor, b.Active)));
+                (a, b) => a.Lo().CompareTo(b.Lo()));
             return regions;
         }
 
@@ -320,8 +320,8 @@ namespace Notemeow.Core
         {
             string text = ctx.Port.GetText();
             SelRange prim = Selections.Primary(ctx);
-            int s = Math.Min(prim.Anchor, prim.Active);
-            int e = Math.Max(prim.Anchor, prim.Active);
+            int s = prim.Lo();
+            int e = prim.Hi();
             char before = s > 0 ? text[s - 1] : '\n';
             char after = e < text.Length ? text[e] : '\n';
             bool space =

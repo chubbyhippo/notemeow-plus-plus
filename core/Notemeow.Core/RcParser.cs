@@ -29,13 +29,14 @@ namespace Notemeow.Core
         private static readonly Regex WhichKeyLetRe =
             new Regex("^let\\s+g:WhichKeyDesc\\w*\\s*=\\s*\"(.+)\"$");
         private static readonly Regex TrailingCommentRe = new Regex("\\s\"");
-        private static readonly HashSet<string> ColorSetKeys = new HashSet<string>
-        {
-            "overlay-color",
-            "overlay-text-color",
-            "expand-hint-color",
-            "grab-color",
-        };
+        private static readonly Dictionary<string, Action<Rc.Config, int>> ColorSetters =
+            new Dictionary<string, Action<Rc.Config, int>>
+            {
+                ["overlay-color"] = (c, v) => c.OverlayColor = v,
+                ["overlay-text-color"] = (c, v) => c.OverlayTextColor = v,
+                ["expand-hint-color"] = (c, v) => c.ExpandHintColor = v,
+                ["grab-color"] = (c, v) => c.GrabColor = v,
+            };
         private static readonly Regex HexColorRe = new Regex("^[0-9a-fA-F]{6}$");
 
         internal static Rc.Config Parse(List<string> lines)
@@ -140,7 +141,7 @@ namespace Notemeow.Core
         {
             int eqIndex = rest.IndexOf('=');
             string key = (eqIndex >= 0 ? rest.Substring(0, eqIndex) : rest).Trim();
-            if (!ColorSetKeys.Contains(key)) return;
+            if (!ColorSetters.TryGetValue(key, out var set)) return;
             string value = eqIndex >= 0 ? rest.Substring(eqIndex + 1).Trim() : "";
             int? color = ParseHexColor(value);
             if (color == null)
@@ -148,21 +149,7 @@ namespace Notemeow.Core
                 err("set " + key + ": invalid color '" + value + "' (expected #RRGGBB)");
                 return;
             }
-            switch (key)
-            {
-                case "overlay-color":
-                    c.OverlayColor = color;
-                    break;
-                case "overlay-text-color":
-                    c.OverlayTextColor = color;
-                    break;
-                case "expand-hint-color":
-                    c.ExpandHintColor = color;
-                    break;
-                case "grab-color":
-                    c.GrabColor = color;
-                    break;
-            }
+            set(c, color.Value);
         }
 
         private static int? ParseHexColor(string text)

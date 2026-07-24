@@ -286,8 +286,8 @@ namespace Notemeow.Core
             string text = ctx.Port.GetText();
             SelType type = WordType(symbol);
             SelRange sel = Selections.Primary(ctx);
-            int lo = Math.Min(sel.Anchor, sel.Active);
-            int hi = Math.Max(sel.Anchor, sel.Active);
+            int lo = sel.Lo();
+            int hi = sel.Hi();
             if (!(Selections.HasSelection(sel) && ctx.St.SelType == type)) Selections.Cancel(ctx);
             bool extend =
                 ctx.St.SelExpand && ctx.St.SelType == type && Selections.HasSelection(sel);

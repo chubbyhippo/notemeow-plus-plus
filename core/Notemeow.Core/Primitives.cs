@@ -15,6 +15,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using System;
+
 namespace Notemeow.Core
 {
     public sealed class SelRange
@@ -27,6 +29,10 @@ namespace Notemeow.Core
 
         public int Anchor { get; }
         public int Active { get; }
+
+        public int Lo() => Math.Min(Anchor, Active);
+
+        public int Hi() => Math.Max(Anchor, Active);
 
         public override bool Equals(object obj)
         {

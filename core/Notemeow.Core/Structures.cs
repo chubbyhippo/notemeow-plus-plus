@@ -15,7 +15,6 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-using System;
 using System.Collections.Generic;
 
 namespace Notemeow.Core
@@ -124,8 +123,8 @@ namespace Notemeow.Core
             SelRange sel = Selections.Primary(ctx);
             bool active = ctx.St.SelType == SelType.Block && Selections.HasSelection(sel);
             bool back = Selections.BackwardP(ctx) != (ctx.St.TakeCount(1) < 0);
-            int s = active ? Math.Min(sel.Anchor, sel.Active) : sel.Active;
-            int e = active ? Math.Max(sel.Anchor, sel.Active) : sel.Active;
+            int s = active ? sel.Lo() : sel.Active;
+            int e = active ? sel.Hi() : sel.Active;
             int[] p = EnclosingPair(text, s, e);
             if (p == null)
             {

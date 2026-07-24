@@ -76,7 +76,7 @@ namespace Notemeow.Core
             SelRange sel = Selections.Primary(ctx);
             if (Selections.HasSelection(sel))
             {
-                Set(ctx, Math.Min(sel.Anchor, sel.Active), Math.Max(sel.Anchor, sel.Active));
+                Set(ctx, sel.Lo(), sel.Hi());
             }
             Selections.Cancel(ctx);
         }
@@ -90,7 +90,7 @@ namespace Notemeow.Core
                 return;
             }
             Clear(ctx);
-            Set(ctx, Math.Min(sel.Anchor, sel.Active), Math.Max(sel.Anchor, sel.Active));
+            Set(ctx, sel.Lo(), sel.Hi());
             Selections.Cancel(ctx);
         }
 
@@ -112,8 +112,8 @@ namespace Notemeow.Core
             }
             int gs = g.Start;
             int ge = g.End;
-            int ss = Math.Min(sel.Anchor, sel.Active);
-            int se = Math.Max(sel.Anchor, sel.Active);
+            int ss = sel.Lo();
+            int se = sel.Hi();
             if (Math.Max(gs, ss) < Math.Min(ge, se) && !(gs == ss && ge == se))
             {
                 ctx.Ui.Hint("Selection overlaps the grab");
@@ -164,8 +164,8 @@ namespace Notemeow.Core
             if (g == null || g.End <= g.Start) return;
             SelRange sel = Selections.Primary(ctx);
             if (!Selections.HasSelection(sel)) return;
-            int ss = Math.Min(sel.Anchor, sel.Active);
-            int se = Math.Max(sel.Anchor, sel.Active);
+            int ss = sel.Lo();
+            int se = sel.Hi();
             if (ss < g.Start || se > g.End || se == ss) return;
             string text = ctx.Port.GetText();
             var sels = new List<SelRange>();
