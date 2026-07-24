@@ -560,7 +560,7 @@ namespace Notemeow.Plugin
 
         private sealed class NppUi : IUiPort
         {
-            private const int ExpandHintBg = 0x00B25D2B;
+            private static int ExpandHintBg => NppApi.BgrFromRgb(Rc.ExpandHintColor());
 
             private readonly IntPtr npp;
             private readonly IntPtr sci;

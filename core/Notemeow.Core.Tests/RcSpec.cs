@@ -152,6 +152,52 @@ namespace Notemeow.Core.Tests
             Assert.Equal(150, Rc.WhichKeyDelayMs());
         }
 
+        [Fact(DisplayName = "given overlay color set lines then they parse into rgb colors")]
+        public void OverlayColorSetLinesParseToRgb()
+        {
+            Rc.Config c = Rc.Parse(
+                new List<string>
+                {
+                    "set overlay-color=#E52B50",
+                    "set overlay-text-color=#ffffff",
+                    "set expand-hint-color=#d05c0a",
+                    "set grab-color=#CDE8CD",
+                });
+            Assert.Equal(0xE52B50, c.OverlayColor);
+            Assert.Equal(0xFFFFFF, c.OverlayTextColor);
+            Assert.Equal(0xD05C0A, c.ExpandHintColor);
+            Assert.Equal(0xCDE8CD, c.GrabColor);
+            Assert.Empty(c.Errors);
+        }
+
+        [Fact(DisplayName = "given a malformed overlay color then an error is collected and it stays unset")]
+        public void MalformedOverlayColorErrorsAndStaysUnset()
+        {
+            Rc.Config c = Rc.Parse(
+                new List<string> { "set overlay-color=#12345", "set grab-color=nope" });
+            Assert.Null(c.OverlayColor);
+            Assert.Null(c.GrabColor);
+            Assert.Equal(2, c.Errors.Count);
+            Assert.Contains("overlay-color", c.Errors[0]);
+        }
+
+        [Fact(DisplayName = "given an unknown set color option then it is ignored without error")]
+        public void UnknownSetColorOptionIgnored()
+        {
+            Rc.Config c = Rc.Parse(new List<string> { "set cursor-color=#123456" });
+            Assert.Null(c.OverlayColor);
+            Assert.Empty(c.Errors);
+        }
+
+        [Fact(DisplayName = "overlay colors layer user over the bundled default")]
+        public void OverlayColorsLayerUserOverBundled()
+        {
+            Assert.Equal(0xE52B50, Rc.OverlayColor());
+            GivenRc("set overlay-color=#010203\nset grab-color=#040506");
+            Assert.Equal(0x010203, Rc.OverlayColor());
+            Assert.Equal(0x040506, Rc.GrabColor());
+        }
+
         [Fact(DisplayName = "given a trailing comment then it is stripped from the line")]
         public void TrailingCommentStripped()
         {

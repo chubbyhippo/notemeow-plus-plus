@@ -29,6 +29,14 @@ namespace Notemeow.Core
         private static readonly Regex WhichKeyLetRe =
             new Regex("^let\\s+g:WhichKeyDesc\\w*\\s*=\\s*\"(.+)\"$");
         private static readonly Regex TrailingCommentRe = new Regex("\\s\"");
+        private static readonly HashSet<string> ColorSetKeys = new HashSet<string>
+        {
+            "overlay-color",
+            "overlay-text-color",
+            "expand-hint-color",
+            "grab-color",
+        };
+        private static readonly Regex HexColorRe = new Regex("^[0-9a-fA-F]{6}$");
 
         internal static Rc.Config Parse(List<string> lines)
         {
@@ -60,7 +68,7 @@ namespace Notemeow.Core
                     case "cnoremap":
                         break;
                     case "set":
-                        ParseSet(c, rest);
+                        ParseSet(c, rest, err);
                         break;
                     case "desc":
                         ParseDescBody(c, rest, err);
@@ -91,7 +99,7 @@ namespace Notemeow.Core
             rest = m.Groups[2].Success ? m.Groups[2].Value.Trim() : "";
         }
 
-        private static void ParseSet(Rc.Config c, string rest)
+        private static void ParseSet(Rc.Config c, string rest, Action<string> err)
         {
             if (rest == "which-key")
             {
@@ -117,11 +125,51 @@ namespace Notemeow.Core
                 }
                 if (n != null && n.Value >= 0) c.WhichKeyDelayMs = n.Value;
             }
+            else
+            {
+                ParseSetColor(c, rest, err);
+            }
         }
 
         private static int? ParseIntOrNull(string s)
         {
             return int.TryParse(s, out int n) ? n : (int?)null;
+        }
+
+        private static void ParseSetColor(Rc.Config c, string rest, Action<string> err)
+        {
+            int eq = rest.IndexOf('=');
+            string key = (eq >= 0 ? rest.Substring(0, eq) : rest).Trim();
+            if (!ColorSetKeys.Contains(key)) return;
+            string raw = eq >= 0 ? rest.Substring(eq + 1).Trim() : "";
+            int? color = ParseHexColor(raw);
+            if (color == null)
+            {
+                err("set " + key + ": invalid color '" + raw + "' (expected #RRGGBB)");
+                return;
+            }
+            switch (key)
+            {
+                case "overlay-color":
+                    c.OverlayColor = color;
+                    break;
+                case "overlay-text-color":
+                    c.OverlayTextColor = color;
+                    break;
+                case "expand-hint-color":
+                    c.ExpandHintColor = color;
+                    break;
+                case "grab-color":
+                    c.GrabColor = color;
+                    break;
+            }
+        }
+
+        private static int? ParseHexColor(string text)
+        {
+            string hex = text.StartsWith("#") ? text.Substring(1) : text;
+            if (!HexColorRe.IsMatch(hex)) return null;
+            return Convert.ToInt32(hex, 16);
         }
 
         private static void ParseDescBody(Rc.Config c, string body, Action<string> err)

@@ -146,6 +146,10 @@ rather than fatal.
 | `desc <leader><seq> <text>` | which-key label for an entry (exact seq) or a group (prefix) |
 | `set timeoutlen=300` | which-key delay in milliseconds |
 | `set which-key` / `set nowhich-key` | which-key on/off (default on) |
+| `set overlay-color=#E52B50` | background of the avy / ace jump labels (`#RRGGBB`) |
+| `set overlay-text-color=#ffffff` | the jump-label text color |
+| `set expand-hint-color=#2B5DB2` | the `0`-`9` expand-hint box color |
+| `set grab-color=#33CC33` | the grab / beacon highlight color |
 
 Key notation: plain printable characters, plus `<Space>` and `<lt>`.
 Reserved: keypad `0-9` (digit argument), `?` (cheatsheet), `/` (describe

@@ -15,6 +15,19 @@
 set which-key
 set timeoutlen=300
 
+" Overlay colors — #RRGGBB, applied as written. Uncomment a line to override
+" the plugin default:
+"   set overlay-color        avy / ace label background
+"   set overlay-text-color   avy / ace label text
+"   set expand-hint-color    0-9 expand-hint box
+"   set grab-color           grab / beacon highlight
+" The two label colors below sit at their defaults; the expand-hint and grab
+" defaults live in the plugin, so uncomment those to change them.
+set overlay-color=#E52B50
+set overlay-text-color=#ffffff
+" set expand-hint-color=#2B5DB2
+" set grab-color=#33CC33
+
 " expand / counts
 nmap 0 meow-expand-0
 nmap 1 meow-expand-1

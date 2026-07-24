@@ -273,11 +273,11 @@ namespace Notemeow.Plugin
             if (!grabIndicatorReady)
             {
                 Send(NppApi.SciIndicSetStyle, NppApi.GrabIndicator, NppApi.IndicStraightBox);
-                Send(NppApi.SciIndicSetFore, NppApi.GrabIndicator, 0x33CC33);
                 Send(NppApi.SciIndicSetAlpha, NppApi.GrabIndicator, 60);
                 Send(NppApi.SciIndicSetUnder, NppApi.GrabIndicator, 1);
                 grabIndicatorReady = true;
             }
+            Send(NppApi.SciIndicSetFore, NppApi.GrabIndicator, NppApi.BgrFromRgb(Rc.GrabColor()));
             int len = (int)Send(NppApi.SciGetLength);
             Send(NppApi.SciSetIndicatorCurrent, NppApi.GrabIndicator);
             Send(NppApi.SciIndicatorClearRange, 0, len);

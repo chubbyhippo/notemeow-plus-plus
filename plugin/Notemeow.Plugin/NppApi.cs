@@ -99,6 +99,11 @@ namespace Notemeow.Plugin
         internal const uint AvyTimeoutMs = 250;
         internal const nuint WhichKeyTimerId = 0xA5F0;
 
+        internal static int BgrFromRgb(int rgb)
+        {
+            return ((rgb & 0xFF) << 16) | (rgb & 0x00FF00) | ((rgb >> 16) & 0xFF);
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         internal struct Rect
         {

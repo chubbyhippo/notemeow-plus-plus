@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Notemeow.Core;
 
 namespace Notemeow.Plugin
 {
@@ -47,8 +48,8 @@ namespace Notemeow.Plugin
         private const uint WmPaint = 0x000F;
         private const uint LwaColorKey = 1;
         private const int ColorKey = 0x00010101;
-        private const int LabelBg = 0x00502BE5;
-        private const int LabelFg = 0x00FFFFFF;
+        private static int LabelBg => NppApi.BgrFromRgb(Rc.OverlayColor());
+        private static int LabelFg => NppApi.BgrFromRgb(Rc.OverlayTextColor());
         private const int TransparentBkMode = 1;
         private const int BoldWeight = 700;
         private const uint ClearTypeQuality = 5;

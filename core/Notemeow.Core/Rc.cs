@@ -15,6 +15,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -54,6 +55,10 @@ namespace Notemeow.Core
 
             public bool? WhichKey;
             public int? WhichKeyDelayMs;
+            public int? OverlayColor;
+            public int? OverlayTextColor;
+            public int? ExpandHintColor;
+            public int? GrabColor;
             public readonly List<string> Errors = new List<string>();
         }
 
@@ -190,6 +195,40 @@ namespace Notemeow.Core
             if (Cfg().WhichKeyDelayMs != null) return Cfg().WhichKeyDelayMs.Value;
             if (Defaults().WhichKeyDelayMs != null) return Defaults().WhichKeyDelayMs.Value;
             return DefaultWhichKeyDelayMs;
+        }
+
+        private const int DefaultOverlayColor = 0xE52B50;
+        private const int DefaultOverlayTextColor = 0xFFFFFF;
+        private const int DefaultExpandHintColor = 0x2B5DB2;
+        private const int DefaultGrabColor = 0x33CC33;
+
+        public static int OverlayColor()
+        {
+            return ResolveColor(c => c.OverlayColor, DefaultOverlayColor);
+        }
+
+        public static int OverlayTextColor()
+        {
+            return ResolveColor(c => c.OverlayTextColor, DefaultOverlayTextColor);
+        }
+
+        public static int ExpandHintColor()
+        {
+            return ResolveColor(c => c.ExpandHintColor, DefaultExpandHintColor);
+        }
+
+        public static int GrabColor()
+        {
+            return ResolveColor(c => c.GrabColor, DefaultGrabColor);
+        }
+
+        private static int ResolveColor(Func<Config, int?> pick, int fallback)
+        {
+            int? u = pick(Cfg());
+            if (u != null) return u.Value;
+            int? d = pick(Defaults());
+            if (d != null) return d.Value;
+            return fallback;
         }
     }
 }
