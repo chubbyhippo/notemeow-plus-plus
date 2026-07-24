@@ -304,12 +304,6 @@ namespace Notemeow.Plugin
         private static extern IntPtr DefWindowProcW(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll")]
-        private static extern IntPtr GetDC(IntPtr hwnd);
-
-        [DllImport("user32.dll")]
-        private static extern int ReleaseDC(IntPtr hwnd, IntPtr hdc);
-
-        [DllImport("user32.dll")]
         private static extern int FillRect(IntPtr hdc, ref RECT rc, IntPtr brush);
 
         [DllImport("gdi32.dll")]

@@ -138,14 +138,14 @@ namespace Notemeow.Core
 
         private static void ParseSetColor(Rc.Config c, string rest, Action<string> err)
         {
-            int eq = rest.IndexOf('=');
-            string key = (eq >= 0 ? rest.Substring(0, eq) : rest).Trim();
+            int eqIndex = rest.IndexOf('=');
+            string key = (eqIndex >= 0 ? rest.Substring(0, eqIndex) : rest).Trim();
             if (!ColorSetKeys.Contains(key)) return;
-            string raw = eq >= 0 ? rest.Substring(eq + 1).Trim() : "";
-            int? color = ParseHexColor(raw);
+            string value = eqIndex >= 0 ? rest.Substring(eqIndex + 1).Trim() : "";
+            int? color = ParseHexColor(value);
             if (color == null)
             {
-                err("set " + key + ": invalid color '" + raw + "' (expected #RRGGBB)");
+                err("set " + key + ": invalid color '" + value + "' (expected #RRGGBB)");
                 return;
             }
             switch (key)

@@ -88,9 +88,6 @@ namespace Notemeow.Plugin
 
         internal const int IndicStraightBox = 8;
 
-        // Scintilla indicator slots. 0-7 are lexer indicators and Notepad++'s
-        // own smart-highlight/mark features cluster in 27-31, so these sit in
-        // the free middle band; change them if a plugin you use claims them.
         internal const int GrabIndicator = 12;
         internal const int AvyMatchIndicator = 13;
 
@@ -101,7 +98,10 @@ namespace Notemeow.Plugin
 
         internal static int BgrFromRgb(int rgb)
         {
-            return ((rgb & 0xFF) << 16) | (rgb & 0x00FF00) | ((rgb >> 16) & 0xFF);
+            int red = (rgb >> 16) & 0xFF;
+            int green = (rgb >> 8) & 0xFF;
+            int blue = rgb & 0xFF;
+            return (blue << 16) | (green << 8) | red;
         }
 
         [StructLayout(LayoutKind.Sequential)]

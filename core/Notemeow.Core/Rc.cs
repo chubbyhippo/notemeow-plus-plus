@@ -222,12 +222,12 @@ namespace Notemeow.Core
             return ResolveColor(c => c.GrabColor, DefaultGrabColor);
         }
 
-        private static int ResolveColor(Func<Config, int?> pick, int fallback)
+        private static int ResolveColor(Func<Config, int?> selectColor, int fallback)
         {
-            int? u = pick(Cfg());
-            if (u != null) return u.Value;
-            int? d = pick(Defaults());
-            if (d != null) return d.Value;
+            int? user = selectColor(Cfg());
+            if (user != null) return user.Value;
+            int? bundled = selectColor(Defaults());
+            if (bundled != null) return bundled.Value;
             return fallback;
         }
     }

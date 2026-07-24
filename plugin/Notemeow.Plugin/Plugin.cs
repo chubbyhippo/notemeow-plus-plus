@@ -216,11 +216,7 @@ namespace Notemeow.Plugin
                 "MEOW " + mode);
             string typing =
                 st.Mode == MeowMode.Insert
-                    ? NppApi.SendMessage(
-                            sci, (uint)NppApi.SciGetOvertype, IntPtr.Zero, IntPtr.Zero)
-                        != IntPtr.Zero
-                        ? "OVR"
-                        : "INS"
+                    ? IsOvertype(sci) ? "OVR" : "INS"
                     : mode.Substring(0, 3);
             NppApi.SendMessageStr(
                 nppData.NppHandle,
@@ -229,6 +225,12 @@ namespace Notemeow.Plugin
                 typing);
             int style = st.Mode == MeowMode.Insert ? NppApi.CaretStyleLine : NppApi.CaretStyleBlock;
             NppApi.SendMessage(sci, (uint)NppApi.SciSetCaretStyle, (IntPtr)style, IntPtr.Zero);
+        }
+
+        private static bool IsOvertype(IntPtr sci)
+        {
+            return NppApi.SendMessage(sci, (uint)NppApi.SciGetOvertype, IntPtr.Zero, IntPtr.Zero)
+                != IntPtr.Zero;
         }
 
         [UnmanagedCallersOnly]
