@@ -494,7 +494,7 @@ namespace Notemeow.Plugin
             NppApi.MessageBox(
                 nppData.NppHandle,
                 "notemeow++ — meow modal editing for Notepad++\n"
-                    + "Engine: Notemeow.Core (282 behavior specs)\n"
+                    + "Engine: Notemeow.Core (310 behavior specs)\n"
                     + "License: GPL-3.0-or-later",
                 "About notemeow++",
                 0);
