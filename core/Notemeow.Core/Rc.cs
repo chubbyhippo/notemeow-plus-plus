@@ -189,7 +189,7 @@ namespace Notemeow.Core
             return DefaultWhichKeyDelayMs;
         }
 
-        private const int DefaultOverlayColor = 0xE52B50;
+        private const int DefaultOverlayColor = 0x2ECC71;
         private const int DefaultOverlayTextColor = 0xFFFFFF;
         private const int DefaultExpandHintColor = 0x2B5DB2;
         private const int DefaultGrabColor = 0x33CC33;

@@ -190,7 +190,7 @@ namespace Notemeow.Core.Tests
         [Fact(DisplayName = "overlay colors layer user over the bundled default")]
         public void OverlayColorsLayerUserOverBundled()
         {
-            Assert.Equal(0xE52B50, Rc.OverlayColor());
+            Assert.Equal(0x2ECC71, Rc.OverlayColor());
             GivenRc("set overlay-color=#010203\nset grab-color=#040506");
             Assert.Equal(0x010203, Rc.OverlayColor());
             Assert.Equal(0x040506, Rc.GrabColor());

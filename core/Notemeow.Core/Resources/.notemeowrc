@@ -23,7 +23,7 @@ set timeoutlen=300
 "   set grab-color           grab / beacon highlight
 " The two label colors below sit at their defaults; the expand-hint and grab
 " defaults live in the plugin, so uncomment those to change them.
-set overlay-color=#E52B50
+set overlay-color=#2ECC71
 set overlay-text-color=#ffffff
 " set expand-hint-color=#2B5DB2
 " set grab-color=#33CC33
