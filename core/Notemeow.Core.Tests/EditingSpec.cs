@@ -23,6 +23,34 @@ namespace Notemeow.Core.Tests
 {
     public class EditingSpec : SpecDsl
     {
+
+        [Fact(DisplayName = "given a caret mid-line then open-line breaks the line and stays put")]
+        public void OpenLineKeepsPoint()
+        {
+            Given("one line", "hel<caret>lo");
+            WhenCommand("open-line");
+            ThenText("hel\nlo");
+            ThenCaretAt(3);
+        }
+
+        [Fact(DisplayName = "given blanks around the caret then delete-horizontal-space removes them all")]
+        public void DeleteHorizontalSpaceRemovesBoth()
+        {
+            Given("spaced", "a   <caret>   b");
+            WhenCommand("delete-horizontal-space");
+            ThenText("ab");
+            ThenCaretAt(1);
+        }
+
+        [Fact(DisplayName = "given blanks around the caret then just-one-space leaves exactly one")]
+        public void JustOneSpaceLeavesOne()
+        {
+            Given("spaced", "a   <caret>   b");
+            WhenCommand("just-one-space");
+            ThenText("a b");
+            ThenCaretAt(2);
+        }
+
         [Fact(DisplayName = "given a selection when i then INSERT starts at the selection beginning")]
         public void SelectionIStartsInsertAtBeginning()
         {

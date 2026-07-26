@@ -60,6 +60,7 @@ namespace Notemeow.Core
                 },
                 ["move-beginning-of-line"] = ctx => MoveToOrExpand(ctx, SelType.Char, LineStartTarget),
                 ["move-end-of-line"] = ctx => MoveToOrExpand(ctx, SelType.Char, LineEndTarget),
+                ["back-to-indentation"] = ctx => MoveToOrExpand(ctx, SelType.Char, IndentationTarget),
                 ["forward-word"] = ctx => WordOrExpand(ctx, ctx.St.TakeCount(1)),
                 ["backward-word"] = ctx => WordOrExpand(ctx, -ctx.St.TakeCount(1)),
                 ["forward-sentence"] = ctx => SentenceOrExpand(ctx, ctx.St.TakeCount(1)),
@@ -80,6 +81,15 @@ namespace Notemeow.Core
         private static int LineEndTarget(string text, int off)
         {
             return Text.LineEnd(text, Text.LineOfOffset(text, off));
+        }
+
+        private static int IndentationTarget(string text, int off)
+        {
+            int line = Text.LineOfOffset(text, off);
+            int end = Text.LineEnd(text, line);
+            int at = Text.LineStart(text, line);
+            while (at < end && Text.IsBlank(text[at])) at++;
+            return at;
         }
 
         private static void CharOrExpand(Ctx ctx, int dx)

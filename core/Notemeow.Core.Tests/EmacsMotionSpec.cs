@@ -23,6 +23,24 @@ namespace Notemeow.Core.Tests
 {
     public class EmacsMotionSpec : SpecDsl
     {
+
+        [Fact(DisplayName = "given an indented line then back-to-indentation lands on the first real char")]
+        public void BackToIndentationSkipsLeadingBlanks()
+        {
+            Given("indented", "    hel<caret>lo");
+            WhenCommand("back-to-indentation");
+            ThenCaretAt(4);
+        }
+
+        [Fact(DisplayName = "given a selection then back-to-indentation extends it like the other motions")]
+        public void BackToIndentationExtends()
+        {
+            Given("indented", "    hello world<caret>");
+            WhenKeys("w");
+            WhenCommand("back-to-indentation");
+            ThenSelection("hello ");
+        }
+
         [Fact(
             DisplayName =
                 "given no selection when forward-char then the caret moves right without selecting")]

@@ -55,6 +55,9 @@ namespace Notemeow.Core
                 ["downcase-word"] = ctx => CaseWord(ctx, CaseOp.Downcase),
                 ["capitalize-word"] = ctx => CaseWord(ctx, CaseOp.Capitalize),
                 ["kill-word"] = KillWord,
+                ["open-line"] = OpenLine,
+                ["delete-horizontal-space"] = ctx => HorizontalSpace(ctx, ""),
+                ["just-one-space"] = ctx => HorizontalSpace(ctx, " "),
             };
 
         private enum CaseOp
@@ -157,6 +160,35 @@ namespace Notemeow.Core
             ctx.Port.Edit(nl);
             ctx.Port.SetSelections([new SelRange(eol + 1, eol + 1)]);
             ctx.SetMode(MeowMode.Insert);
+        }
+
+        private static void OpenLine(Ctx ctx)
+        {
+            if (BlockedReadOnly(ctx)) return;
+            Selections.Collapse(ctx);
+            int at = Selections.Primary(ctx).Active;
+            var nl = new List<TextEdit> { new(at, at, "\n") };
+            Grab.AdjustForEdits(ctx.St, nl);
+            ctx.Port.Edit(nl);
+            ctx.Port.SetSelections([new SelRange(at, at)]);
+        }
+
+        private static void HorizontalSpace(Ctx ctx, string replacement)
+        {
+            if (BlockedReadOnly(ctx)) return;
+            Selections.Collapse(ctx);
+            string text = ctx.Port.GetText();
+            int at = Selections.Primary(ctx).Active;
+            int from = at;
+            while (from > 0 && Text.IsBlank(text[from - 1])) from--;
+            int to = at;
+            while (to < text.Length && Text.IsBlank(text[to])) to++;
+            if (from == to && replacement.Length == 0) return;
+            var edits = new List<TextEdit> { new(from, to, replacement) };
+            Grab.AdjustForEdits(ctx.St, edits);
+            ctx.Port.Edit(edits);
+            int caret = from + replacement.Length;
+            ctx.Port.SetSelections([new SelRange(caret, caret)]);
         }
 
         private static void OpenAbove(Ctx ctx)

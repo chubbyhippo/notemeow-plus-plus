@@ -268,5 +268,10 @@ namespace Notemeow.Core
                 return [s, e];
             }
         }
-    }
+    
+        public static bool IsBlank(char ch)
+        {
+            return ch == ' ' || ch == '\t';
+        }
+}
 }
