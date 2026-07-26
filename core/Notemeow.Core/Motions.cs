@@ -178,11 +178,11 @@ namespace Notemeow.Core
             return symbol ? SelType.Symbol : SelType.Word;
         }
 
-        private static readonly HashSet<string> Vertical = new HashSet<string>
-        {
+        private static readonly HashSet<string> Vertical =
+        [
             "meow-next", "meow-prev", "meow-next-expand", "meow-prev-expand",
             "next-line", "previous-line",
-        };
+        ];
 
         private static bool CharSelActive(Ctx ctx)
         {
@@ -212,7 +212,7 @@ namespace Notemeow.Core
             }
             else
             {
-                int col = goal.HasValue ? goal.Value : sel.Active - Text.LineStart(text, ln);
+                int col = goal ?? sel.Active - Text.LineStart(text, ln);
                 int bol = Text.LineStart(text, target);
                 active = bol + Math.Min(col, Text.LineEnd(text, target) - bol);
             }
@@ -379,8 +379,7 @@ namespace Notemeow.Core
             if (input == null) return;
             string text = ctx.Port.GetText();
             if (text.Length == 0) return;
-            int parsed;
-            if (!int.TryParse(input.Trim(), out parsed)) return;
+            if (!int.TryParse(input.Trim(), out int parsed)) return;
             int ln = Text.Clamp(parsed - 1, 0, Text.LineCount(text) - 1);
             Selections.Select(
                 ctx, SelType.Line, Text.LineStart(text, ln), Text.LineEnd(text, ln), true);

@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 
 namespace Notemeow.Plugin
 {
-    internal static unsafe class InputBox
+    internal static unsafe partial class InputBox
     {
         private const uint WmInitDialog = 0x0110;
         private const uint WmCommand = 0x0111;
@@ -166,24 +166,26 @@ namespace Notemeow.Plugin
             return IntPtr.Zero;
         }
 
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr GetModuleHandleW(IntPtr name);
+        [LibraryImport("kernel32.dll")]
+        private static partial IntPtr GetModuleHandleW(IntPtr name);
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr DialogBoxIndirectParamW(
+        [LibraryImport("user32.dll")]
+        private static partial IntPtr DialogBoxIndirectParamW(
             IntPtr instance, IntPtr template, IntPtr owner, IntPtr dlgProc, IntPtr param);
 
-        [DllImport("user32.dll")]
-        private static extern bool EndDialog(IntPtr hwnd, IntPtr result);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool EndDialog(IntPtr hwnd, IntPtr result);
 
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern bool SetDlgItemTextW(IntPtr hwnd, int id, string text);
+        [LibraryImport("user32.dll", StringMarshalling = StringMarshalling.Utf16)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SetDlgItemTextW(IntPtr hwnd, int id, string text);
 
-        [DllImport("user32.dll")]
-        private static extern int GetDlgItemTextW(IntPtr hwnd, int id, char* buf, int max);
+        [LibraryImport("user32.dll")]
+        private static partial int GetDlgItemTextW(IntPtr hwnd, int id, char* buf, int max);
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr SendDlgItemMessageW(
+        [LibraryImport("user32.dll")]
+        private static partial IntPtr SendDlgItemMessageW(
             IntPtr hwnd, int id, uint msg, IntPtr wParam, IntPtr lParam);
     }
 }

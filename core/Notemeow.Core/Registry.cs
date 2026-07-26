@@ -23,7 +23,7 @@ namespace Notemeow.Core
     {
         public static readonly IReadOnlyDictionary<string, MeowCommand> Commands = Build();
 
-        private static IReadOnlyDictionary<string, MeowCommand> Build()
+        private static Dictionary<string, MeowCommand> Build()
         {
             var commands = new Dictionary<string, MeowCommand>();
             foreach (var e in Motions.Commands) commands[e.Key] = e.Value;

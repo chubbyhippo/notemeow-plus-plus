@@ -27,18 +27,11 @@ namespace Notemeow.Core
             Down,
         }
 
-        public sealed class ViewLayout
+        public sealed class ViewLayout(bool twoViews, bool stacked, bool onSecond)
         {
-            public ViewLayout(bool twoViews, bool stacked, bool onSecond)
-            {
-                TwoViews = twoViews;
-                Stacked = stacked;
-                OnSecond = onSecond;
-            }
-
-            public bool TwoViews { get; }
-            public bool Stacked { get; }
-            public bool OnSecond { get; }
+            public bool TwoViews { get; } = twoViews;
+            public bool Stacked { get; } = stacked;
+            public bool OnSecond { get; } = onSecond;
         }
 
         public const string FocusOtherView = "notemeow.focusOtherView";

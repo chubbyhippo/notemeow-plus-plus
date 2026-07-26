@@ -34,7 +34,7 @@ namespace Notemeow.Core
             MeowState st = ctx.St;
             string text = ctx.Port.GetText();
             SelRange sel = ctx.Port.GetSelections()[0];
-            if (sel.Anchor == sel.Active) return new List<int>();
+            if (sel.Anchor == sel.Active) return [];
             int caret = sel.Active;
             bool backward = caret < sel.Anchor;
             var outPositions = new List<int>();

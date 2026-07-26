@@ -170,7 +170,7 @@ namespace Notemeow.Core.Tests
             Given("word", "<caret>hello");
             WhenKeys(" xs");
             ThenMode(MeowMode.Normal);
-            Assert.Equal(new List<string> { "IDM_FILE_SAVE" }, Ui.Ran);
+            Assert.Equal(["IDM_FILE_SAVE"], Ui.Ran);
         }
 
         [Fact(DisplayName =
@@ -179,9 +179,9 @@ namespace Notemeow.Core.Tests
         {
             Given("word", "<caret>hello");
             WhenKeys("i");
-            Assert.Equal(new List<MeowMode> { MeowMode.Insert }, Ui.Modes);
+            Assert.Equal([MeowMode.Insert], Ui.Modes);
             PressEsc();
-            Assert.Equal(new List<MeowMode> { MeowMode.Insert, MeowMode.Normal }, Ui.Modes);
+            Assert.Equal([MeowMode.Insert, MeowMode.Normal], Ui.Modes);
         }
 
         [Fact(DisplayName =

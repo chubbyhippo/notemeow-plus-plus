@@ -30,7 +30,7 @@ namespace Notemeow.Core
         }
 
         internal Phase CurrentPhase = Phase.Collecting;
-        internal readonly StringBuilder Input = new StringBuilder();
+        internal readonly StringBuilder Input = new();
         internal Avy.Branch Node;
         internal readonly bool GotoLine;
 
@@ -45,7 +45,7 @@ namespace Notemeow.Core
         private const string Keys = "asdfghjkl";
 
         internal static readonly Dictionary<string, MeowCommand> Commands =
-            new Dictionary<string, MeowCommand>
+            new()
             {
                 ["avy-goto-char-timer"] = StartCharTimer,
                 ["avy-goto-line"] = StartGotoLine,
@@ -55,36 +55,20 @@ namespace Notemeow.Core
         {
         }
 
-        internal sealed class Leaf : AvyNode
+        internal sealed class Leaf(int offset) : AvyNode
         {
-            public Leaf(int offset)
-            {
-                Offset = offset;
-            }
-
-            public int Offset { get; }
+            public int Offset { get; } = offset;
         }
 
-        internal sealed class Branch : AvyNode
+        internal sealed class Branch(List<Avy.Entry> children) : AvyNode
         {
-            public Branch(List<Entry> children)
-            {
-                Children = children;
-            }
-
-            public List<Entry> Children { get; }
+            public List<Entry> Children { get; } = children;
         }
 
-        internal sealed class Entry
+        internal sealed class Entry(char key, Avy.AvyNode child)
         {
-            public Entry(char key, AvyNode child)
-            {
-                Key = key;
-                Child = child;
-            }
-
-            public char Key { get; }
-            public AvyNode Child { get; }
+            public char Key { get; } = key;
+            public AvyNode Child { get; } = child;
         }
 
         private const double SubdivLogEpsilon = 1e-6;
@@ -262,11 +246,11 @@ namespace Notemeow.Core
             if (Selections.HasSelection(sel))
             {
                 ctx.Port.SetSelections(
-                    new List<SelRange> { new SelRange(Selections.Mark(ctx), offset) });
+                    [new SelRange(Selections.Mark(ctx), offset)]);
             }
             else
             {
-                ctx.Port.SetSelections(new List<SelRange> { new SelRange(offset, offset) });
+                ctx.Port.SetSelections([new SelRange(offset, offset)]);
             }
         }
 
@@ -287,17 +271,17 @@ namespace Notemeow.Core
         {
             int total = Text.LineCount(ctx.Port.GetText());
             LineRange vis = ctx.Port.VisibleLineRange();
-            if (vis == null) return new[] { 0, total - 1 };
-            return new[]
-            {
+            if (vis == null) return [0, total - 1];
+            return
+            [
                 Text.Clamp(vis.First, 0, total - 1),
                 Text.Clamp(vis.Last, 0, total - 1),
-            };
+            ];
         }
 
         private static List<int> Matches(Ctx ctx, string input)
         {
-            if (input.Length == 0) return new List<int>();
+            if (input.Length == 0) return [];
             string text = ctx.Port.GetText();
             int[] fl = VisibleLines(ctx);
             int from = Text.LineStart(text, fl[0]);

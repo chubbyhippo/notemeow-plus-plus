@@ -21,10 +21,10 @@ namespace Notemeow.Core
 {
     public static class AttachPolicy
     {
-        private static readonly HashSet<string> Readonly = new HashSet<string> { "finderesult" };
+        private static readonly HashSet<string> Readonly = ["finderesult"];
 
         private static readonly HashSet<string> Skip =
-            new HashSet<string> { "oneline", "search", "dialog", "docmap" };
+            ["oneline", "search", "dialog", "docmap"];
 
         public static MeowMode? AttachMode(string kind)
         {

@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 
 namespace Notemeow.Plugin
 {
-    internal static class NppApi
+    internal static partial class NppApi
     {
         internal const int NppMsg = 0x400 + 1000;
         internal const int NppmGetCurrentScintilla = NppMsg + 4;
@@ -113,17 +113,20 @@ namespace Notemeow.Plugin
             public int Bottom;
         }
 
-        [DllImport("user32.dll")]
-        internal static extern bool IsWindowVisible(IntPtr hwnd);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool IsWindowVisible(IntPtr hwnd);
 
-        [DllImport("user32.dll")]
-        internal static extern bool GetWindowRect(IntPtr hwnd, out Rect rc);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool GetWindowRect(IntPtr hwnd, out Rect rc);
 
-        [DllImport("user32.dll")]
-        internal static extern nuint SetTimer(IntPtr hwnd, nuint id, uint elapseMs, IntPtr callback);
+        [LibraryImport("user32.dll")]
+        internal static partial nuint SetTimer(IntPtr hwnd, nuint id, uint elapseMs, IntPtr callback);
 
-        [DllImport("user32.dll")]
-        internal static extern bool KillTimer(IntPtr hwnd, nuint id);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool KillTimer(IntPtr hwnd, nuint id);
 
         internal const uint WmChar = 0x0102;
         internal const uint WmKeyDown = 0x0100;
@@ -159,59 +162,66 @@ namespace Notemeow.Plugin
             public uint Code;
         }
 
-        [DllImport("user32.dll", EntryPoint = "SendMessageW")]
-        internal static extern IntPtr SendMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
+        [LibraryImport("user32.dll", EntryPoint = "SendMessageW")]
+        internal static partial IntPtr SendMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-        [DllImport("user32.dll", EntryPoint = "SendMessageW", CharSet = CharSet.Unicode)]
-        internal static extern IntPtr SendMessageStr(IntPtr hwnd, uint msg, IntPtr wParam, string lParam);
+        [LibraryImport("user32.dll", EntryPoint = "SendMessageW", StringMarshalling = StringMarshalling.Utf16)]
+        internal static partial IntPtr SendMessageStr(IntPtr hwnd, uint msg, IntPtr wParam, string lParam);
 
-        [DllImport("user32.dll")]
-        internal static extern bool PostMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool PostMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-        [DllImport("user32.dll")]
-        internal static extern short GetKeyState(int vKey);
+        [LibraryImport("user32.dll")]
+        internal static partial short GetKeyState(int vKey);
 
-        [DllImport("user32.dll", EntryPoint = "MessageBoxW", CharSet = CharSet.Unicode)]
-        internal static extern int MessageBox(IntPtr hwnd, string text, string caption, uint type);
+        [LibraryImport("user32.dll", EntryPoint = "MessageBoxW", StringMarshalling = StringMarshalling.Utf16)]
+        internal static partial int MessageBox(IntPtr hwnd, string text, string caption, uint type);
 
-        [DllImport("comctl32.dll", SetLastError = true)]
-        internal static extern unsafe bool SetWindowSubclass(
+        [LibraryImport("comctl32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static unsafe partial bool SetWindowSubclass(
             IntPtr hwnd,
             delegate* unmanaged<IntPtr, uint, IntPtr, IntPtr, UIntPtr, UIntPtr, IntPtr> proc,
             UIntPtr id,
             UIntPtr refData);
 
-        [DllImport("comctl32.dll")]
-        internal static extern unsafe bool RemoveWindowSubclass(
+        [LibraryImport("comctl32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static unsafe partial bool RemoveWindowSubclass(
             IntPtr hwnd,
             delegate* unmanaged<IntPtr, uint, IntPtr, IntPtr, UIntPtr, UIntPtr, IntPtr> proc,
             UIntPtr id);
 
-        [DllImport("comctl32.dll")]
-        internal static extern IntPtr DefSubclassProc(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
+        [LibraryImport("comctl32.dll")]
+        internal static partial IntPtr DefSubclassProc(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-        [DllImport("user32.dll")]
-        internal static extern bool OpenClipboard(IntPtr owner);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool OpenClipboard(IntPtr owner);
 
-        [DllImport("user32.dll")]
-        internal static extern bool CloseClipboard();
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool CloseClipboard();
 
-        [DllImport("user32.dll")]
-        internal static extern bool EmptyClipboard();
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool EmptyClipboard();
 
-        [DllImport("user32.dll")]
-        internal static extern IntPtr GetClipboardData(uint format);
+        [LibraryImport("user32.dll")]
+        internal static partial IntPtr GetClipboardData(uint format);
 
-        [DllImport("user32.dll")]
-        internal static extern IntPtr SetClipboardData(uint format, IntPtr handle);
+        [LibraryImport("user32.dll")]
+        internal static partial IntPtr SetClipboardData(uint format, IntPtr handle);
 
-        [DllImport("kernel32.dll")]
-        internal static extern IntPtr GlobalAlloc(uint flags, UIntPtr bytes);
+        [LibraryImport("kernel32.dll")]
+        internal static partial IntPtr GlobalAlloc(uint flags, UIntPtr bytes);
 
-        [DllImport("kernel32.dll")]
-        internal static extern IntPtr GlobalLock(IntPtr handle);
+        [LibraryImport("kernel32.dll")]
+        internal static partial IntPtr GlobalLock(IntPtr handle);
 
-        [DllImport("kernel32.dll")]
-        internal static extern bool GlobalUnlock(IntPtr handle);
+        [LibraryImport("kernel32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool GlobalUnlock(IntPtr handle);
     }
 }

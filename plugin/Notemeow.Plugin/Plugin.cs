@@ -28,7 +28,7 @@ namespace Notemeow.Plugin
     {
         private static NppApi.NppData nppData;
         private static readonly Dictionary<ulong, MeowState> States =
-            new Dictionary<ulong, MeowState>();
+            [];
         private static bool swallowEscChar;
         private static bool swallowSysChar;
         private static string whichKeyKind;
@@ -102,7 +102,7 @@ namespace Notemeow.Plugin
         }
 
         [UnmanagedCallersOnly(EntryPoint = "messageProc")]
-        internal static IntPtr MessageProc(uint msg, UIntPtr wParam, IntPtr lParam)
+        internal static IntPtr MessageProc(uint _, UIntPtr _1, IntPtr _2)
         {
             return (IntPtr)1;
         }
@@ -194,10 +194,8 @@ namespace Notemeow.Plugin
             IntPtr second = nppData.ScintillaSecondHandle;
             bool twoViews = NppApi.IsWindowVisible(main) && NppApi.IsWindowVisible(second);
             if (!twoViews) return new Windmove.ViewLayout(false, false, false);
-            NppApi.Rect mainRect;
-            NppApi.Rect secondRect;
-            NppApi.GetWindowRect(main, out mainRect);
-            NppApi.GetWindowRect(second, out secondRect);
+            NppApi.GetWindowRect(main, out NppApi.Rect mainRect);
+            NppApi.GetWindowRect(second, out NppApi.Rect secondRect);
             bool stacked = mainRect.Top != secondRect.Top;
             bool onSecond =
                 ActiveScintilla() == main
@@ -217,7 +215,7 @@ namespace Notemeow.Plugin
             string typing =
                 st.Mode == MeowMode.Insert
                     ? IsOvertype(sci) ? "OVR" : "INS"
-                    : mode.Substring(0, 3);
+                    : mode[..3];
             NppApi.SendMessageStr(
                 nppData.NppHandle,
                 NppApi.NppmSetStatusBar,
@@ -351,36 +349,36 @@ namespace Notemeow.Plugin
 
         private static string CtrlChord(int vk)
         {
-            switch (vk)
+            return vk switch
             {
-                case 'F': return "forward-char";
-                case 'B': return "backward-char";
-                case 'N': return "next-line";
-                case 'P': return "previous-line";
-                case 'A': return "move-beginning-of-line";
-                case 'E': return "move-end-of-line";
-                default: return null;
-            }
+                'F' => "forward-char",
+                'B' => "backward-char",
+                'N' => "next-line",
+                'P' => "previous-line",
+                'A' => "move-beginning-of-line",
+                'E' => "move-end-of-line",
+                _ => null,
+            };
         }
 
         private static string AltChord(int vk, bool shift)
         {
-            switch (vk)
+            return vk switch
             {
-                case 'F': return "forward-word";
-                case 'B': return "backward-word";
-                case 'A': return "backward-sentence";
-                case 'E': return "forward-sentence";
-                case 'U': return "upcase-word";
-                case 'L': return "downcase-word";
-                case 'C': return "capitalize-word";
-                case 'D': return "kill-word";
-                case NppApi.VkOemComma: return shift ? "beginning-of-buffer" : null;
-                case NppApi.VkOemPeriod: return shift ? "end-of-buffer" : null;
-                case NppApi.VkOemOpenBracket: return shift ? "backward-paragraph" : null;
-                case NppApi.VkOemCloseBracket: return shift ? "forward-paragraph" : null;
-                default: return null;
-            }
+                'F' => "forward-word",
+                'B' => "backward-word",
+                'A' => "backward-sentence",
+                'E' => "forward-sentence",
+                'U' => "upcase-word",
+                'L' => "downcase-word",
+                'C' => "capitalize-word",
+                'D' => "kill-word",
+                NppApi.VkOemComma => shift ? "beginning-of-buffer" : null,
+                NppApi.VkOemPeriod => shift ? "end-of-buffer" : null,
+                NppApi.VkOemOpenBracket => shift ? "backward-paragraph" : null,
+                NppApi.VkOemCloseBracket => shift ? "forward-paragraph" : null,
+                _ => null,
+            };
         }
 
         private static string RcPath()
@@ -404,7 +402,7 @@ namespace Notemeow.Plugin
                 }
                 return;
             }
-            Rc.Config cfg = Rc.SetUserLines(new List<string>(File.ReadAllLines(path)));
+            Rc.Config cfg = Rc.SetUserLines([.. File.ReadAllLines(path)]);
             if (!report) return;
             var sb = new StringBuilder();
             sb.Append("Loaded ").Append(path).Append('\n');
@@ -447,7 +445,7 @@ namespace Notemeow.Plugin
                 (IntPtr)pathCapacity,
                 (IntPtr)buf);
             if (got == IntPtr.Zero) return;
-            string current = new string(buf);
+            string current = new(buf);
             if (!string.Equals(current, RcPath(), StringComparison.OrdinalIgnoreCase)) return;
             IntPtr modified = NppApi.SendMessage(
                 ActiveScintilla(), (uint)NppApi.SciGetModify, IntPtr.Zero, IntPtr.Zero);
@@ -643,8 +641,7 @@ namespace Notemeow.Plugin
                     RunCommand("IDM_VIEW_SWITCHTO_OTHER_VIEW");
                     return;
                 }
-                int id;
-                if (!NppMenuIds.TryGet(idText, out id) && !int.TryParse(idText, out id))
+                if (!NppMenuIds.TryGet(idText, out int id) && !int.TryParse(idText, out id))
                 {
                     throw new InvalidOperationException("not a menu command id: " + idText);
                 }

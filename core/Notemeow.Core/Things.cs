@@ -34,35 +34,22 @@ namespace Notemeow.Core
         private static OffsetRange Compute(Ctx ctx, char ch, int offset, bool inner)
         {
             string text = ctx.Port.GetText();
-            switch (ch)
+            return ch switch
             {
-                case 'r':
-                    return Pair(text, offset, '(', ')', inner);
-                case 's':
-                    return Pair(text, offset, '[', ']', inner);
-                case 'c':
-                    return Pair(text, offset, '{', '}', inner);
-                case 'g':
-                    return StringThing(text, offset, inner);
-                case 'e':
-                    return Symbol(text, offset);
-                case 'w':
-                    return Window(ctx, text);
-                case 'b':
-                    return new OffsetRange(0, text.Length);
-                case 'p':
-                    return Paragraph(text, offset, inner);
-                case 'l':
-                    return Line(text, offset, inner);
-                case 'v':
-                    return Line(text, offset, true);
-                case 'd':
-                    return Defun(ctx, text, offset);
-                case '.':
-                    return Sentence(text, offset, inner);
-                default:
-                    return null;
-            }
+                'r' => Pair(text, offset, '(', ')', inner),
+                's' => Pair(text, offset, '[', ']', inner),
+                'c' => Pair(text, offset, '{', '}', inner),
+                'g' => StringThing(text, offset, inner),
+                'e' => Symbol(text, offset),
+                'w' => Window(ctx, text),
+                'b' => new OffsetRange(0, text.Length),
+                'p' => Paragraph(text, offset, inner),
+                'l' => Line(text, offset, inner),
+                'v' => Line(text, offset, true),
+                'd' => Defun(ctx, text, offset),
+                '.' => Sentence(text, offset, inner),
+                _ => null,
+            };
         }
 
         internal static OffsetRange Pair(string text, int offset, char open, char close, bool inner)

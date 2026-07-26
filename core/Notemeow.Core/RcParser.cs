@@ -25,19 +25,19 @@ namespace Notemeow.Core
     internal static class RcParser
     {
         private static readonly Regex ActionRe =
-            new Regex("^<action>\\(([\\w.\\-$(),=]+)\\)$", RegexOptions.IgnoreCase);
+            new("^<action>\\(([\\w.\\-$(),=]+)\\)$", RegexOptions.IgnoreCase);
         private static readonly Regex WhichKeyLetRe =
-            new Regex("^let\\s+g:WhichKeyDesc\\w*\\s*=\\s*\"(.+)\"$");
-        private static readonly Regex TrailingCommentRe = new Regex("\\s\"");
+            new("^let\\s+g:WhichKeyDesc\\w*\\s*=\\s*\"(.+)\"$");
+        private static readonly Regex TrailingCommentRe = new("\\s\"");
         private static readonly Dictionary<string, Action<Rc.Config, int>> ColorSetters =
-            new Dictionary<string, Action<Rc.Config, int>>
+            new()
             {
                 ["overlay-color"] = (c, v) => c.OverlayColor = v,
                 ["overlay-text-color"] = (c, v) => c.OverlayTextColor = v,
                 ["expand-hint-color"] = (c, v) => c.ExpandHintColor = v,
                 ["grab-color"] = (c, v) => c.GrabColor = v,
             };
-        private static readonly Regex HexColorRe = new Regex("^[0-9a-fA-F]{6}$");
+        private static readonly Regex HexColorRe = new("^[0-9a-fA-F]{6}$");
 
         internal static Rc.Config Parse(List<string> lines)
         {
@@ -46,7 +46,7 @@ namespace Notemeow.Core
             {
                 string line = lines[i].Trim();
                 int lineNo = i + 1;
-                Action<string> err = msg => c.Errors.Add("line " + lineNo + ": " + msg);
+                void err(string msg) => c.Errors.Add("line " + lineNo + ": " + msg);
 
                 if (line.Length == 0 || line.StartsWith("\"") || line.StartsWith("#")) continue;
 
@@ -286,7 +286,7 @@ namespace Notemeow.Core
                 if (binding == null) return;
                 if (!c.Repeat.TryGetValue(group, out var members))
                 {
-                    members = new Dictionary<char, Rc.Binding>();
+                    members = [];
                     c.Repeat[group] = members;
                 }
                 members[key[0]] = binding;

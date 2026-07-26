@@ -32,9 +32,9 @@ namespace Notemeow.Core
 
         public char? LastFind;
 
-        public List<string> SearchHistory = new List<string>();
+        public List<string> SearchHistory = [];
 
-        public List<SavedSelection> SelectionHistory = new List<SavedSelection>();
+        public List<SavedSelection> SelectionHistory = [];
 
         public SavedSelection LastSelection;
 
@@ -46,12 +46,12 @@ namespace Notemeow.Core
 
         public AvySession Avy;
 
-        public StringBuilder Keypad = new StringBuilder();
+        public StringBuilder Keypad = new();
 
         public MeowMode KeypadPreviousState = MeowMode.Normal;
 
-        public List<char> Unit = new List<char>();
-        public IReadOnlyList<char> LastKeys = new List<char>();
+        public List<char> Unit = [];
+        public IReadOnlyList<char> LastKeys = [];
         public bool Replaying;
 
         public int ReplayDepth;

@@ -265,7 +265,7 @@ namespace Notemeow.Core
                 int e = o;
                 while (s > 0 && pred(text[s - 1])) s--;
                 while (e < text.Length && pred(text[e])) e++;
-                return new[] { s, e };
+                return [s, e];
             }
         }
     }

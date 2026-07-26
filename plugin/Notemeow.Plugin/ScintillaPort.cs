@@ -41,12 +41,12 @@ namespace Notemeow.Plugin
 
         private IntPtr Send(int msg, long w)
         {
-            return NppApi.SendMessage(sci, (uint)msg, (IntPtr)w, IntPtr.Zero);
+            return NppApi.SendMessage(sci, (uint)msg, checked((IntPtr)w), IntPtr.Zero);
         }
 
         private IntPtr Send(int msg, long w, long l)
         {
-            return NppApi.SendMessage(sci, (uint)msg, (IntPtr)w, (IntPtr)l);
+            return NppApi.SendMessage(sci, (uint)msg, checked((IntPtr)w), checked((IntPtr)l));
         }
 
         private sealed class Mapping
@@ -57,7 +57,7 @@ namespace Notemeow.Plugin
         }
 
         private static readonly Dictionary<IntPtr, Mapping> Cache =
-            new Dictionary<IntPtr, Mapping>();
+            [];
 
         internal static void Invalidate(IntPtr sciHwnd)
         {
@@ -123,7 +123,7 @@ namespace Notemeow.Plugin
             var mapping = new Mapping
             {
                 Text = sb.ToString(),
-                CharToByte = charToByteList.ToArray(),
+                CharToByte = [.. charToByteList],
                 ByteToChar = byteToChar,
             };
             Cache[sci] = mapping;

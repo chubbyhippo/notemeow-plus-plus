@@ -78,20 +78,12 @@ namespace Notemeow.Core
 
     public delegate void MeowCommand(Ctx ctx);
 
-    public sealed class Ctx
+    public sealed class Ctx(IEditorPort port, IClipboardPort clipboard, IUiPort ui, MeowState st)
     {
-        public Ctx(IEditorPort port, IClipboardPort clipboard, IUiPort ui, MeowState st)
-        {
-            Port = port;
-            Clipboard = clipboard;
-            Ui = ui;
-            St = st;
-        }
-
-        public IEditorPort Port { get; }
-        public IClipboardPort Clipboard { get; }
-        public IUiPort Ui { get; }
-        public MeowState St { get; }
+        public IEditorPort Port { get; } = port;
+        public IClipboardPort Clipboard { get; } = clipboard;
+        public IUiPort Ui { get; } = ui;
+        public MeowState St { get; } = st;
 
         public void SetMode(MeowMode mode)
         {

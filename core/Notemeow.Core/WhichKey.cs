@@ -21,33 +21,27 @@ namespace Notemeow.Core
 {
     public static class WhichKey
     {
-        public sealed class Row
+        public sealed class Row(string key, string label)
         {
-            public Row(string key, string label)
-            {
-                Key = key;
-                Label = label;
-            }
-
-            public string Key { get; }
-            public string Label { get; }
+            public string Key { get; } = key;
+            public string Label { get; } = label;
         }
 
-        public static readonly IReadOnlyList<Row> Things = new List<Row>
-        {
-            new Row("r", "round ( )"),
-            new Row("s", "square [ ]"),
-            new Row("c", "curly { }"),
-            new Row("g", "string"),
-            new Row("e", "symbol"),
-            new Row("w", "window"),
-            new Row("b", "buffer"),
-            new Row("p", "paragraph"),
-            new Row("l", "line"),
-            new Row("v", "visual line"),
-            new Row("d", "defun"),
-            new Row(".", "sentence"),
-        };
+        public static readonly IReadOnlyList<Row> Things =
+        [
+            new("r", "round ( )"),
+            new("s", "square [ ]"),
+            new("c", "curly { }"),
+            new("g", "string"),
+            new("e", "symbol"),
+            new("w", "window"),
+            new("b", "buffer"),
+            new("p", "paragraph"),
+            new("l", "line"),
+            new("v", "visual line"),
+            new("d", "defun"),
+            new(".", "sentence"),
+        ];
 
         public static List<Row> KeypadRows(string buffer)
         {
@@ -64,15 +58,12 @@ namespace Notemeow.Core
                 {
                     Rc.Binding b = e.Value;
                     label =
-                        descs.ContainsKey(seq)
-                            ? descs[seq]
-                            : b.Action != null
-                                ? b.Action
-                                : b.Command != null ? b.Command : b.Keys != null ? b.Keys : "";
+                        descs.TryGetValue(seq, out string value)
+                            ? value : b.Action ?? b.Command ?? b.Keys ?? "";
                 }
                 else
                 {
-                    label = descs.ContainsKey(child) ? descs[child] : "+more";
+                    label = descs.TryGetValue(child, out string value) ? value : "+more";
                 }
                 if (!rows.ContainsKey(child))
                 {

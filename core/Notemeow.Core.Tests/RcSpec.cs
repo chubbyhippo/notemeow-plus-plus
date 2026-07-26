@@ -27,7 +27,7 @@ namespace Notemeow.Core.Tests
         [Fact(DisplayName = "given an action mapping then it parses into a normal override")]
         public void ActionMappingParses()
         {
-            Rc.Config c = Rc.Parse(new List<string> { "nmap S <action>(extension.aceJump)" });
+            Rc.Config c = Rc.Parse(["nmap S <action>(extension.aceJump)"]);
             Assert.Equal("extension.aceJump", c.Normal['S'].Action);
             Assert.Empty(c.Errors);
         }
@@ -38,7 +38,7 @@ namespace Notemeow.Core.Tests
             string id =
                 "org.eclipse.ui.views.showView("
                 + "org.eclipse.ui.views.showView.viewId=org.eclipse.ui.views.BookmarkView)";
-            Rc.Config c = Rc.Parse(new List<string> { "map <leader>bj <action>(" + id + ")" });
+            Rc.Config c = Rc.Parse(["map <leader>bj <action>(" + id + ")"]);
             Assert.Equal(id, c.Keypad["bj"].Action);
             Assert.Empty(c.Errors);
         }
@@ -46,15 +46,15 @@ namespace Notemeow.Core.Tests
         [Fact(DisplayName = "given comment-only rc edits then the reload button reports no changes")]
         public void CommentOnlyEditsNoReload()
         {
-            Rc.SetUserLines(new List<string> { "nmap Z ,b" });
-            Assert.True(RcFileState.EqualTo(new List<string> { "\" just a comment", "nmap Z ,b" }));
-            Assert.False(RcFileState.EqualTo(new List<string> { "nmap Q meow-goto-line" }));
+            Rc.SetUserLines(["nmap Z ,b"]);
+            Assert.True(RcFileState.EqualTo(["\" just a comment", "nmap Z ,b"]));
+            Assert.False(RcFileState.EqualTo(["nmap Q meow-goto-line"]));
         }
 
         [Fact(DisplayName = "given a key-sequence mapping then it parses as replay keys")]
         public void KeySequenceParsesAsReplay()
         {
-            Rc.Config c = Rc.Parse(new List<string> { "nmap Z ,b" });
+            Rc.Config c = Rc.Parse(["nmap Z ,b"]);
             Assert.Equal(",b", c.Normal['Z'].Keys);
             Assert.True(c.Normal['Z'].Recursive);
         }
@@ -62,7 +62,7 @@ namespace Notemeow.Core.Tests
         [Fact(DisplayName = "given nnoremap then the binding is non-recursive")]
         public void NnoremapNonRecursive()
         {
-            Rc.Config c = Rc.Parse(new List<string> { "nnoremap Z ,b" });
+            Rc.Config c = Rc.Parse(["nnoremap Z ,b"]);
             Assert.False(c.Normal['Z'].Recursive);
         }
 
@@ -70,7 +70,7 @@ namespace Notemeow.Core.Tests
         public void MeowCommandNameParses()
         {
             Rc.Config c = Rc.Parse(
-                new List<string> { "nmap n meow-mark-word", "nmap d ignore", "nmap Z repeat" });
+                ["nmap n meow-mark-word", "nmap d ignore", "nmap Z repeat"]);
             Assert.Equal("meow-mark-word", c.Normal['n'].Command);
             Assert.Equal("ignore", c.Normal['d'].Command);
             Assert.Equal("repeat", c.Normal['Z'].Command);
@@ -80,7 +80,7 @@ namespace Notemeow.Core.Tests
         [Fact(DisplayName = "given mmap then the binding lands in the motion map")]
         public void MmapLandsInMotionMap()
         {
-            Rc.Config c = Rc.Parse(new List<string> { "mmap n meow-next", "mnoremap e k" });
+            Rc.Config c = Rc.Parse(["mmap n meow-next", "mnoremap e k"]);
             Assert.Equal("meow-next", c.Motion['n'].Command);
             Assert.Equal("k", c.Motion['e'].Keys);
             Assert.False(c.Motion['e'].Recursive);
@@ -91,7 +91,7 @@ namespace Notemeow.Core.Tests
         [Fact(DisplayName = "given an unknown meow command then an error is collected")]
         public void UnknownCommandCollectsError()
         {
-            Rc.Config c = Rc.Parse(new List<string> { "nmap Z meow-frobnicate" });
+            Rc.Config c = Rc.Parse(["nmap Z meow-frobnicate"]);
             Assert.Single(c.Errors);
             Assert.Contains("meow-frobnicate", c.Errors[0]);
         }
@@ -99,7 +99,7 @@ namespace Notemeow.Core.Tests
         [Fact(DisplayName = "given a cmap or cnoremap line then the rc loads it without error")]
         public void CmapCnoremapLoadsWithoutError()
         {
-            Rc.Config c = Rc.Parse(new List<string> { "cmap kj <Esc>", "cnoremap <C-a> <Home>" });
+            Rc.Config c = Rc.Parse(["cmap kj <Esc>", "cnoremap <C-a> <Home>"]);
             Assert.Empty(c.Errors);
             Assert.Empty(c.Normal);
             Assert.Empty(c.Motion);
@@ -121,7 +121,7 @@ namespace Notemeow.Core.Tests
         public void WhichKeyDescLetSyntaxParses()
         {
             Rc.Config c = Rc.Parse(
-                new List<string> { "let g:WhichKeyDesc_leader_x = \"<leader>x C-x files/buffers\"" });
+                ["let g:WhichKeyDesc_leader_x = \"<leader>x C-x files/buffers\""]);
             Assert.Equal("C-x files/buffers", c.KeypadDesc["x"]);
             Assert.Empty(c.Errors);
         }
@@ -130,13 +130,12 @@ namespace Notemeow.Core.Tests
         public void SetLinesApplyWhichKeyOptions()
         {
             Rc.Config c = Rc.Parse(
-                new List<string>
-                {
+                [
                     "set nowhich-key",
                     "set timeoutlen=400",
                     "set clipboard+=unnamedplus",
                     "let mapleader=\" \"",
-                });
+                ]);
             Assert.Equal(false, c.WhichKey);
             Assert.Equal(400, c.WhichKeyDelayMs);
             Assert.Empty(c.Errors);
@@ -156,13 +155,12 @@ namespace Notemeow.Core.Tests
         public void OverlayColorSetLinesParseToRgb()
         {
             Rc.Config c = Rc.Parse(
-                new List<string>
-                {
+                [
                     "set overlay-color=#E52B50",
                     "set overlay-text-color=#ffffff",
                     "set expand-hint-color=#d05c0a",
                     "set grab-color=#CDE8CD",
-                });
+                ]);
             Assert.Equal(0xE52B50, c.OverlayColor);
             Assert.Equal(0xFFFFFF, c.OverlayTextColor);
             Assert.Equal(0xD05C0A, c.ExpandHintColor);
@@ -174,7 +172,7 @@ namespace Notemeow.Core.Tests
         public void MalformedOverlayColorErrorsAndStaysUnset()
         {
             Rc.Config c = Rc.Parse(
-                new List<string> { "set overlay-color=#12345", "set grab-color=nope" });
+                ["set overlay-color=#12345", "set grab-color=nope"]);
             Assert.Null(c.OverlayColor);
             Assert.Null(c.GrabColor);
             Assert.Equal(2, c.Errors.Count);
@@ -184,7 +182,7 @@ namespace Notemeow.Core.Tests
         [Fact(DisplayName = "given an unknown set color option then it is ignored without error")]
         public void UnknownSetColorOptionIgnored()
         {
-            Rc.Config c = Rc.Parse(new List<string> { "set cursor-color=#123456" });
+            Rc.Config c = Rc.Parse(["set cursor-color=#123456"]);
             Assert.Null(c.OverlayColor);
             Assert.Empty(c.Errors);
         }
@@ -202,11 +200,10 @@ namespace Notemeow.Core.Tests
         public void TrailingCommentStripped()
         {
             Rc.Config c = Rc.Parse(
-                new List<string>
-                {
+                [
                     "nmap S <action>(extension.aceJump)   \" jump anywhere",
                     "map <leader>zz ,b            \" select the buffer",
-                });
+                ]);
             Assert.Equal("extension.aceJump", c.Normal['S'].Action);
             Assert.Equal(",b", c.Keypad["zz"].Keys);
             Assert.Empty(c.Errors);
@@ -240,14 +237,13 @@ namespace Notemeow.Core.Tests
         public void BadLinesCollectErrors()
         {
             Rc.Config c = Rc.Parse(
-                new List<string>
-                {
+                [
                     "frobnicate everything",
                     "nmap <Space> ,b",
                     "map <leader>1 <action>(X)",
                     "nmap Q <CR>",
                     "mmap <leader>x ,b",
-                });
+                ]);
             Assert.Equal(5, c.Errors.Count);
             Assert.StartsWith("line 1", c.Errors[0]);
         }
@@ -364,23 +360,23 @@ namespace Notemeow.Core.Tests
         {
             GivenRc("map <leader>zz <action>(workbench.action.quickOpen)\ndesc <leader>z my group");
             List<WhichKey.Row> top = WhichKey.KeypadRows("");
-            Assert.True(top.Any(r => r.Key == "z" && r.Label == "my group"));
+            Assert.Contains(top, r => r.Key == "z" && r.Label == "my group");
             List<WhichKey.Row> inner = WhichKey.KeypadRows("z");
-            Assert.True(inner.Any(r => r.Key == "z" && r.Label == "workbench.action.quickOpen"));
+            Assert.Contains(inner, r => r.Key == "z" && r.Label == "workbench.action.quickOpen");
         }
 
         [Fact(DisplayName = "given a terminal with a description then which-key prefers it")]
         public void WhichKeyPrefersDescription()
         {
             GivenRc("map <leader>zz <action>(workbench.action.quickOpen)\ndesc <leader>zz open a file");
-            Assert.True(
-                WhichKey.KeypadRows("z").Any(r => r.Key == "z" && r.Label == "open a file"));
+            Assert.Contains(
+                WhichKey.KeypadRows("z"), r => r.Key == "z" && r.Label == "open a file");
         }
 
         [Fact(DisplayName = "given the default table then the SPC SPC entry renders as SPC")]
         public void SpcSpcRendersAsSpc()
         {
-            Assert.True(WhichKey.KeypadRows("").Any(r => r.Key == "SPC"));
+            Assert.Contains(WhichKey.KeypadRows(""), r => r.Key == "SPC");
         }
 
         private static Dictionary<char, string> Qwerty()

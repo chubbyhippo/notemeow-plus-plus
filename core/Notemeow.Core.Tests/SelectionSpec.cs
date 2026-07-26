@@ -229,7 +229,7 @@ namespace Notemeow.Core.Tests
         {
             Given("chars", "<caret>aXX");
             WhenKeys("fX");
-            Assert.Equal(new List<int> { 3 }, Ui.ExpandHints);
+            Assert.Equal([3], Ui.ExpandHints);
         }
 
         [Fact(DisplayName = "given digits after w then the selection expands by that many words")]

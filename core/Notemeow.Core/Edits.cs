@@ -36,7 +36,7 @@ namespace Notemeow.Core
         }
 
         internal static readonly Dictionary<string, MeowCommand> Commands =
-            new Dictionary<string, MeowCommand>
+            new()
             {
                 ["meow-insert"] = Insert,
                 ["meow-append"] = Append,
@@ -64,32 +64,19 @@ namespace Notemeow.Core
             Capitalize,
         }
 
-        private sealed class Computed
+        private sealed class Computed(TextEdit edit, SelRange sel)
         {
-            public Computed(TextEdit edit, SelRange sel)
-            {
-                Edit = edit;
-                Sel = sel;
-            }
-
-            public TextEdit Edit { get; }
-            public SelRange Sel { get; }
+            public TextEdit Edit { get; } = edit;
+            public SelRange Sel { get; } = sel;
         }
 
         private delegate Computed Compute(SelRange sel, int lo, int hi);
 
-        private sealed class Item
+        private sealed class Item(SelRange sel, int index, int lo)
         {
-            public Item(SelRange sel, int index, int lo)
-            {
-                Sel = sel;
-                Index = index;
-                Lo = lo;
-            }
-
-            public SelRange Sel { get; }
-            public int Index { get; }
-            public int Lo { get; }
+            public SelRange Sel { get; } = sel;
+            public int Index { get; } = index;
+            public int Lo { get; } = lo;
         }
 
         private static void EditCarets(Ctx ctx, Compute compute)
@@ -128,7 +115,7 @@ namespace Notemeow.Core
                 Grab.AdjustForEdits(ctx.St, edits);
                 ctx.Port.Edit(edits);
             }
-            ctx.Port.SetSelections(new List<SelRange>(newSels));
+            ctx.Port.SetSelections([.. newSels]);
         }
 
         private static void Insert(Ctx ctx)
@@ -165,10 +152,10 @@ namespace Notemeow.Core
             Selections.Collapse(ctx);
             string text = ctx.Port.GetText();
             int eol = Text.LineEnd(text, Text.LineOfOffset(text, Selections.Primary(ctx).Active));
-            var nl = new List<TextEdit> { new TextEdit(eol, eol, "\n") };
+            var nl = new List<TextEdit> { new(eol, eol, "\n") };
             Grab.AdjustForEdits(ctx.St, nl);
             ctx.Port.Edit(nl);
-            ctx.Port.SetSelections(new List<SelRange> { new SelRange(eol + 1, eol + 1) });
+            ctx.Port.SetSelections([new SelRange(eol + 1, eol + 1)]);
             ctx.SetMode(MeowMode.Insert);
         }
 
@@ -178,10 +165,10 @@ namespace Notemeow.Core
             Selections.Collapse(ctx);
             string text = ctx.Port.GetText();
             int bol = Text.LineStart(text, Text.LineOfOffset(text, Selections.Primary(ctx).Active));
-            var nl = new List<TextEdit> { new TextEdit(bol, bol, "\n") };
+            var nl = new List<TextEdit> { new(bol, bol, "\n") };
             Grab.AdjustForEdits(ctx.St, nl);
             ctx.Port.Edit(nl);
-            ctx.Port.SetSelections(new List<SelRange> { new SelRange(bol, bol) });
+            ctx.Port.SetSelections([new SelRange(bol, bol)]);
             ctx.SetMode(MeowMode.Insert);
         }
 
@@ -249,7 +236,7 @@ namespace Notemeow.Core
                 if (text[hi] == '\r') hi++;
                 if (hi < text.Length && text[hi] == '\n') hi++;
             }
-            return new[] { lo, hi };
+            return [lo, hi];
         }
 
         private static List<SelRange> RegionsInOrder(List<SelRange> sels)
@@ -311,8 +298,8 @@ namespace Notemeow.Core
             if (end > caret)
             {
                 ctx.Clipboard.Write(text.Substring(caret, end - caret));
-                ctx.Port.Edit(new List<TextEdit> { new TextEdit(caret, end, "") });
-                ctx.Port.SetSelections(new List<SelRange> { new SelRange(caret, caret) });
+                ctx.Port.Edit([new TextEdit(caret, end, "")]);
+                ctx.Port.SetSelections([new SelRange(caret, caret)]);
             }
         }
 
@@ -331,8 +318,8 @@ namespace Notemeow.Core
                     && !char.IsWhiteSpace(after)
                     && ")]}.,;:".IndexOf(after) < 0
                     && "([{".IndexOf(before) < 0;
-            ctx.Port.Edit(new List<TextEdit> { new TextEdit(s, e, space ? " " : "") });
-            ctx.Port.SetSelections(new List<SelRange> { new SelRange(s, s) });
+            ctx.Port.Edit([new TextEdit(s, e, space ? " " : "")]);
+            ctx.Port.SetSelections([new SelRange(s, s)]);
             ctx.St.SelType = SelType.None;
             ctx.St.SelExpand = false;
         }
@@ -394,15 +381,12 @@ namespace Notemeow.Core
 
         private static string Casified(string slice, CaseOp op)
         {
-            switch (op)
+            return op switch
             {
-                case CaseOp.Upcase:
-                    return slice.ToUpperInvariant();
-                case CaseOp.Downcase:
-                    return slice.ToLowerInvariant();
-                default:
-                    return CapitalizedWords(slice);
-            }
+                CaseOp.Upcase => slice.ToUpperInvariant(),
+                CaseOp.Downcase => slice.ToLowerInvariant(),
+                _ => CapitalizedWords(slice),
+            };
         }
 
         private static string CapitalizedWords(string slice)
@@ -457,7 +441,7 @@ namespace Notemeow.Core
                 n > 0
                     ? Text.Words.NextEnd(text, from, n, pred)
                     : Text.Words.PrevStart(text, from, -n, pred);
-            return new[] { Math.Min(from, target), Math.Max(from, target) };
+            return [Math.Min(from, target), Math.Max(from, target)];
         }
 
         private static void KillWord(Ctx ctx)

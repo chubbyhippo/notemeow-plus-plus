@@ -19,16 +19,10 @@ using System;
 
 namespace Notemeow.Core
 {
-    public sealed class SelRange
+    public sealed class SelRange(int anchor, int active)
     {
-        public SelRange(int anchor, int active)
-        {
-            Anchor = anchor;
-            Active = active;
-        }
-
-        public int Anchor { get; }
-        public int Active { get; }
+        public int Anchor { get; } = anchor;
+        public int Active { get; } = active;
 
         public int Lo() => Math.Min(Anchor, Active);
 
@@ -48,58 +42,31 @@ namespace Notemeow.Core
         }
     }
 
-    public sealed class TextEdit
+    public sealed class TextEdit(int start, int end, string text)
     {
-        public TextEdit(int start, int end, string text)
-        {
-            Start = start;
-            End = end;
-            Text = text;
-        }
-
-        public int Start { get; }
-        public int End { get; }
-        public string Text { get; }
+        public int Start { get; } = start;
+        public int End { get; } = end;
+        public string Text { get; } = text;
     }
 
-    public sealed class OffsetRange
+    public sealed class OffsetRange(int start, int end)
     {
-        public OffsetRange(int start, int end)
-        {
-            Start = start;
-            End = end;
-        }
-
-        public int Start { get; }
-        public int End { get; }
+        public int Start { get; } = start;
+        public int End { get; } = end;
     }
 
-    public sealed class LineRange
+    public sealed class LineRange(int first, int last)
     {
-        public LineRange(int first, int last)
-        {
-            First = first;
-            Last = last;
-        }
-
-        public int First { get; }
-        public int Last { get; }
+        public int First { get; } = first;
+        public int Last { get; } = last;
     }
 
-    public sealed class SavedSelection
+    public sealed class SavedSelection(SelType? type, bool expand, int anchor, int active)
     {
-        public SavedSelection(SelType? type, bool expand, int anchor, int active)
-        {
-            Type = type;
-            Expand = expand;
-            Anchor = anchor;
-            Active = active;
-        }
-
-        public SelType? Type { get; }
-        public bool Expand { get; }
-        public int Anchor { get; }
-        public int Active { get; }
+        public SelType? Type { get; } = type;
+        public bool Expand { get; } = expand;
+        public int Anchor { get; } = anchor;
+        public int Active { get; } = active;
 
         public override bool Equals(object obj)
         {
@@ -123,15 +90,9 @@ namespace Notemeow.Core
         }
     }
 
-    public sealed class AvyLabel
+    public sealed class AvyLabel(int offset, string label)
     {
-        public AvyLabel(int offset, string label)
-        {
-            Offset = offset;
-            Label = label;
-        }
-
-        public int Offset { get; }
-        public string Label { get; }
+        public int Offset { get; } = offset;
+        public string Label { get; } = label;
     }
 }

@@ -164,10 +164,10 @@ namespace Notemeow.Core.Tests
         [Fact(DisplayName = "the avy-subdiv distribution matches avy 0-5-0")]
         public void AvySubdivDistribution()
         {
-            Assert.Equal(new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 }, Avy.Subdiv(9, 9));
-            Assert.Equal(new[] { 1, 1, 1, 1, 1, 1, 1, 1, 2 }, Avy.Subdiv(10, 9));
-            Assert.Equal(new[] { 1, 1, 1, 1, 9, 9, 9, 9, 9 }, Avy.Subdiv(49, 9));
-            Assert.Equal(new[] { 9, 9, 9, 9, 9, 9, 9, 9, 9 }, Avy.Subdiv(81, 9));
+            Assert.Equal([1, 1, 1, 1, 1, 1, 1, 1, 1], Avy.Subdiv(9, 9));
+            Assert.Equal([1, 1, 1, 1, 1, 1, 1, 1, 2], Avy.Subdiv(10, 9));
+            Assert.Equal([1, 1, 1, 1, 9, 9, 9, 9, 9], Avy.Subdiv(49, 9));
+            Assert.Equal([9, 9, 9, 9, 9, 9, 9, 9, 9], Avy.Subdiv(81, 9));
         }
     }
 }

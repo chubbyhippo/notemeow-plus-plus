@@ -41,15 +41,15 @@ namespace Notemeow.Core
         private const int MaxSelectionHistory = 200;
         private const int DigitZeroExpand = 10;
 
-        private static readonly HashSet<SelType> Expandable = new HashSet<SelType>
-        {
+        private static readonly HashSet<SelType> Expandable =
+        [
             SelType.Char,
             SelType.Word,
             SelType.Symbol,
             SelType.Line,
             SelType.Find,
             SelType.Till,
-        };
+        ];
 
         public static SelRange Primary(Ctx ctx)
         {
@@ -78,9 +78,7 @@ namespace Notemeow.Core
         {
             MeowState st = ctx.St;
             SavedSelection prev =
-                st.LastSelection != null
-                    ? st.LastSelection
-                    : new SavedSelection(null, false, posBefore, posBefore);
+                st.LastSelection ?? new SavedSelection(null, false, posBefore, posBefore);
             SavedSelection head =
                 st.SelectionHistory.Count > 0
                     ? st.SelectionHistory[st.SelectionHistory.Count - 1]
@@ -108,8 +106,10 @@ namespace Notemeow.Core
             else st.LastSelection = new SavedSelection(type, expand, m, p);
             st.SelType = type;
             st.SelExpand = expand;
-            var next = new List<SelRange>(sels);
-            next[0] = new SelRange(m, p);
+            var next = new List<SelRange>(sels)
+            {
+                [0] = new SelRange(m, p)
+            };
             ctx.Port.SetSelections(next);
             Grab.Beacon(ctx);
             ctx.Ui.ShowExpandHints(Hints.ExpandHintPositions(ctx));
@@ -139,7 +139,7 @@ namespace Notemeow.Core
         public static void CancelAll(Ctx ctx)
         {
             List<SelRange> sels = ctx.Port.GetSelections();
-            if (sels.Count > 1) ctx.Port.SetSelections(new List<SelRange> { sels[0] });
+            if (sels.Count > 1) ctx.Port.SetSelections([sels[0]]);
             Cancel(ctx);
         }
 
@@ -147,8 +147,10 @@ namespace Notemeow.Core
         {
             SelRange sel = Primary(ctx);
             if (!HasSelection(sel)) return;
-            var sels = new List<SelRange>(ctx.Port.GetSelections());
-            sels[0] = new SelRange(sel.Active, sel.Anchor);
+            var sels = new List<SelRange>(ctx.Port.GetSelections())
+            {
+                [0] = new SelRange(sel.Active, sel.Anchor)
+            };
             ctx.Port.SetSelections(sels);
         }
 
@@ -166,8 +168,10 @@ namespace Notemeow.Core
                 if (entry == null) return;
                 if (entry.Type == null)
                 {
-                    var sels = new List<SelRange>(ctx.Port.GetSelections());
-                    sels[0] = new SelRange(entry.Active, entry.Active);
+                    var sels = new List<SelRange>(ctx.Port.GetSelections())
+                    {
+                        [0] = new SelRange(entry.Active, entry.Active)
+                    };
                     ctx.Port.SetSelections(sels);
                     Cancel(ctx);
                     ctx.Ui.Hint("No previous selection");

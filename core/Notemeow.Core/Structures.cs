@@ -22,7 +22,7 @@ namespace Notemeow.Core
     public static class Structures
     {
         internal static readonly Dictionary<string, MeowCommand> Commands =
-            new Dictionary<string, MeowCommand>
+            new()
             {
                 ["meow-inner-of-thing"] = ctx => PendThing(ctx, Pending.Inner),
                 ["meow-bounds-of-thing"] = ctx => PendThing(ctx, Pending.Bounds),
@@ -106,7 +106,7 @@ namespace Notemeow.Core
                         {
                             if (o < s && i + 1 >= e && (best == null || i - o < best[1] - best[0]))
                             {
-                                best = new[] { o, i };
+                                best = [o, i];
                             }
                             break;
                         }

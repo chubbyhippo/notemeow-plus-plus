@@ -116,10 +116,8 @@ namespace Notemeow.Core
             {
                 Rc.Binding b = keypad[seq];
                 string target =
-                    b.Action != null
-                        ? b.Action
-                        : b.Command != null ? b.Command : b.Keys != null ? b.Keys : "";
-                string desc = descs.ContainsKey(seq) ? "  (" + descs[seq] + ")" : "";
+                    b.Action ?? b.Command ?? b.Keys ?? "";
+                string desc = descs.TryGetValue(seq, out string value) ? "  (" + value + ")" : "";
                 rows.Add("SPC " + Spaced(seq) + "  ->  " + target + desc);
             }
             string entries = string.Join("\n", rows);

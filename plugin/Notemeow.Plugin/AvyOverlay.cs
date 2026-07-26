@@ -22,20 +22,13 @@ using Notemeow.Core;
 
 namespace Notemeow.Plugin
 {
-    internal static unsafe class AvyOverlay
+    internal static unsafe partial class AvyOverlay
     {
-        internal sealed class Label
+        internal sealed class Label(string text, int x, int y)
         {
-            public Label(string text, int x, int y)
-            {
-                Text = text;
-                X = x;
-                Y = y;
-            }
-
-            public string Text { get; }
-            public int X { get; }
-            public int Y { get; }
+            public string Text { get; } = text;
+            public int X { get; } = x;
+            public int Y { get; } = y;
         }
 
         private const uint WsPopup = 0x80000000;
@@ -58,7 +51,7 @@ namespace Notemeow.Plugin
         private static IntPtr classNamePtr;
         private static ushort classAtom;
         private static IntPtr overlay;
-        private static List<Label> current = new List<Label>();
+        private static List<Label> current = [];
         private static int lineHeight = 14;
         private static int boxColor = LabelBg;
         private static IntPtr labelFont;
@@ -94,13 +87,12 @@ namespace Notemeow.Plugin
 
         internal static void Show(IntPtr sci, List<Label> labels, int height, int box)
         {
-            current = labels ?? new List<Label>();
+            current = labels ?? [];
             boxColor = box;
             if (height > 0) lineHeight = height;
             if (!EnsureWindow()) return;
 
-            RECT rc;
-            if (!GetClientRect(sci, out rc)) return;
+            if (!GetClientRect(sci, out RECT rc)) return;
             POINT origin = default;
             ClientToScreen(sci, ref origin);
             int w = rc.Right - rc.Left;
@@ -113,7 +105,7 @@ namespace Notemeow.Plugin
 
         internal static void Hide()
         {
-            current = new List<Label>();
+            current = [];
             if (overlay != IntPtr.Zero) ShowWindow(overlay, SwHide);
         }
 
@@ -155,21 +147,19 @@ namespace Notemeow.Plugin
 
         private static void PaintInto(IntPtr hdc)
         {
-            RECT rc;
-            GetClientRect(overlay, out rc);
+            GetClientRect(overlay, out RECT rc);
             IntPtr bg = CreateSolidBrush(ColorKey);
             FillRect(hdc, ref rc, bg);
             DeleteObject(bg);
 
             IntPtr oldFont = SelectObject(hdc, LabelFont());
-            SetBkMode(hdc, TransparentBkMode);
+            _ = SetBkMode(hdc, TransparentBkMode);
             IntPtr box = CreateSolidBrush(boxColor);
             foreach (Label lb in current)
             {
                 string text = lb.Text ?? "";
                 if (text.Length == 0) continue;
-                SIZE ext;
-                GetTextExtentPoint32W(hdc, text, text.Length, out ext);
+                GetTextExtentPoint32W(hdc, text, text.Length, out SIZE ext);
                 int boxH = Math.Max(ext.Cy, lineHeight);
                 var r = new RECT
                 {
@@ -179,7 +169,7 @@ namespace Notemeow.Plugin
                     Bottom = lb.Y + boxH,
                 };
                 FillRect(hdc, ref r, box);
-                SetTextColor(hdc, LabelFg);
+                _ = SetTextColor(hdc, LabelFg);
                 TextOutW(hdc, lb.X + 2, lb.Y, text, text.Length);
             }
             DeleteObject(box);
@@ -252,14 +242,14 @@ namespace Notemeow.Plugin
             public fixed byte Reserved[32];
         }
 
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr GetModuleHandleW(IntPtr name);
+        [LibraryImport("kernel32.dll")]
+        private static partial IntPtr GetModuleHandleW(IntPtr name);
 
-        [DllImport("user32.dll")]
-        private static extern ushort RegisterClassW(ref WNDCLASSW wc);
+        [LibraryImport("user32.dll")]
+        private static partial ushort RegisterClassW(ref WNDCLASSW wc);
 
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern IntPtr CreateWindowExW(
+        [LibraryImport("user32.dll")]
+        private static partial IntPtr CreateWindowExW(
             uint exStyle,
             IntPtr className,
             IntPtr windowName,
@@ -273,47 +263,56 @@ namespace Notemeow.Plugin
             IntPtr instance,
             IntPtr param);
 
-        [DllImport("user32.dll")]
-        private static extern bool ShowWindow(IntPtr hwnd, int cmd);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool ShowWindow(IntPtr hwnd, int cmd);
 
-        [DllImport("user32.dll")]
-        private static extern bool MoveWindow(IntPtr hwnd, int x, int y, int w, int h, bool repaint);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool MoveWindow(IntPtr hwnd, int x, int y, int w, int h, [MarshalAs(UnmanagedType.Bool)] bool repaint);
 
-        [DllImport("user32.dll")]
-        private static extern bool GetClientRect(IntPtr hwnd, out RECT rc);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool GetClientRect(IntPtr hwnd, out RECT rc);
 
-        [DllImport("user32.dll")]
-        private static extern bool ClientToScreen(IntPtr hwnd, ref POINT pt);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool ClientToScreen(IntPtr hwnd, ref POINT pt);
 
-        [DllImport("user32.dll")]
-        private static extern bool SetLayeredWindowAttributes(IntPtr hwnd, int key, byte alpha, uint flags);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SetLayeredWindowAttributes(IntPtr hwnd, int key, byte alpha, uint flags);
 
-        [DllImport("user32.dll")]
-        private static extern bool InvalidateRect(IntPtr hwnd, IntPtr rc, bool erase);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool InvalidateRect(IntPtr hwnd, IntPtr rc, [MarshalAs(UnmanagedType.Bool)] bool erase);
 
-        [DllImport("user32.dll")]
-        private static extern bool UpdateWindow(IntPtr hwnd);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool UpdateWindow(IntPtr hwnd);
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr BeginPaint(IntPtr hwnd, PAINTSTRUCT* ps);
+        [LibraryImport("user32.dll")]
+        private static partial IntPtr BeginPaint(IntPtr hwnd, PAINTSTRUCT* ps);
 
-        [DllImport("user32.dll")]
-        private static extern bool EndPaint(IntPtr hwnd, PAINTSTRUCT* ps);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool EndPaint(IntPtr hwnd, PAINTSTRUCT* ps);
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr DefWindowProcW(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
+        [LibraryImport("user32.dll")]
+        private static partial IntPtr DefWindowProcW(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-        [DllImport("user32.dll")]
-        private static extern int FillRect(IntPtr hdc, ref RECT rc, IntPtr brush);
+        [LibraryImport("user32.dll")]
+        private static partial int FillRect(IntPtr hdc, ref RECT rc, IntPtr brush);
 
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr CreateSolidBrush(int color);
+        [LibraryImport("gdi32.dll")]
+        private static partial IntPtr CreateSolidBrush(int color);
 
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteObject(IntPtr obj);
+        [LibraryImport("gdi32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool DeleteObject(IntPtr obj);
 
-        [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
-        private static extern IntPtr CreateFontW(
+        [LibraryImport("gdi32.dll", StringMarshalling = StringMarshalling.Utf16)]
+        private static partial IntPtr CreateFontW(
             int height,
             int width,
             int escapement,
@@ -329,19 +328,21 @@ namespace Notemeow.Plugin
             uint pitchAndFamily,
             string faceName);
 
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr SelectObject(IntPtr hdc, IntPtr obj);
+        [LibraryImport("gdi32.dll")]
+        private static partial IntPtr SelectObject(IntPtr hdc, IntPtr obj);
 
-        [DllImport("gdi32.dll")]
-        private static extern int SetBkMode(IntPtr hdc, int mode);
+        [LibraryImport("gdi32.dll")]
+        private static partial int SetBkMode(IntPtr hdc, int mode);
 
-        [DllImport("gdi32.dll")]
-        private static extern int SetTextColor(IntPtr hdc, int color);
+        [LibraryImport("gdi32.dll")]
+        private static partial int SetTextColor(IntPtr hdc, int color);
 
-        [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
-        private static extern bool TextOutW(IntPtr hdc, int x, int y, string text, int len);
+        [LibraryImport("gdi32.dll", StringMarshalling = StringMarshalling.Utf16)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool TextOutW(IntPtr hdc, int x, int y, string text, int len);
 
-        [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
-        private static extern bool GetTextExtentPoint32W(IntPtr hdc, string text, int len, out SIZE size);
+        [LibraryImport("gdi32.dll", StringMarshalling = StringMarshalling.Utf16)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool GetTextExtentPoint32W(IntPtr hdc, string text, int len, out SIZE size);
     }
 }

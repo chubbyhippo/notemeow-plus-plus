@@ -20,13 +20,22 @@ set -eu
 cd "$(dirname "$0")"
 
 published_dll="plugin/Notemeow.Plugin/bin/Release/net10.0/win-x64/publish/Notemeow.dll"
+projects="core/Notemeow.Core core/Notemeow.Core.Tests plugin/Notemeow.Plugin"
 
 usage() {
-  echo "usage: ./setup.sh              run the suite, build the Notepad++ DLL, and install it"
-  echo "       ./setup.sh --core-only  only the engine behavior suite (no Notepad++ needed)"
+  echo "usage: ./setup.sh              lint, run the suite, build the Notepad++ DLL, and install it"
+  echo "       ./setup.sh --core-only  only the lint gates and the engine behavior suite (no Notepad++ needed)"
+  echo "       ./setup.sh --lint-only  only the analyzer and code-style gates"
   echo "       ./setup.sh --build-only build the DLL, install nothing"
   echo "       ./setup.sh --skip-build install the already-built DLL"
   echo "       ./setup.sh -h           show this help and exit"
+}
+
+run_lint() {
+  for project in $projects; do
+    mise exec -- dotnet format "$project" --verify-no-changes --severity info
+  done
+  mise exec -- dotnet build plugin/Notemeow.Plugin
 }
 
 run_suite() {
@@ -100,10 +109,11 @@ install_plugin() {
   fi
 }
 
-core_only=0 do_build=1 do_install=1
+core_only=0 lint_only=0 do_build=1 do_install=1
 while [ $# -gt 0 ]; do
   case "$1" in
     --core-only)  core_only=1 ;;
+    --lint-only)  lint_only=1 ;;
     --build-only) do_install=0 ;;
     --skip-build) do_build=0 ;;
     -h|--help)    usage; exit 0 ;;
@@ -111,6 +121,12 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+
+run_lint
+
+if [ "$lint_only" -eq 1 ]; then
+  exit 0
+fi
 
 run_suite
 

@@ -44,19 +44,19 @@ namespace Notemeow.Core.Tests
             return new Ctx(Editor, Clip, Ui, St);
         }
 
-        protected void Given(string description, string textWithCaret)
+        protected void Given(string _, string textWithCaret)
         {
             int at = textWithCaret.IndexOf("<caret>", StringComparison.Ordinal);
             Editor.Text.Length = 0;
             Editor.Text.Append(textWithCaret.Replace("<caret>", ""));
             int off = Math.Max(at, 0);
-            Editor.Sels = new List<SelRange> { new SelRange(off, off) };
+            Editor.Sels = [new(off, off)];
             St = new MeowState();
         }
 
-        protected void GivenRc(string text)
+        protected static void GivenRc(string text)
         {
-            Rc.SetForTest(Rc.Parse(new List<string>(text.Split(new[] { '\n' }))));
+            Rc.SetForTest(Rc.Parse([.. text.Split(['\n'])]));
         }
 
         protected void GivenClipboard(string text)
@@ -71,7 +71,7 @@ namespace Notemeow.Core.Tests
 
         protected void GivenCaretAt(int offset)
         {
-            Editor.Sels = new List<SelRange> { new SelRange(offset, offset) };
+            Editor.Sels = [new(offset, offset)];
         }
 
         protected void GivenReadOnly()
@@ -100,7 +100,7 @@ namespace Notemeow.Core.Tests
             if (s.Anchor == s.Active) return null;
             int lo = Math.Min(s.Anchor, s.Active);
             int hi = Math.Max(s.Anchor, s.Active);
-            return Editor.GetText().Substring(lo, hi - lo);
+            return Editor.GetText()[lo..hi];
         }
 
         protected int CaretLine()

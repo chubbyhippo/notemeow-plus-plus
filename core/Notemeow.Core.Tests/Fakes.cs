@@ -23,8 +23,8 @@ namespace Notemeow.Core.Tests
 {
     public class FakeEditor : IEditorPort
     {
-        public readonly StringBuilder Text = new StringBuilder();
-        public List<SelRange> Sels = new List<SelRange> { new SelRange(0, 0) };
+        public readonly StringBuilder Text = new();
+        public List<SelRange> Sels = [new SelRange(0, 0)];
         public bool Writable = true;
         public LineRange Visible;
         public int UndoCount;
@@ -36,12 +36,12 @@ namespace Notemeow.Core.Tests
 
         public List<SelRange> GetSelections()
         {
-            return new List<SelRange>(Sels);
+            return [.. Sels];
         }
 
         public void SetSelections(List<SelRange> sels)
         {
-            Sels = new List<SelRange>(sels);
+            Sels = [.. sels];
         }
 
         public void Edit(List<TextEdit> edits)
@@ -97,27 +97,21 @@ namespace Notemeow.Core.Tests
 
     public class FakeUi : IUiPort
     {
-        public sealed class InfoEntry
+        public sealed class InfoEntry(string title, string body)
         {
-            public InfoEntry(string title, string body)
-            {
-                Title = title;
-                Body = body;
-            }
-
-            public string Title { get; }
-            public string Body { get; }
+            public string Title { get; } = title;
+            public string Body { get; } = body;
         }
 
-        public readonly List<string> Hints = new List<string>();
-        public readonly List<InfoEntry> Infos = new List<InfoEntry>();
-        public readonly Queue<string> Answers = new Queue<string>();
+        public readonly List<string> Hints = [];
+        public readonly List<InfoEntry> Infos = [];
+        public readonly Queue<string> Answers = new();
 
-        public readonly List<string> Ran = new List<string>();
+        public readonly List<string> Ran = [];
 
-        public readonly List<MeowMode> Modes = new List<MeowMode>();
+        public readonly List<MeowMode> Modes = [];
 
-        public List<int> ExpandHints = new List<int>();
+        public List<int> ExpandHints = [];
 
         public void Hint(string text)
         {
@@ -154,7 +148,7 @@ namespace Notemeow.Core.Tests
 
         public void ClearExpandHints()
         {
-            ExpandHints = new List<int>();
+            ExpandHints = [];
         }
 
         public void ShowAvyMatches(List<OffsetRange> matches)

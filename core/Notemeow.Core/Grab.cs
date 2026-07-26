@@ -24,7 +24,7 @@ namespace Notemeow.Core
     public static class Grab
     {
         internal static readonly Dictionary<string, MeowCommand> Commands =
-            new Dictionary<string, MeowCommand>
+            new()
             {
                 ["meow-grab"] = DoGrab,
                 ["meow-sync-grab"] = Sync,
@@ -124,24 +124,23 @@ namespace Notemeow.Core
             string selText = text.Substring(ss, se - ss);
             st.Grab = null;
             ctx.Port.Edit(
-                new List<TextEdit>
-                {
+                [
                     new TextEdit(ss, se, grabText),
                     new TextEdit(gs, ge, selText),
-                });
+                ]);
             if (gs <= ss)
             {
                 int delta = selText.Length - (ge - gs);
                 Set(ctx, gs, gs + selText.Length);
                 int caret = ss + delta + grabText.Length;
-                ctx.Port.SetSelections(new List<SelRange> { new SelRange(caret, caret) });
+                ctx.Port.SetSelections([new SelRange(caret, caret)]);
             }
             else
             {
                 int delta = grabText.Length - (se - ss);
                 Set(ctx, gs + delta, gs + delta + selText.Length);
                 int caret = ss + grabText.Length;
-                ctx.Port.SetSelections(new List<SelRange> { new SelRange(caret, caret) });
+                ctx.Port.SetSelections([new SelRange(caret, caret)]);
             }
             st.SelType = SelType.None;
         }

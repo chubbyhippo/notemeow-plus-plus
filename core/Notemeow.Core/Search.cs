@@ -24,7 +24,7 @@ namespace Notemeow.Core
     public static class Search
     {
         internal static readonly Dictionary<string, MeowCommand> Commands =
-            new Dictionary<string, MeowCommand>
+            new()
             {
                 ["meow-search"] = DoSearch,
                 ["meow-visit"] = Visit,
@@ -39,16 +39,10 @@ namespace Notemeow.Core
             while (st.SearchHistory.Count > MaxSearchHistory) st.SearchHistory.RemoveAt(0);
         }
 
-        private sealed class SearchMatch
+        private sealed class SearchMatch(int start, int end)
         {
-            public SearchMatch(int start, int end)
-            {
-                Start = start;
-                End = end;
-            }
-
-            public int Start { get; }
-            public int End { get; }
+            public int Start { get; } = start;
+            public int End { get; } = end;
         }
 
         private static bool FullyMatches(string pattern, string s)

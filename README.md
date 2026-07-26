@@ -112,11 +112,19 @@ Toolchain pinned in `mise.toml` (.NET SDK 10):
 
 ```bash
 cd notemeow-plus-plus
-./setup.sh                  # run the suite, build the DLL, and install it into Notepad++
-./setup.sh --core-only      # just the behavior suite (about 0.3 s; no Notepad++ needed)
+./setup.sh                  # lint, run the suite, build the DLL, and install it into Notepad++
+./setup.sh --core-only      # the lint gates and the behavior suite (no Notepad++ needed)
+./setup.sh --lint-only      # only the analyzer and code-style gates
 ./setup.sh --build-only     # build the DLL via the Windows .NET SDK, install nothing
 ./setup.sh --skip-build     # install the already-built DLL
 ```
+
+Every path lints first: `dotnet format --verify-no-changes --severity info`
+over all three projects plus a managed build of the adapter.
+`Directory.Build.props` turns the compiler and the .NET analyzers into the
+gate itself (`TreatWarningsAsErrors`, `EnableNETAnalyzers`,
+`AnalysisLevel latest`, `EnforceCodeStyleInBuild`) on pure defaults — no
+rule-config file, no baseline, no suppressions, zero findings.
 
 On machines without libicu, `mise.toml` sets
 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` so the SDK runs anyway;

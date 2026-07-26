@@ -267,7 +267,7 @@ namespace Notemeow.Core.Tests
             var actives = new List<int>();
             foreach (SelRange s in Editor.Sels) actives.Add(s.Active);
             actives.Sort();
-            Assert.Equal(new List<int> { 4, 9, 14 }, actives);
+            Assert.Equal([4, 9, 14], actives);
         }
 
         [Fact(DisplayName = "given no selection when beginning-of-buffer then the caret goes to point-min")]

@@ -23,11 +23,11 @@ namespace Notemeow.Core
     public static class Engine
     {
         private static readonly Rc.Binding KeypadBinding =
-            new Rc.Binding(null, null, "meow-keypad", true);
+            new(null, null, "meow-keypad", true);
 
         private const int MaxReplayDepth = 8;
 
-        public static Dictionary<char, Rc.Binding> RepeatMap;
+        public static Dictionary<char, Rc.Binding> RepeatMap { get; set; }
 
         public static void EnterKeypad(Ctx ctx)
         {
@@ -73,9 +73,9 @@ namespace Notemeow.Core
             bool motionish = st.Mode == MeowMode.Motion;
             Rc.Binding binding =
                 pend == null
-                    ? repeatBinding != null ? repeatBinding : Resolve(ctx, c, motionish)
+                    ? repeatBinding ?? Resolve(ctx, c, motionish)
                     : null;
-            string cmd = binding != null ? binding.Command : null;
+            string cmd = binding?.Command;
 
             if (!st.Replaying && cmd != "repeat")
             {
@@ -93,9 +93,7 @@ namespace Notemeow.Core
             {
                 RunBinding(ctx, binding);
                 st.LastCommand =
-                    cmd != null
-                        ? cmd
-                        : binding.Action != null ? binding.Action : st.LastCommand;
+                    cmd ?? binding.Action ?? st.LastCommand;
             }
             else
             {
@@ -109,7 +107,7 @@ namespace Notemeow.Core
                     || cmd == "meow-keypad";
             if (!st.Replaying && cmd != "repeat" && !awaitingMoreKeys)
             {
-                st.LastKeys = new List<char>(st.Unit);
+                st.LastKeys = [.. st.Unit];
             }
 
             ctx.Ui.Refresh(st);
@@ -122,12 +120,10 @@ namespace Notemeow.Core
             if (ctx.St.NoremapDepth == 0)
             {
                 Rc.Config cfg = Rc.Cfg();
-                Rc.Binding user;
-                if ((motion ? cfg.Motion : cfg.Normal).TryGetValue(c, out user)) return user;
+                if ((motion ? cfg.Motion : cfg.Normal).TryGetValue(c, out Rc.Binding user)) return user;
             }
             Rc.Config d = Rc.Defaults();
-            Rc.Binding def;
-            (motion ? d.Motion : d.Normal).TryGetValue(c, out def);
+            (motion ? d.Motion : d.Normal).TryGetValue(c, out Rc.Binding def);
             return def;
         }
 
@@ -259,7 +255,7 @@ namespace Notemeow.Core
             {
                 SelRange p = sels[0];
                 ctx.Port.SetSelections(
-                    new List<SelRange> { new SelRange(p.Active, p.Active) });
+                    [new SelRange(p.Active, p.Active)]);
                 ctx.Ui.Refresh(st);
                 return true;
             }

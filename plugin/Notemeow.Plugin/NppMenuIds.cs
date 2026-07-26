@@ -26,7 +26,7 @@ namespace Notemeow.Plugin
             return Ids.TryGetValue(name, out id);
         }
 
-        private static readonly Dictionary<string, int> Ids = new Dictionary<string, int>
+        private static readonly Dictionary<string, int> Ids = new()
         {
             { "IDM", 40000 },
             { "IDM_FILE", 41000 },

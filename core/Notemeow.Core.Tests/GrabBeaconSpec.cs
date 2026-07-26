@@ -48,7 +48,7 @@ namespace Notemeow.Core.Tests
             ThenText("three two one");
             ThenNoSelection();
             Assert.Equal(
-                "three", Editor.GetText().Substring(St.Grab.Start, St.Grab.End - St.Grab.Start));
+                "three", Editor.GetText()[St.Grab.Start..St.Grab.End]);
         }
 
         [Fact(DisplayName =
@@ -127,12 +127,11 @@ namespace Notemeow.Core.Tests
             WhenKeys("wc");
             ThenText(" bar  baz ");
             Assert.Equal(
-                new List<SelRange>
-                {
-                    new SelRange(0, 0),
-                    new SelRange(5, 5),
-                    new SelRange(10, 10),
-                },
+                [
+                    new(0, 0),
+                    new(5, 5),
+                    new(10, 10),
+                ],
                 Editor.Sels);
         }
 

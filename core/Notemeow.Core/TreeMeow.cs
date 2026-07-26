@@ -23,7 +23,7 @@ namespace Notemeow.Core
     public static class TreeMeow
     {
         private static readonly Dictionary<string, string> ListMotions =
-            new Dictionary<string, string>
+            new()
             {
                 { "meow-next", "notemeow.tree.focusDown" },
                 { "meow-prev", "notemeow.tree.focusUp" },
@@ -38,8 +38,7 @@ namespace Notemeow.Core
             var bound = new HashSet<char>();
             foreach (char c in all)
             {
-                Rc.Binding b;
-                if (!Rc.Cfg().Motion.TryGetValue(c, out b))
+                if (!Rc.Cfg().Motion.TryGetValue(c, out Rc.Binding b))
                 {
                     Rc.Defaults().Motion.TryGetValue(c, out b);
                 }

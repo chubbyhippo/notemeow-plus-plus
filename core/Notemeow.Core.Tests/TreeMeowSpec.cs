@@ -23,18 +23,12 @@ namespace Notemeow.Core.Tests
 {
     public class TreeMeowSpec : SpecDsl
     {
-        private sealed class TreeNode
+        private sealed class TreeNode(string name, TreeMeowSpec.TreeNode parent)
         {
-            public readonly string Name;
-            public readonly TreeNode Parent;
-            public readonly List<TreeNode> Children = new List<TreeNode>();
+            public readonly string Name = name;
+            public readonly TreeNode Parent = parent;
+            public readonly List<TreeNode> Children = [];
             public bool Expanded;
-
-            public TreeNode(string name, TreeNode parent)
-            {
-                Name = name;
-                Parent = parent;
-            }
 
             public TreeNode Add(string childName)
             {
@@ -46,9 +40,9 @@ namespace Notemeow.Core.Tests
 
         private sealed class FakeTree
         {
-            public readonly TreeNode Root = new TreeNode("root", null);
+            public readonly TreeNode Root = new("root", null);
             public TreeNode Focus;
-            public readonly List<string> Ran = new List<string>();
+            public readonly List<string> Ran = [];
 
             public FakeTree()
             {
@@ -88,7 +82,7 @@ namespace Notemeow.Core.Tests
                 return rows;
             }
 
-            private void Walk(TreeNode n, List<TreeNode> rows)
+            private static void Walk(TreeNode n, List<TreeNode> rows)
             {
                 rows.Add(n);
                 if (n.Expanded)
@@ -102,7 +96,7 @@ namespace Notemeow.Core.Tests
                 Focus = Find(Root, name);
             }
 
-            private TreeNode Find(TreeNode n, string name)
+            private static TreeNode Find(TreeNode n, string name)
             {
                 if (n.Name == name) return n;
                 foreach (TreeNode c in n.Children)
@@ -235,7 +229,7 @@ namespace Notemeow.Core.Tests
             GivenRc("mmap z <action>(notemeow.test.probe)");
             FakeTree tree = GivenTree();
             TreeMeow.Dispatch(tree.Run, 'z');
-            Assert.Equal(new List<string> { "notemeow.test.probe" }, tree.Ran);
+            Assert.Equal(["notemeow.test.probe"], tree.Ran);
         }
 
         [Fact(DisplayName = "given defaults and user maps then boundChars merges them")]

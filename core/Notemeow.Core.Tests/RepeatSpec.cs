@@ -27,17 +27,19 @@ namespace Notemeow.Core.Tests
             "map <leader>tn meow-next\n"
             + "repeat nav . meow-next\n"
             + "repeat nav , meow-prev";
+        private static readonly char[] ZoomGroupKeys = ['i', '=', 'o', '-', 'u', '0'];
+        private static readonly char[] TabGroupKeys = ['n', 'p', '.', ','];
+        private static readonly char[] NavGroupKeys = ['.', ','];
 
         [Fact(DisplayName = "given repeat lines then named groups parse with their member targets")]
         public void RepeatLinesParseGroups()
         {
             Rc.Config c = Rc.Parse(
-                new List<string>
-                {
+                [
                     "repeat nav . meow-next",
                     "repeat nav , meow-prev",
                     "repeat zoom i <action>(IDM_VIEW_ZOOMIN)",
-                });
+                ]);
             Assert.Equal("meow-next", c.Repeat["nav"]['.'].Command);
             Assert.Equal("meow-prev", c.Repeat["nav"][','].Command);
             Assert.Equal("IDM_VIEW_ZOOMIN", c.Repeat["zoom"]['i'].Action);
@@ -48,7 +50,7 @@ namespace Notemeow.Core.Tests
         public void BadTargetCollectsError()
         {
             Rc.Config c = Rc.Parse(
-                new List<string> { "repeat nav . meow-frobnicate", "repeat nav" });
+                ["repeat nav . meow-frobnicate", "repeat nav"]);
             Assert.Equal(2, c.Errors.Count);
             Assert.Contains("meow-frobnicate", c.Errors[0]);
         }
@@ -58,7 +60,7 @@ namespace Notemeow.Core.Tests
         public void BadRepeatKeyCollectsError()
         {
             Rc.Config c = Rc.Parse(
-                new List<string> { "repeat nav ab meow-next", "repeat nav <Space> meow-next" });
+                ["repeat nav ab meow-next", "repeat nav <Space> meow-next"]);
             Assert.Equal(2, c.Errors.Count);
         }
 
@@ -89,7 +91,7 @@ namespace Notemeow.Core.Tests
             Assert.Equal("IDM_SEARCH_CHANGED_PREV", d["change"][','].Action);
             Assert.True(
                 new HashSet<char>(d["zoom"].Keys)
-                    .SetEquals(new[] { 'i', '=', 'o', '-', 'u', '0' }));
+                    .SetEquals(ZoomGroupKeys));
             Assert.False(d.ContainsKey("error"));
             Assert.False(d.ContainsKey("expand"));
         }
@@ -103,15 +105,15 @@ namespace Notemeow.Core.Tests
             Assert.Equal("IDM_VIEW_TAB_NEXT", g['.'].Action);
             Assert.Equal("IDM_VIEW_TAB_PREV", g[','].Action);
             Assert.True(
-                new HashSet<char>(g.Keys).SetEquals(new[] { 'n', 'p', '.', ',' }));
+                new HashSet<char>(g.Keys).SetEquals(TabGroupKeys));
         }
 
         [Fact(DisplayName = "given a repeat line edit then the reload button sees a change")]
         public void RepeatLineEditLightsReload()
         {
-            Rc.SetUserLines(new List<string> { "nmap Z ,b" });
+            Rc.SetUserLines(["nmap Z ,b"]);
             Assert.False(
-                RcFileState.EqualTo(new List<string> { "nmap Z ,b", "repeat nav . meow-next" }));
+                RcFileState.EqualTo(["nmap Z ,b", "repeat nav . meow-next"]));
         }
 
         [Fact(DisplayName =
@@ -223,7 +225,7 @@ namespace Notemeow.Core.Tests
             GivenRc(NavRc);
             WhenKeys(" tn");
             Assert.NotNull(Engine.RepeatMap);
-            Assert.True(new HashSet<char>(Engine.RepeatMap.Keys).SetEquals(new[] { '.', ',' }));
+            Assert.True(new HashSet<char>(Engine.RepeatMap.Keys).SetEquals(NavGroupKeys));
             WhenKeys("w");
             Assert.Null(Engine.RepeatMap);
         }

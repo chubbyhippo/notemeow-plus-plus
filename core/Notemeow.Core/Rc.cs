@@ -25,33 +25,25 @@ namespace Notemeow.Core
     {
         public const string FileName = ".notemeowrc";
 
-        public sealed class Binding
+        public sealed class Binding(string action, string keys, string command, bool recursive)
         {
-            public Binding(string action, string keys, string command, bool recursive)
-            {
-                Action = action;
-                Keys = keys;
-                Command = command;
-                Recursive = recursive;
-            }
-
-            public string Action { get; }
-            public string Keys { get; }
-            public string Command { get; }
-            public bool Recursive { get; }
+            public string Action { get; } = action;
+            public string Keys { get; } = keys;
+            public string Command { get; } = command;
+            public bool Recursive { get; } = recursive;
         }
 
         public sealed class Config
         {
-            public readonly Dictionary<char, Binding> Normal = new Dictionary<char, Binding>();
-            public readonly Dictionary<char, Binding> Motion = new Dictionary<char, Binding>();
+            public readonly Dictionary<char, Binding> Normal = [];
+            public readonly Dictionary<char, Binding> Motion = [];
             public readonly Dictionary<string, Binding> Keypad =
-                new Dictionary<string, Binding>();
+                [];
             public readonly Dictionary<string, string> KeypadDesc =
-                new Dictionary<string, string>();
+                [];
 
             public readonly Dictionary<string, Dictionary<char, Binding>> Repeat =
-                new Dictionary<string, Dictionary<char, Binding>>();
+                [];
 
             public bool? WhichKey;
             public int? WhichKeyDelayMs;
@@ -59,10 +51,10 @@ namespace Notemeow.Core
             public int? OverlayTextColor;
             public int? ExpandHintColor;
             public int? GrabColor;
-            public readonly List<string> Errors = new List<string>();
+            public readonly List<string> Errors = [];
         }
 
-        private static Config userConfig = new Config();
+        private static Config userConfig = new();
         private static Config defaultConfig;
 
         public static Config Parse(List<string> lines)
@@ -143,7 +135,7 @@ namespace Notemeow.Core
             {
                 if (!merged.TryGetValue(e.Key, out var members))
                 {
-                    members = new Dictionary<char, Binding>();
+                    members = [];
                     merged[e.Key] = members;
                 }
                 foreach (var m in e.Value) members[m.Key] = m.Value;
