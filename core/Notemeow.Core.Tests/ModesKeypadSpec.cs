@@ -46,6 +46,16 @@ namespace Notemeow.Core.Tests
             ThenMode(MeowMode.Normal);
         }
 
+        [Fact(DisplayName = "given a selection in NORMAL when escape then it collapses to the caret")]
+        public void EscapeCollapsesSelection()
+        {
+            Given("word", "<caret>hello");
+            WhenKeys("w");
+            ThenSelection("hello");
+            Assert.True(PressEsc(), "escape consumed the selection");
+            ThenNoSelection();
+        }
+
         [Fact(DisplayName = "given a pending find when escape then the pending key is dropped")]
         public void EscapeDropsPendingFind()
         {

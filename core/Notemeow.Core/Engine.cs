@@ -251,11 +251,9 @@ namespace Notemeow.Core
                 return true;
             }
             List<SelRange> sels = ctx.Port.GetSelections();
-            if (sels.Count > 1)
+            if (sels.Count > 1 || Selections.HasSelection(sels[0]))
             {
-                SelRange p = sels[0];
-                ctx.Port.SetSelections(
-                    [new SelRange(p.Active, p.Active)]);
+                Selections.CancelAll(ctx);
                 ctx.Ui.Refresh(st);
                 return true;
             }
