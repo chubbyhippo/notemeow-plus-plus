@@ -2,8 +2,9 @@
 " .notemeowrc — THE default keymap of the notemeow++ plugin
 " ----------------------------------------------------------------------------
 " The plugin binds no keys in code: these lines ARE the default NORMAL/MOTION
-" layout (meow's suggested QWERTY), plus the SPC keypad <action> table of
-" Notepad++ menu commands (IDM_* names from menuCmdID.h, or raw numeric ids).
+" layout (meow's suggested QWERTY), the Emacs modifier-chord layer, plus the
+" SPC keypad <action> table of Notepad++ menu commands (IDM_* names from
+" menuCmdID.h, or raw numeric ids).
 " A ~/.notemeowrc overrides this file entry by entry — only the lines you
 " change matter; a deleted line falls back to the bundled default (bind
 " `ignore` to disable a key). Open it with SPC c m — the first press creates
@@ -105,6 +106,66 @@ mmap k meow-prev
 mmap h meow-left
 mmap l meow-right
 mmap q <action>(notemeow.hideView)
+
+" ============================================================================
+" The Emacs chord layer — modifier-key bindings, like the vanilla Emacs keymap
+" ----------------------------------------------------------------------------
+" Unlike the single-key layout above, these are Ctrl-/Alt- CHORDS. They fire
+" in NORMAL and MOTION — never in INSERT, never mid-keypad — and, like meow's
+" own motions, EXTEND an active selection instead of replacing it (so C-f
+" after a selection grows it). Either spelling works: the Emacs one (C-f, M-<)
+" or the host one (control F, alt shift COMMA).
+" An unbound chord stays Notepad++'s; to hand a bound one back, map it to
+" `ignore` — e.g. `cmap C-f ignore` restores Find.
+" ============================================================================
+
+" point motions (C-f C-b C-n C-p C-a C-e, M-f M-b M-a M-e)
+cmap C-f forward-char
+cmap C-b backward-char
+cmap C-n next-line
+cmap C-p previous-line
+cmap C-a move-beginning-of-line
+cmap C-e move-end-of-line
+cmap M-f forward-word
+cmap M-b backward-word
+cmap M-a backward-sentence
+cmap M-e forward-sentence
+
+" buffer + paragraph (M-< M-> M-{ M-})
+cmap M-< beginning-of-buffer
+cmap M-> end-of-buffer
+cmap M-{ backward-paragraph
+cmap M-} forward-paragraph
+
+" case + kill (M-u M-l M-c M-d)
+cmap M-u upcase-word
+cmap M-l downcase-word
+cmap M-c capitalize-word
+cmap M-d kill-word
+
+" stock-Emacs edit chords. Each maps onto the meow command that IS the Emacs
+" one (meow-semantics.md): meow-kill's no-selection fallback is meow-C-k, so
+" C-k kills the line and C-w the region through the same command; meow-save is
+" kill-ring-save; meow-cancel-selection is keyboard-quit; meow-delete is
+" delete-forward-char. These never fire in INSERT, so Notepad++ keeps them
+" while you type.
+cmap C-/ meow-undo
+cmap C-_ meow-undo
+cmap C-d meow-delete
+cmap C-k meow-kill
+cmap C-w meow-kill
+cmap M-w meow-save
+cmap C-y meow-yank
+cmap C-g meow-cancel-selection
+
+" stock-Emacs whitespace and line chords. M-^ is meow-join + kill: the ledger
+" records that killing the join selection IS delete-indentation, so it needs no
+" command of its own.
+cmap M-m back-to-indentation
+cmap C-o open-line
+cmap M-\ delete-horizontal-space
+cmap M-SPC just-one-space
+cmap M-^ ms
 
 " ── SPC keypad table ────────────────────────────────────────────────────────
 " SPC is the leader; these sequences dispatch Notepad++ menu commands by

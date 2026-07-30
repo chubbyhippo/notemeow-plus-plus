@@ -99,11 +99,12 @@ namespace Notemeow.Core.Tests
         [Fact(DisplayName = "given a cmap or cnoremap line then the rc loads it without error")]
         public void CmapCnoremapLoadsWithoutError()
         {
-            Rc.Config c = Rc.Parse(["cmap kj <Esc>", "cnoremap <C-a> <Home>"]);
+            Rc.Config c = Rc.Parse(["cmap control F forward-char", "cnoremap M-b backward-word"]);
             Assert.Empty(c.Errors);
             Assert.Empty(c.Normal);
             Assert.Empty(c.Motion);
             Assert.Empty(c.Keypad);
+            Assert.Equal(2, c.Chords.Count);
         }
 
         [Fact(DisplayName = "given leader mappings and descriptions then the keypad table extends")]
@@ -209,7 +210,7 @@ namespace Notemeow.Core.Tests
             Assert.Empty(c.Errors);
         }
 
-        [Fact(DisplayName = "the bundled default notemeowrc defines the whole keymap")]
+        [Fact(DisplayName = "the bundled rc defines the whole keymap")]
         public void BundledRcDefinesWholeKeymap()
         {
             Rc.Config d = Rc.Defaults();

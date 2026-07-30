@@ -137,11 +137,19 @@ namespace Notemeow.Plugin
         internal const int VkControl = 0x11;
         internal const int VkShift = 0x10;
         internal const int VkMenu = 0x12;
+        internal const int VkTab = 0x09;
+        internal const int VkSpace = 0x20;
         internal const int VkOemComma = 0xBC;
         internal const int VkOemPeriod = 0xBE;
         internal const int VkOemSemicolon = 0xBA;
         internal const int VkOemOpenBracket = 0xDB;
         internal const int VkOemCloseBracket = 0xDD;
+        internal const int VkOemPlus = 0xBB;
+        internal const int VkOemMinus = 0xBD;
+        internal const int VkOemSlash = 0xBF;
+        internal const int VkOemBackQuote = 0xC0;
+        internal const int VkOemBackSlash = 0xDC;
+        internal const int VkOemQuote = 0xDE;
 
         internal const uint CfUnicodeText = 13;
         internal const uint GmemMoveable = 0x0002;

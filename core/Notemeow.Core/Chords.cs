@@ -17,44 +17,25 @@
 
 namespace Notemeow.Core
 {
-    public enum MeowMode
+    public static class Chords
     {
-        Normal,
-        Insert,
-        Motion,
-        Keypad,
-    }
-
-    public static class MeowModes
-    {
-        public static bool TakesChords(this MeowMode mode)
+        public static Rc.Binding BindingFor(Chord chord)
         {
-            return mode == MeowMode.Normal || mode == MeowMode.Motion;
+            if (chord == null) return null;
+            return Rc.ChordBindings().TryGetValue(chord, out Rc.Binding binding) ? binding : null;
         }
-    }
 
-    public enum SelType
-    {
-        None,
-        Char,
-        Word,
-        Symbol,
-        Line,
-        Block,
-        Find,
-        Till,
-        Visit,
-        Join,
-        Transient,
-    }
+        public static bool Claims(MeowMode mode, Chord chord)
+        {
+            if (!mode.TakesChords()) return false;
+            return BindingFor(chord) != null;
+        }
 
-    public enum Pending
-    {
-        Find,
-        Till,
-        Inner,
-        Bounds,
-        Begin,
-        End,
+        public static bool Dispatch(Ctx ctx, Chord chord)
+        {
+            if (!Claims(ctx.St.Mode, chord)) return false;
+            Engine.RunBinding(ctx, BindingFor(chord));
+            return true;
+        }
     }
 }

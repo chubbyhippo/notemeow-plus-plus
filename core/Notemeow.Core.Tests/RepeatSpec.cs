@@ -83,7 +83,7 @@ namespace Notemeow.Core.Tests
             Assert.Equal("IDM_VIEW_ZOOMIN", g['i'].Action);
         }
 
-        [Fact(DisplayName = "the bundled default notemeowrc declares the init el repeat groups")]
+        [Fact(DisplayName = "the bundled rc declares the init el repeat groups")]
         public void BundledRcDeclaresRepeatGroups()
         {
             Dictionary<string, Dictionary<char, Rc.Binding>> d = Rc.Defaults().Repeat;

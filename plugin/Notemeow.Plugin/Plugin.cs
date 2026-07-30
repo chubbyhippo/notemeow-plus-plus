@@ -290,15 +290,11 @@ namespace Notemeow.Plugin
                             bool alt = NppApi.GetKeyState(NppApi.VkMenu) < 0;
                             if (ctrl && !alt)
                             {
-                                string cmd = CtrlChord(vk);
-                                if (cmd != null)
+                                bool shift = NppApi.GetKeyState(NppApi.VkShift) < 0;
+                                Chord chord = ChordFor(vk, true, false, shift);
+                                if (chord != null && Chords.Dispatch(MakeCtx(hwnd), chord))
                                 {
-                                    Ctx ctx = MakeCtx(hwnd);
-                                    if (ctx.St.Mode == MeowMode.Normal)
-                                    {
-                                        Engine.RunEmacsMotion(ctx, cmd);
-                                        return IntPtr.Zero;
-                                    }
+                                    return IntPtr.Zero;
                                 }
                             }
                             break;
@@ -314,16 +310,11 @@ namespace Notemeow.Plugin
                                 return IntPtr.Zero;
                             }
                             bool shift = NppApi.GetKeyState(NppApi.VkShift) < 0;
-                            string cmd = AltChord(vk, shift);
-                            if (cmd != null)
+                            Chord chord = ChordFor(vk, ctrlHeld, true, shift);
+                            if (chord != null && Chords.Dispatch(MakeCtx(hwnd), chord))
                             {
-                                Ctx ctx = MakeCtx(hwnd);
-                                if (ctx.St.Mode == MeowMode.Normal)
-                                {
-                                    Engine.RunEmacsMotion(ctx, cmd);
-                                    swallowSysChar = true;
-                                    return IntPtr.Zero;
-                                }
+                                swallowSysChar = true;
+                                return IntPtr.Zero;
                             }
                             break;
                         }
@@ -347,36 +338,38 @@ namespace Notemeow.Plugin
             return NppApi.DefSubclassProc(hwnd, msg, wParam, lParam);
         }
 
-        private static string CtrlChord(int vk)
+        private static Chord ChordFor(int vk, bool ctrl, bool alt, bool shift)
         {
-            return vk switch
-            {
-                'F' => "forward-char",
-                'B' => "backward-char",
-                'N' => "next-line",
-                'P' => "previous-line",
-                'A' => "move-beginning-of-line",
-                'E' => "move-end-of-line",
-                _ => null,
-            };
+            string keyName = KeyName(vk);
+            if (keyName == null) return null;
+            var spelling = new StringBuilder();
+            if (ctrl) spelling.Append("control ");
+            if (alt) spelling.Append("alt ");
+            if (shift) spelling.Append("shift ");
+            return Chord.Parse(spelling.Append(keyName).ToString());
         }
 
-        private static string AltChord(int vk, bool shift)
+        private static string KeyName(int vk)
         {
+            if ((vk >= 'A' && vk <= 'Z') || (vk >= '0' && vk <= '9'))
+            {
+                return ((char)vk).ToString();
+            }
             return vk switch
             {
-                'F' => "forward-word",
-                'B' => "backward-word",
-                'A' => "backward-sentence",
-                'E' => "forward-sentence",
-                'U' => "upcase-word",
-                'L' => "downcase-word",
-                'C' => "capitalize-word",
-                'D' => "kill-word",
-                NppApi.VkOemComma => shift ? "beginning-of-buffer" : null,
-                NppApi.VkOemPeriod => shift ? "end-of-buffer" : null,
-                NppApi.VkOemOpenBracket => shift ? "backward-paragraph" : null,
-                NppApi.VkOemCloseBracket => shift ? "forward-paragraph" : null,
+                NppApi.VkSpace => "SPACE",
+                NppApi.VkTab => "TAB",
+                NppApi.VkOemComma => "COMMA",
+                NppApi.VkOemPeriod => "PERIOD",
+                NppApi.VkOemSemicolon => "SEMICOLON",
+                NppApi.VkOemQuote => "QUOTE",
+                NppApi.VkOemOpenBracket => "OPEN_BRACKET",
+                NppApi.VkOemCloseBracket => "CLOSE_BRACKET",
+                NppApi.VkOemBackSlash => "BACK_SLASH",
+                NppApi.VkOemBackQuote => "BACK_QUOTE",
+                NppApi.VkOemMinus => "MINUS",
+                NppApi.VkOemPlus => "EQUALS",
+                NppApi.VkOemSlash => "SLASH",
                 _ => null,
             };
         }

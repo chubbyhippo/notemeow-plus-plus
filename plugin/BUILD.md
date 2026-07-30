@@ -49,11 +49,14 @@ NORMAL.
 - INSERT passthrough — in INSERT the engine refuses keys and Scintilla
   types them, IME composition included
 - `ESC` back to NORMAL (and collapsing extra selections)
-- the **Alt chord layer** in NORMAL: `Alt+f/b` word, `Alt+a/e` sentence,
-  `Alt+u/l/c` case, `Alt+d` kill-word, `Alt+Shift+,` / `Alt+Shift+.`
-  buffer start/end, `Alt+Shift+[` / `Alt+Shift+]` paragraph back/forward —
-  consumed before the menu bar sees them, so `Alt+f`
-  moves instead of opening the File menu (INSERT gives them back)
+- the **Emacs chord layer** in NORMAL and MOTION, every chord read from the
+  rc's `cmap` lines: `Alt+f/b` word, `Alt+a/e` sentence, `Alt+u/l/c` case,
+  `Alt+d` kill-word, `Alt+Shift+,` / `Alt+Shift+.` buffer start/end,
+  `Alt+Shift+[` / `Alt+Shift+]` paragraph back/forward, plus the stock edit
+  chords (`Ctrl+/` `Ctrl+_` `Ctrl+d` `Ctrl+k` `Ctrl+w` `Ctrl+y` `Ctrl+g`
+  `Alt+w`, `Alt+m` `Ctrl+o` `Alt+\` `Alt+Space` `Alt+^`) — the Alt ones are
+  consumed before the menu bar sees them, so `Alt+f` moves instead of
+  opening the File menu (INSERT gives them back)
 - the mode shown two ways, the Emacs+meow way: a **block caret** in
   NORMAL / MOTION / KEYPAD and a **line caret** in INSERT
   (`SCI_SETCARETSTYLE`), plus `MEOW NORMAL` / `MEOW INSERT` in the status
@@ -86,11 +89,13 @@ NORMAL.
 
 ## Known limits (v0.1)
 
-- **The Ctrl chords** (`Ctrl+f/b/n/p/a/e`) are implemented, but Notepad++'s
-  own accelerators (Find, brace-match, New, Print, Select All) grab those
-  keys before the editor sees them. Clear the conflicting entries in
-  *Settings → Shortcut Mapper* and the chords come alive; keep them and
-  Notepad++ wins — your call, both are fine.
+- **The Ctrl chords** — now the whole stock-Emacs set the rc binds, not just
+  the six point motions — are implemented, but Notepad++'s own accelerators
+  (Find, brace-match, New, Print, Select All and whatever else you have on
+  those keys) grab them before the editor sees them. Clear the conflicting
+  entries in *Settings → Shortcut Mapper* and the chords come alive; keep
+  them and Notepad++ wins — your call, both are fine. The Alt chords have no
+  such problem.
 - **The overlay and dialog surfaces are load-verified, not eye-verified**
   — the DLL loads and the engine is fully tested, but the avy labels, the
   which-key panel, the expand-hint digits and the input box haven't been

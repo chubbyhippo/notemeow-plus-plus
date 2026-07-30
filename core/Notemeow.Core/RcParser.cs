@@ -65,8 +65,10 @@ namespace Notemeow.Core
                 switch (cmd)
                 {
                     case "let":
+                        break;
                     case "cmap":
                     case "cnoremap":
+                        ParseChord(c, cmd, rest, err);
                         break;
                     case "set":
                         ParseSet(c, rest, err);
@@ -177,6 +179,28 @@ namespace Notemeow.Core
                 return;
             }
             c.KeypadDesc[seq] = desc;
+        }
+
+        private static void ParseChord(Rc.Config c, string cmd, string rest, Action<string> err)
+        {
+            int split = Math.Max(rest.LastIndexOf(' '), rest.LastIndexOf('\t'));
+            if (split <= 0)
+            {
+                err(cmd + " needs a chord and a target");
+                return;
+            }
+            string spelling = rest.Substring(0, split).Trim();
+            Chord chord = Chord.Parse(spelling);
+            if (chord == null)
+            {
+                err("not a chord (needs Ctrl or Alt and one key): " + spelling);
+                return;
+            }
+            string rhs = rest.Substring(split + 1).Trim();
+            bool recursive = cmd == "cmap";
+            Rc.Binding binding = ParseTarget(rhs, recursive, cmd + " " + rest, err);
+            if (binding == null) return;
+            c.Chords[chord] = binding;
         }
 
         private static void ParseMap(Rc.Config c, string cmd, string rest, Action<string> err)

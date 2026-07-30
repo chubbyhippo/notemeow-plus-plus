@@ -45,6 +45,8 @@ namespace Notemeow.Core
             public readonly Dictionary<string, Dictionary<char, Binding>> Repeat =
                 [];
 
+            public readonly Dictionary<Chord, Binding> Chords = [];
+
             public bool? WhichKey;
             public int? WhichKeyDelayMs;
             public int? OverlayColor;
@@ -114,6 +116,19 @@ namespace Notemeow.Core
         {
             var merged = new Dictionary<string, Binding>(Defaults().Keypad);
             foreach (var e in Cfg().Keypad) merged[e.Key] = e.Value;
+            return merged;
+        }
+
+        public static Dictionary<Chord, Binding> ChordBindings()
+        {
+            var merged = new Dictionary<Chord, Binding>(Defaults().Chords);
+            foreach (var e in Cfg().Chords) merged[e.Key] = e.Value;
+            var handedBack = new List<Chord>();
+            foreach (var e in merged)
+            {
+                if (e.Value.Command == "ignore") handedBack.Add(e.Key);
+            }
+            foreach (Chord chord in handedBack) merged.Remove(chord);
             return merged;
         }
 

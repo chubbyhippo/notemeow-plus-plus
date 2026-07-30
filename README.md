@@ -95,8 +95,15 @@ lands on the separator line, backward on the paragraph start), `Alt+u` /
 `Alt+l` / `Alt+c` are
 `upcase/downcase/capitalize-word` (a negative count — `-` then the chord —
 reaches back without moving the caret), and `Alt+d` is `kill-word` (into
-the clipboard). The chords answer in NORMAL and yield to Notepad++'s own
-keys in INSERT.
+the clipboard). The stock-Emacs edit chords are here too — `Ctrl+/` and
+`Ctrl+_` undo, `Ctrl+d` delete, `Ctrl+k` / `Ctrl+w` kill, `Alt+w` save,
+`Ctrl+y` yank, `Ctrl+g` cancel, `Alt+m` back-to-indentation, `Ctrl+o`
+open-line, `Alt+\` and `Alt+Space` whitespace, `Alt+^` join — each one the
+meow command that IS the Emacs one. Like every other key here they are rc
+lines, one `cmap` each, in either spelling (`cmap C-f forward-char` or
+`cmap control F forward-char`), so rebinding a chord is editing a line;
+bind one to `ignore` and Notepad++ keeps that key. They answer in NORMAL
+and MOTION and yield to Notepad++'s own keys in INSERT.
 
 And one idea borrowed straight from meow itself: **the plugin binds no keys
 in code.** The entire layout lives in a
@@ -208,7 +215,7 @@ through rc bindings.
 | Where | What |
 |---|---|
 | `Engine.cs` | the dispatcher: key → binding → command; repeat (`'`), rc-replay bookkeeping, ESC |
-| `Motions.cs` | movement and the selections it creates: hjkl, words, lines, find/till, plus the sixteen Emacs chord commands |
+| `Motions.cs` | movement and the selections it creates: hjkl, words, lines, find/till, plus the fifteen Emacs chord motions |
 | `Selections.cs` | the selection primitive (meow's expand/select model), reverse/cancel/pop, digit expand |
 | `Search.cs` | meow-search / meow-visit and the shared regexp ring |
 | `Structures.cs` / `Things.cs` | the char-thing table, blocks, join / what a "thing" is |
