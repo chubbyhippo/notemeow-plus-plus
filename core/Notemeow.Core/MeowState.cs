@@ -42,6 +42,8 @@ namespace Notemeow.Core
 
         public string LastCommand;
 
+        public int RecenterPhase;
+
         public OffsetRange Grab;
 
         public AvySession Avy;

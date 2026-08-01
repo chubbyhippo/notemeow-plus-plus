@@ -51,6 +51,8 @@ namespace Notemeow.Core
     {
         void Hint(string text);
 
+        void RevealCaret(RevealAt at);
+
         void Info(string title, string body);
 
         string Input(string prompt, string initial);

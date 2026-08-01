@@ -577,6 +577,27 @@ namespace Notemeow.Plugin
                 Status("meow — " + text);
             }
 
+            public void RevealCaret(RevealAt at)
+            {
+                if (sci == IntPtr.Zero) return;
+                long caret = (long)NppApi.SendMessage(
+                    sci, (uint)NppApi.SciGetCurrentPos, IntPtr.Zero, IntPtr.Zero);
+                long docLine = (long)NppApi.SendMessage(
+                    sci, (uint)NppApi.SciLineFromPosition, (IntPtr)caret, IntPtr.Zero);
+                long caretVisible = (long)NppApi.SendMessage(
+                    sci, (uint)NppApi.SciVisibleFromDocLine, (IntPtr)docLine, IntPtr.Zero);
+                long onScreen = (long)NppApi.SendMessage(
+                    sci, (uint)NppApi.SciLinesOnScreen, IntPtr.Zero, IntPtr.Zero);
+                long top = at switch
+                {
+                    RevealAt.Top => caretVisible,
+                    RevealAt.Bottom => caretVisible - onScreen + 1,
+                    _ => caretVisible - onScreen / 2,
+                };
+                NppApi.SendMessage(
+                    sci, (uint)NppApi.SciSetFirstVisibleLine, (IntPtr)Math.Max(0, top), IntPtr.Zero);
+            }
+
             public void Info(string title, string body)
             {
                 NppApi.MessageBox(npp, body, title, 0);

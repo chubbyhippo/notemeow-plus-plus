@@ -17,6 +17,13 @@
 
 namespace Notemeow.Core
 {
+    public enum RevealAt
+    {
+        Center,
+        Top,
+        Bottom
+    }
+
     public enum MeowMode
     {
         Normal,

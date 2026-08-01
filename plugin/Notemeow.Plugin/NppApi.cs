@@ -61,6 +61,10 @@ namespace Notemeow.Plugin
         internal const int SciReplaceTarget = 2194;
         internal const int SciDocLineFromVisible = 2221;
         internal const int SciLinesOnScreen = 2370;
+        internal const int SciSetFirstVisibleLine = 2613;
+        internal const int SciVisibleFromDocLine = 2220;
+        internal const int SciLineFromPosition = 2166;
+        internal const int SciGetCurrentPos = 2008;
         internal const int SciGetSelections = 2570;
         internal const int SciClearSelections = 2571;
         internal const int SciSetSelection = 2572;

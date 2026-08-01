@@ -113,6 +113,13 @@ namespace Notemeow.Core.Tests
 
         public List<int> ExpandHints = [];
 
+        public readonly List<RevealAt> Revealed = [];
+
+        public void RevealCaret(RevealAt at)
+        {
+            Revealed.Add(at);
+        }
+
         public void Hint(string text)
         {
             Hints.Add(text);

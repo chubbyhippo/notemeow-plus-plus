@@ -234,6 +234,7 @@ namespace Notemeow.Core
                 ctx.Ui.Refresh(st);
                 return true;
             }
+            bool hadTransient = st.Pending != null || RepeatMap != null;
             st.Pending = null;
             RepeatMap = null;
             ctx.Ui.HideWhichKey();
@@ -257,7 +258,7 @@ namespace Notemeow.Core
                 ctx.Ui.Refresh(st);
                 return true;
             }
-            return false;
+            return hadTransient;
         }
     }
 }
