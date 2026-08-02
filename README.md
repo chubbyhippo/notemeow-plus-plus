@@ -1,121 +1,150 @@
-# notemeow++ — meow modal editing for Notepad++
+# notemeow++
 
-If you love [meow](https://github.com/meow-edit/meow) in Emacs and sigh every
-time you open Notepad++, this plugin is for you. It implements meow's
-suggested **QWERTY layout** as a native modal editing engine — no vim
-emulation in the middle. Just meow: select first, then act.
+[meow](https://github.com/meow-edit/meow)-style modal editing for Notepad++ —
+meow's suggested **QWERTY layout** as a native modal engine, with no vim
+emulation in the middle. Select first, then act.
 
 ## Where this stands
 
-The engine — the part that decides what every key does — is complete for
-everything it tests: 282 behavior specs, every one cross-checked against
-meow's own source, running headless in a fraction of a second. The Notepad++
-plugin around it is young: check the notes in
-[plugin/BUILD.md](plugin/BUILD.md) for what is wired and what is still
-ahead.
+| Layer | State |
+|---|---|
+| The engine | complete for everything it tests — 339 behavior specs, each cross-checked against meow's source, headless in a fraction of a second |
+| The Notepad++ plugin around it | young — see [plugin/BUILD.md](plugin/BUILD.md) for what is wired |
 
-What the engine covers today:
+| The engine covers | |
+|---|---|
+| The meow layout, selection model, editing commands | ✓ |
+| The Emacs point-motion and word commands (`forward-char` through `end-of-buffer`, `upcase/downcase/capitalize-word`, `kill-word`) with meow's extend-an-active-selection behavior | ✓ |
+| The `.notemeowrc` two-layer keymap, the keypad and repeat engines, things and blocks, search, grab and beacon | ✓ |
+| The avy jumps — `S` (goto-char-timer) and `Q` (goto-line), a native port of avy 0.5.0's label tree, timer and subdivision | ✓ |
+| The platform decision logic the plugin maps — windmove between the two Notepad++ views, the panel double-`ESC` pairing, tree motions for the MOTION map, the attach policy | ✓ |
 
-- the meow layout, selection model, and editing commands
-- the **Emacs point-motion and word commands** (`forward-char` through
-  `end-of-buffer`, `upcase/downcase/capitalize-word`, `kill-word`) with
-  meow's extend-an-active-selection behavior
-- the `.notemeowrc` two-layer keymap, the keypad and repeat engines, things
-  and blocks, search, grab and beacon
-- the **avy jumps** — `S` (goto-char-timer) and `Q` (goto-line), a native
-  port of avy 0.5.0's label tree, timer, and subdivision
-- the platform decision logic the plugin maps: **windmove** between the two
-  Notepad++ views, the panel double-`ESC` pairing, tree motions for the
-  MOTION map, and the attach policy
+| Still ahead | |
+|---|---|
+| Live keystroke verification of the newest UI surfaces | see [plugin/BUILD.md](plugin/BUILD.md) |
+| Intercepting Notepad++'s panels and trees, so MOTION mode has somewhere to run | see [plugin/BUILD.md](plugin/BUILD.md) |
 
-Still ahead (see [plugin/BUILD.md](plugin/BUILD.md)): live keystroke
-verification of the newest UI surfaces, and intercepting Notepad++'s panels
-and trees so MOTION mode has somewhere to run.
+## States
 
-## What you get
+| State | What |
+|---|---|
+| **NORMAL** | keys are commands; you start here |
+| **INSERT** | keys type text — `i a c I A` enter, `ESC` leaves |
+| **KEYPAD** | `SPC` as the leader — digit arguments, the `?` cheatsheet and `/` describe-key all work |
+| **MOTION** | meow's reduced state, present in the engine, unused on this platform so far |
+| **BEACON** | grab with `G`, select inside it, a selection lands on every similar range; `ESC` collapses |
 
-The states you know from meow:
+### The bundled keypad
 
-- **NORMAL** — keys are commands. You start here.
-- **INSERT** — keys type text. `i a c I A` get you in, `ESC` gets you out.
-- **KEYPAD** — `SPC` as the leader. Digit arguments, the `?` cheatsheet and
-  `/` describe-key all work; the bundled table ships whole groups of
-  Notepad++ menu commands by their `menuCmdID.h` names — `SPC x s` saves,
-  `SPC w i` zooms in (and `i i i` keeps zooming — a repeat group),
-  `SPC . c` walks the change history, `SPC b m` toggles a bookmark,
-  `SPC a u` focuses the Function List — plus the `c` (config) group:
-  `SPC c m` opens your `~/.notemeowrc` (seeding it from the bundled copy
-  first), `SPC c M` reloads it, saving a dirty rc tab first. Add your own
-  `map <leader>...` lines with `IDM_*` names or raw numeric ids.
-- **MOTION** — meow's reduced state, present in the engine, unused on this
-  platform so far.
-- **BEACON** — grab a region with `G`, select something inside it, and a
-  selection lands on every similar range. Edit them all at once; `ESC`
-  collapses.
+Whole groups of Notepad++ menu commands by their `menuCmdID.h` names. Add your
+own `map <leader>...` lines with `IDM_*` names or raw numeric ids.
 
-**Moving and selecting.** `h j k l` move (a char-selection survives
-movement, any other selection is cancelled), and `H J K L` extend a char
-selection. `w`/`W` mark the word/symbol at point — and push it to the search
-ring, which is why `n` finds the next occurrence right afterwards. `e`/`E`
-and `b`/`B` go to the next/previous word or symbol, and after a `w` they
-*extend* the selection instead of replacing it (meow's `(expand . word)`
-rule). `x` selects the line — repeat it or press digits to take more lines.
-`Q`/`X` go to a line, `f`/`t` find/till a character, `o`/`O` select the
-enclosing block / to its end, `m` selects the join region, and `,` `.` `[`
-`]` select inner/bounds/begin/end of a *thing* (`r` round, `s` square, `c`
-curly, `g` string, `e` symbol, `w` window, `b` buffer, `p` paragraph, `l`
-line, `v` visual line, `d` defun, `.` sentence). `;` reverses the selection,
-`z` pops back to the previous one, `v` visits a regexp, `n` continues the
-search (backward when the selection is reversed). Digits expand the
-selection by N units (`0` = 10) or act as a count when nothing is selected;
-`-` is the negative argument.
+| Sequence | Does |
+|---|---|
+| `SPC x s` | save |
+| `SPC w i` | zoom in — `i i i` keeps zooming, a repeat group |
+| `SPC . c` | walk the change history |
+| `SPC b m` | toggle a bookmark |
+| `SPC a u` | focus the Function List |
+| `SPC c m` | open `~/.notemeowrc`, seeding it from the bundled copy first |
+| `SPC c M` | reload it, saving a dirty rc tab first |
 
-**Editing.** `i`/`a` insert at the selection's start/end, `I`/`A` open a
-line above/below, `c` change, `s` kill (cut), `d`/`D` delete
-forward/backward, `y` save (copy), `p` yank (paste), `r` replace the
-selection with the clipboard, `u` undo, `'` repeats the last command —
-counts and all, so `'` after `2fa` finds the second `a` again. `g` cancels,
-`q` closes the tab, `ESC` always brings you back to NORMAL.
+## The layout
 
-**Emacs chords.** `Ctrl+f/b/n/p/a/e` and `Alt+f/b/a/e` are the real Emacs
-point motions (`forward/backward-char`, `next/previous-line`,
-`move-beginning/end-of-line`, `forward/backward-word`,
-`backward/forward-sentence`), not meow commands: meow itself never rebinds
-these chords — its state keymaps hold only single printable keys — and
-since a meow selection is an active Emacs mark, the same point motion
-stretches an already-active selection for free. notemeow++ ports that: with
-no selection the chord just moves the caret, and with one active it extends
-it, anchored exactly like meow's own `H J K L` expand — so `w` then
-`Ctrl+f Ctrl+f` grows the marked word one character at a time, and `;`
-flips which end subsequent chords grow from. `Alt+Shift+,` / `Alt+Shift+.`
-are `beginning/end-of-buffer` (a count lands N/10 of the way in, snapping
-to the next line start), `Alt+Shift+[` / `Alt+Shift+]` are
-`backward/forward-paragraph` (blank-line-delimited paragraphs — forward
-lands on the separator line, backward on the paragraph start), `Alt+u` /
-`Alt+l` / `Alt+c` are
-`upcase/downcase/capitalize-word` (a negative count — `-` then the chord —
-reaches back without moving the caret), and `Alt+d` is `kill-word` (into
-the clipboard). The stock-Emacs edit chords are here too — `Ctrl+/` and
-`Ctrl+_` undo, `Ctrl+d` delete, `Ctrl+k` / `Ctrl+w` kill, `Alt+w` save,
-`Ctrl+y` yank, `Ctrl+g` cancel, `Alt+m` back-to-indentation, `Ctrl+o`
-open-line, `Alt+\` and `Alt+Space` whitespace, `Alt+^` join — each one the
-meow command that IS the Emacs one. Like every other key here they are rc
-lines, one `cmap` each, in either spelling (`cmap C-f forward-char` or
-`cmap control F forward-char`), so rebinding a chord is editing a line;
-bind one to `ignore` and Notepad++ keeps that key. They answer in NORMAL
-and MOTION and yield to Notepad++'s own keys in INSERT.
+### Moving and selecting
 
-And one idea borrowed straight from meow itself: **the plugin binds no keys
-in code.** The entire layout lives in a
-[`.notemeowrc`](core/Notemeow.Core/Resources/.notemeowrc) bundled inside
-the plugin — one `nmap <key> <meow-command>` line per key, so the file
-doubles as the authoritative reference — and a `~/.notemeowrc` in your home
-directory overrides it entry by entry. Rebind anything; relayout
-everything.
+| Key | Does |
+|---|---|
+| `h j k l` | move — a char-selection survives, any other selection is cancelled |
+| `H J K L` | extend a char selection |
+| `w` / `W` | mark the word / symbol at point, and push it to the search ring, so `n` finds the next occurrence |
+| `e` / `E`, `b` / `B` | next / previous word or symbol; after a `w` they extend rather than replace (meow's `(expand . word)` rule) |
+| `x` | select the line — repeat or press digits to take more |
+| `Q` / `X` | go to a line |
+| `f` / `t` | find / till a character |
+| `o` / `O` | select the enclosing block / to its end |
+| `m` | select the join region |
+| `,` `.` `[` `]` | inner / bounds / begin / end of a *thing* |
+| `;` | reverse the selection |
+| `z` | pop back to the previous selection |
+| `v` | visit a regexp |
+| `n` | continue the search — backward when the selection is reversed |
+| `1`-`9`, `0` | expand by N units (`0` = 10); a count when nothing is selected |
+| `-` | negative argument |
+
+| Thing | Char |
+|---|---|
+| round / square / curly | `r` / `s` / `c` |
+| string / symbol | `g` / `e` |
+| window / buffer | `w` / `b` |
+| paragraph / line / visual line | `p` / `l` / `v` |
+| defun / sentence | `d` / `.` |
+
+### Editing
+
+| Key | Does |
+|---|---|
+| `i` / `a` | insert at the selection's start / end |
+| `I` / `A` | open a line above / below |
+| `c` | change |
+| `s` | kill (cut) |
+| `d` / `D` | delete forward / backward |
+| `y` | save (copy) |
+| `p` | yank (paste) |
+| `r` | replace the selection with the clipboard |
+| `u` | undo |
+| `'` | repeat the last command, counts and all — `'` after `2fa` finds the second `a` again |
+| `g` | cancel |
+| `q` | close the tab |
+| `ESC` | back to NORMAL |
+
+## Emacs chords
+
+| Behavior | Value |
+|---|---|
+| Bound to | the real Emacs point motions, not meow commands |
+| With no selection | the chord moves the caret |
+| With one active | it extends it, anchored exactly like meow's own `H J K L` expand — `w` then `Ctrl+f Ctrl+f` grows the marked word one character at a time |
+| `;` (reverse) | flips which end subsequent chords grow from |
+
+| Chord | Command |
+|---|---|
+| `Ctrl+f` / `Ctrl+b` | `forward/backward-char` |
+| `Ctrl+n` / `Ctrl+p` | `next/previous-line` |
+| `Ctrl+a` / `Ctrl+e` | `move-beginning/end-of-line` |
+| `Alt+f` / `Alt+b` | `forward/backward-word` |
+| `Alt+a` / `Alt+e` | `backward/forward-sentence` |
+| `Alt+Shift+,` / `Alt+Shift+.` | `beginning/end-of-buffer` — a count lands N/10 of the way in, snapping to the next line start |
+| `Alt+Shift+[` / `Alt+Shift+]` | `backward/forward-paragraph` — blank-line-delimited; forward lands on the separator line, backward on the paragraph start |
+| `Alt+u` / `Alt+l` / `Alt+c` | `upcase/downcase/capitalize-word` — `-` then the chord reaches back without moving the caret |
+| `Alt+d` | `kill-word` into the clipboard |
+| `Ctrl+/`, `Ctrl+_` | undo |
+| `Ctrl+d` | delete |
+| `Ctrl+k` / `Ctrl+w` | kill |
+| `Alt+w` | save |
+| `Ctrl+y` | yank |
+| `Ctrl+g` | cancel |
+| `Alt+m` | back-to-indentation |
+| `Ctrl+o` | open-line |
+| `Alt+\`, `Alt+Space` | whitespace |
+| `Alt+^` | join |
+
+| Fact | Value |
+|---|---|
+| Config | rc lines, one `cmap` each, in either spelling — `cmap C-f forward-char` or `cmap control F forward-char` |
+| Give a key back to Notepad++ | bind the chord to `ignore` |
+| Active in | NORMAL and MOTION; they yield to Notepad++'s own keys in INSERT |
+
+## No keys in code
+
+| Layer | What |
+|---|---|
+| Bundled [`.notemeowrc`](core/Notemeow.Core/Resources/.notemeowrc) | the entire layout — one `nmap <key> <meow-command>` line per key, so the file is the authoritative reference |
+| `~/.notemeowrc` | overrides it entry by entry |
 
 ## Build & test
 
-Toolchain pinned in `mise.toml` (.NET SDK 10):
+Toolchain pinned in `mise.toml` (.NET SDK 10).
 
 ```bash
 cd notemeow-plus-plus
@@ -126,28 +155,23 @@ cd notemeow-plus-plus
 ./setup.sh --skip-build     # install the already-built DLL
 ```
 
-Every path lints first: `dotnet format --verify-no-changes --severity info`
-over all three projects plus a managed build of the adapter.
-`Directory.Build.props` turns the compiler and the .NET analyzers into the
-gate itself (`TreatWarningsAsErrors`, `EnableNETAnalyzers`,
-`AnalysisLevel latest`, `EnforceCodeStyleInBuild`) on pure defaults — no
-rule-config file, no baseline, no suppressions, zero findings.
+| Gate | Detail |
+|---|---|
+| Every path lints first | `dotnet format --verify-no-changes --severity info` over all three projects, plus a managed build of the adapter |
+| `Directory.Build.props` | `TreatWarningsAsErrors`, `EnableNETAnalyzers`, `AnalysisLevel latest`, `EnforceCodeStyleInBuild` — pure defaults, no rule-config file, no baseline, no suppressions, zero findings |
 
-On machines without libicu, `mise.toml` sets
-`DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` so the SDK runs anyway;
-`apt install libicu-dev` is the clean fix. Building and installing the
-Notepad++ plugin natively on Windows is covered in
-[plugin/BUILD.md](plugin/BUILD.md); from WSL, `./setup.sh --build-only` drives
-the same build through the Windows .NET SDK, so the Windows-side
-requirements (a .NET 10 SDK and the Visual Studio C++ build tools) still
-apply.
+| Host note | Value |
+|---|---|
+| Machines without libicu | `mise.toml` sets `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1`; `apt install libicu-dev` is the clean fix |
+| Building natively on Windows | [plugin/BUILD.md](plugin/BUILD.md) |
+| From WSL | `./setup.sh --build-only` drives the same build through the Windows .NET SDK, so the Windows-side requirements still apply — a .NET 10 SDK and the Visual Studio C++ build tools |
 
-## ~/.notemeowrc — configuring everything
+## ~/.notemeowrc
 
-notemeow++ reads a vimrc-style file from your home directory:
-`~/.notemeowrc` on the machine Notepad++ runs on
-(`C:\Users\<you>\.notemeowrc`). Lines it doesn't understand are ignored
-rather than fatal.
+| Item | Value |
+|---|---|
+| Path | `~/.notemeowrc` on the machine Notepad++ runs on — `C:\Users\<you>\.notemeowrc` |
+| Format | vimrc-style; lines it does not understand are ignored rather than fatal |
 
 | Line | Meaning |
 |---|---|
@@ -157,8 +181,10 @@ rather than fatal.
 | `nmap <key> <keys>` | NORMAL key replays a meow key sequence, e.g. `nmap Z ,b` |
 | `nnoremap` / `noremap` | like `nmap`/`map`, but the replayed keys resolve through the bundled defaults, ignoring your other mappings |
 | `mmap` / `mnoremap` | the same target forms, for MOTION mode |
+| `cmap` / `cnoremap` | the Emacs modifier-chord layer (see above) |
 | `map <leader><seq> <target>` | keypad entry: `SPC` + sequence |
 | `desc <leader><seq> <text>` | which-key label for an entry (exact seq) or a group (prefix) |
+| `repeat <group> <key> <target>` | a tap-to-continue group |
 | `set timeoutlen=300` | which-key delay in milliseconds |
 | `set which-key` / `set nowhich-key` | which-key on/off (default on) |
 | `set overlay-color=#2ECC71` | background of the avy / ace jump labels (`#RRGGBB`) |
@@ -166,51 +192,49 @@ rather than fatal.
 | `set expand-hint-color=#2B5DB2` | the `0`-`9` expand-hint box color |
 | `set grab-color=#33CC33` | the grab / beacon highlight color |
 
-Key notation: plain printable characters, plus `<Space>` and `<lt>`.
-Reserved: keypad `0-9` (digit argument), `?` (cheatsheet), `/` (describe
-key); `SPC` is always the keypad key. Only printable keys reach the modal
-engine — modifier chords belong to the host (that's where the Emacs chords
-live too).
+| Item | Value |
+|---|---|
+| Key notation | plain printable characters, plus `<Space>` and `<lt>` |
+| Reserved | keypad `0-9` (digit argument), `?` (cheatsheet), `/` (describe key); `SPC` is always the keypad key |
+| Reach | only printable keys reach the modal engine — modifier chords go through `cmap` |
 
-**Relayouting (Dvorak, Colemak, …).** The layout section of the bundled
-`.notemeowrc` IS the default keymap — an `nmap` line per key, exactly like
-a `meow-normal-define-key` block in Emacs. A right-hand side that names a
-known command binds it; `ignore` disables a key; a misspelled `meow-*` name
-is reported as an error; anything else is replayed as keys. A key you don't
-mention keeps its bundled binding.
+### Relayouting (Dvorak, Colemak, …)
 
-**A few semantics worth knowing:**
+The layout section of the bundled `.notemeowrc` IS the default keymap — an
+`nmap` line per key, exactly like a `meow-normal-define-key` block in Emacs.
 
-- Mapped keys work with `'` (repeat), and key-replay mappings are
-  recursion-guarded — a self-referencing map stops at depth 8 with a hint
-  instead of freezing the editor.
-- `repeat` is itself a bindable command, so even `'` can be reassigned.
-- `repeat <group> <key> <target>` lines define tap-to-continue groups:
-  after any binding whose target belongs to a group, the next keypress is
-  looked up in that group first — a member key keeps the run alive, any
-  other key ends it and keeps its normal meaning.
+| Right-hand side | Effect |
+|---|---|
+| a known command name | binds it |
+| `ignore` | disables the key |
+| a misspelled `meow-*` name | reported as an error |
+| anything else | replayed as keys |
+| a key you do not mention | keeps its bundled binding |
+
+### Semantics worth knowing
+
+| Fact | Value |
+|---|---|
+| Repeat | mapped keys work with `'`; key-replay mappings are recursion-guarded — a self-referencing map stops at depth 8 with a hint |
+| `repeat` | itself a bindable command, so even `'` can be reassigned |
+| `repeat <group> <key> <target>` | after any binding whose target belongs to a group, the next keypress is looked up in that group first — a member key keeps the run alive, any other key ends it and keeps its normal meaning |
 
 ## Known deviations from meow
 
-All deliberate, none accidental:
+All deliberate, none accidental.
 
-- `U` (meow-undo-in-selection) runs plain undo, gated on an active region —
-  the host's undo stack cannot be scoped to a region.
-- Beacon uses native multiple selections instead of kmacro recording.
-- The kill-ring is the system clipboard; `kill-line` does not append
-  consecutive kills.
-- Block/string/defun "things" use a text scan (same-line strings skipped),
-  with a hook for the host to supply a smarter defun range.
-- The avy jumps (`S`/`Q`) are a native port of avy 0.5.0's goto-char-timer
-  and goto-line: same label keys (`a s d f g h j k l`), same label tree and
-  subdivision, scoped to the visible area of the current editor. Labels
-  paint in an overlay over the editor.
+| Deviation | Detail |
+|---|---|
+| `U` (meow-undo-in-selection) | plain undo, gated on an active region — the host's undo stack cannot be scoped to a region |
+| Beacon | native multiple selections instead of kmacro recording |
+| The kill-ring | the system clipboard; `kill-line` does not append consecutive kills |
+| Block/string/defun "things" | a text scan (same-line strings skipped), with a hook for the host to supply a smarter defun range |
+| The avy jumps (`S` / `Q`) | a native port of avy 0.5.0's goto-char-timer and goto-line — same label keys (`a s d f g h j k l`), same label tree and subdivision, scoped to the visible area of the current editor; labels paint in an overlay |
 
 ## Hacking on it
 
-The code keeps one rule from meow: commands are data. Every command
-registers under its meow name in `Registry.cs`, and keys only ever resolve
-through rc bindings.
+Commands are data: every command registers under its meow name in
+`Registry.cs`, and keys only ever resolve through rc bindings.
 
 | Where | What |
 |---|---|
@@ -227,10 +251,11 @@ through rc bindings.
 | `Keypad.cs` / `WhichKey.cs` / `Hints.cs` | the SPC leader, the popup rows, the digit-expand hint positions |
 | `Ports.cs` | the seam: `IEditorPort` / `IClipboardPort` / `IUiPort` — the engine never touches an editor or OS API, which is why the suite runs in milliseconds |
 
-Behavior is pinned by the specs in `core/Notemeow.Core.Tests`
-(given/whenKeys/then…), cross-checked against meow's source. Treat a red
-spec as "you changed meow's semantics", not "update the test". Run them
-with `./setup.sh --core-only`.
+| Item | Value |
+|---|---|
+| Specs | `core/Notemeow.Core.Tests`, given/whenKeys/then…, cross-checked against meow's source |
+| A red spec means | "you changed meow's semantics", not "update the test" |
+| Run | `./setup.sh --core-only` |
 
 ## License
 
