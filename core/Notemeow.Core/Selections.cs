@@ -30,7 +30,7 @@ namespace Notemeow.Core
             for (int n = 0; n <= 9; n++)
             {
                 int digit = n;
-                commands["meow-expand-" + n] = ctx => ExpandOrCount(ctx, digit);
+                commands["meow-expand-" + digit] = ctx => ExpandOrCount(ctx, digit);
             }
             commands["meow-reverse"] = Reverse;
             commands["meow-cancel-selection"] = CancelAll;
@@ -76,17 +76,17 @@ namespace Notemeow.Core
         public static void RecordSelect(
             Ctx ctx, SelType type, int anchor, int active, bool expand, int posBefore)
         {
-            MeowState st = ctx.St;
+            MeowState state = ctx.State;
             SavedSelection prev =
-                st.LastSelection ?? new SavedSelection(null, false, posBefore, posBefore);
+                state.LastSelection ?? new SavedSelection(null, false, posBefore, posBefore);
             SavedSelection head =
-                st.SelectionHistory.Count > 0
-                    ? st.SelectionHistory[st.SelectionHistory.Count - 1]
+                state.SelectionHistory.Count > 0
+                    ? state.SelectionHistory[state.SelectionHistory.Count - 1]
                     : null;
-            if (head == null || !head.Equals(prev)) st.SelectionHistory.Add(prev);
-            while (st.SelectionHistory.Count > MaxSelectionHistory)
-                st.SelectionHistory.RemoveAt(0);
-            st.LastSelection = new SavedSelection(type, expand, anchor, active);
+            if (head == null || !head.Equals(prev)) state.SelectionHistory.Add(prev);
+            while (state.SelectionHistory.Count > MaxSelectionHistory)
+                state.SelectionHistory.RemoveAt(0);
+            state.LastSelection = new SavedSelection(type, expand, anchor, active);
         }
 
         public static void Select(Ctx ctx, SelType type, int markOff, int point, bool expand)
@@ -97,28 +97,28 @@ namespace Notemeow.Core
         public static void Select(
             Ctx ctx, SelType type, int markOff, int point, bool expand, bool push)
         {
-            MeowState st = ctx.St;
+            MeowState state = ctx.State;
             int len = ctx.Port.GetText().Length;
-            int m = Text.Clamp(markOff, 0, len);
-            int p = Text.Clamp(point, 0, len);
+            int mark = Text.Clamp(markOff, 0, len);
+            int caret = Text.Clamp(point, 0, len);
             List<SelRange> sels = ctx.Port.GetSelections();
-            if (push) RecordSelect(ctx, type, m, p, expand, sels[0].Active);
-            else st.LastSelection = new SavedSelection(type, expand, m, p);
-            st.SelType = type;
-            st.SelExpand = expand;
+            if (push) RecordSelect(ctx, type, mark, caret, expand, sels[0].Active);
+            else state.LastSelection = new SavedSelection(type, expand, mark, caret);
+            state.SelType = type;
+            state.SelExpand = expand;
             var next = new List<SelRange>(sels)
             {
-                [0] = new SelRange(m, p)
+                [0] = new SelRange(mark, caret)
             };
             ctx.Port.SetSelections(next);
             Grab.Beacon(ctx);
             ctx.Ui.ShowExpandHints(Hints.ExpandHintPositions(ctx));
         }
 
-        public static void ResetSelectionMemory(MeowState st)
+        public static void ResetSelectionMemory(MeowState state)
         {
-            st.SelectionHistory.Clear();
-            st.LastSelection = null;
+            state.SelectionHistory.Clear();
+            state.LastSelection = null;
         }
 
         public static void Collapse(Ctx ctx)
@@ -126,14 +126,14 @@ namespace Notemeow.Core
             var sels = new List<SelRange>(ctx.Port.GetSelections());
             sels[0] = new SelRange(sels[0].Active, sels[0].Active);
             ctx.Port.SetSelections(sels);
-            ctx.St.SelType = SelType.None;
-            ctx.St.SelExpand = false;
+            ctx.State.SelType = SelType.None;
+            ctx.State.SelExpand = false;
         }
 
         public static void Cancel(Ctx ctx)
         {
             Collapse(ctx);
-            ResetSelectionMemory(ctx.St);
+            ResetSelectionMemory(ctx.State);
         }
 
         public static void CancelAll(Ctx ctx)
@@ -156,14 +156,14 @@ namespace Notemeow.Core
 
         private static void Pop(Ctx ctx)
         {
-            MeowState st = ctx.St;
+            MeowState state = ctx.State;
             if (HasSelection(Primary(ctx)))
             {
                 SavedSelection entry = null;
-                if (st.SelectionHistory.Count > 0)
+                if (state.SelectionHistory.Count > 0)
                 {
-                    entry = st.SelectionHistory[st.SelectionHistory.Count - 1];
-                    st.SelectionHistory.RemoveAt(st.SelectionHistory.Count - 1);
+                    entry = state.SelectionHistory[state.SelectionHistory.Count - 1];
+                    state.SelectionHistory.RemoveAt(state.SelectionHistory.Count - 1);
                 }
                 if (entry == null) return;
                 if (entry.Type == null)
@@ -187,66 +187,68 @@ namespace Notemeow.Core
             }
         }
 
-        private static void ExpandOrCount(Ctx ctx, int n)
+        private static void ExpandOrCount(Ctx ctx, int digit)
         {
-            MeowState st = ctx.St;
-            if (HasSelection(Primary(ctx)) && Expandable.Contains(st.SelType))
+            MeowState state = ctx.State;
+            if (HasSelection(Primary(ctx)) && Expandable.Contains(state.SelType))
             {
-                Expand(ctx, n == 0 ? DigitZeroExpand : n);
+                Expand(ctx, digit == 0 ? DigitZeroExpand : digit);
             }
             else
             {
-                st.PendingCount = st.PendingCount * 10 + n;
+                state.PendingCount = state.PendingCount * 10 + digit;
             }
         }
 
-        private static void Expand(Ctx ctx, int n)
+        private static void Expand(Ctx ctx, int count)
         {
-            MeowState st = ctx.St;
+            MeowState state = ctx.State;
             string text = ctx.Port.GetText();
             bool back = BackwardP(ctx);
             int caret = Primary(ctx).Active;
             int target;
-            switch (st.SelType)
+            switch (state.SelType)
             {
                 case SelType.Char:
-                    target = caret + (back ? -n : n);
+                    target = caret + (back ? -count : count);
                     break;
                 case SelType.Word:
                 case SelType.Symbol:
                     {
-                        Func<char, bool> p = Text.CharPred(st.SelType == SelType.Symbol);
+                        Func<char, bool> isWord =
+                            Text.CharPred(state.SelType == SelType.Symbol);
                         target =
                             back
-                                ? Text.Words.PrevStart(text, caret, n, p)
-                                : Text.Words.NextEnd(text, caret, n, p);
+                                ? Text.Words.PrevStart(text, caret, count, isWord)
+                                : Text.Words.NextEnd(text, caret, count, isWord);
                         break;
                     }
                 case SelType.Line:
                     {
-                        int ln = Text.LineOfOffset(text, caret);
+                        int caretLine = Text.LineOfOffset(text, caret);
                         target =
                             back
-                                ? Text.LineStart(text, Math.Max(ln - n, 0))
-                                : Text.LineEnd(text, Math.Min(ln + n, Text.LineCount(text) - 1));
+                                ? Text.LineStart(text, Math.Max(caretLine - count, 0))
+                                : Text.LineEnd(
+                                    text, Math.Min(caretLine + count, Text.LineCount(text) - 1));
                         break;
                     }
                 case SelType.Find:
                 case SelType.Till:
                     {
-                        char? ch = st.LastFind;
+                        char? ch = state.LastFind;
                         if (ch == null) return;
-                        int t =
+                        int found =
                             Text.NthCharTarget(
-                                text, ch.Value, caret, n, back, st.SelType == SelType.Till);
-                        if (t < 0) return;
-                        target = t;
+                                text, ch.Value, caret, count, back, state.SelType == SelType.Till);
+                        if (found < 0) return;
+                        target = found;
                         break;
                     }
                 default:
                     return;
             }
-            Select(ctx, st.SelType, Mark(ctx), target, false);
+            Select(ctx, state.SelType, Mark(ctx), target, false);
         }
     }
 }

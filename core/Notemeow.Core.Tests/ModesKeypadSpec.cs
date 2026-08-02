@@ -61,9 +61,9 @@ namespace Notemeow.Core.Tests
         {
             Given("word", "<caret>hello");
             WhenKeys("f");
-            Assert.NotNull(St.Pending);
+            Assert.NotNull(State.Pending);
             PressEsc();
-            Assert.Null(St.Pending);
+            Assert.Null(State.Pending);
             WhenKeys("l");
             ThenCaretAt(1);
         }
@@ -152,7 +152,7 @@ namespace Notemeow.Core.Tests
             Given("word", "<caret>hello");
             WhenKeys(" x");
             ThenMode(MeowMode.Keypad);
-            Assert.Equal("x", St.Keypad.ToString());
+            Assert.Equal("x", State.Keypad.ToString());
         }
 
         [Fact(DisplayName = "given an undefined keypad sequence then KEYPAD exits back to NORMAL")]

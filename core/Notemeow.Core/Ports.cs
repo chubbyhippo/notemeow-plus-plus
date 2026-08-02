@@ -73,25 +73,25 @@ namespace Notemeow.Core
 
         void ClearAvy();
 
-        void ModeChanged(MeowState st);
+        void ModeChanged(MeowState state);
 
-        void Refresh(MeowState st);
+        void Refresh(MeowState state);
     }
 
     public delegate void MeowCommand(Ctx ctx);
 
-    public sealed class Ctx(IEditorPort port, IClipboardPort clipboard, IUiPort ui, MeowState st)
+    public sealed class Ctx(IEditorPort port, IClipboardPort clipboard, IUiPort ui, MeowState state)
     {
         public IEditorPort Port { get; } = port;
         public IClipboardPort Clipboard { get; } = clipboard;
         public IUiPort Ui { get; } = ui;
-        public MeowState St { get; } = st;
+        public MeowState State { get; } = state;
 
         public void SetMode(MeowMode mode)
         {
-            St.Mode = mode;
-            if (mode != MeowMode.Keypad) St.Keypad.Length = 0;
-            Ui.ModeChanged(St);
+            State.Mode = mode;
+            if (mode != MeowMode.Keypad) State.Keypad.Length = 0;
+            Ui.ModeChanged(State);
         }
     }
 }

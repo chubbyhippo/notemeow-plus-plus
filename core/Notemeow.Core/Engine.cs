@@ -31,9 +31,9 @@ namespace Notemeow.Core
 
         public static void EnterKeypad(Ctx ctx)
         {
-            MeowState st = ctx.St;
-            if (st.Mode == MeowMode.Keypad) return;
-            st.KeypadPreviousState = st.Mode;
+            MeowState state = ctx.State;
+            if (state.Mode == MeowMode.Keypad) return;
+            state.KeypadPreviousState = state.Mode;
             ctx.SetMode(MeowMode.Keypad);
             ctx.Ui.ScheduleWhichKey("keypad", "");
         }
@@ -41,83 +41,83 @@ namespace Notemeow.Core
         public static void RunEmacsMotion(Ctx ctx, string command)
         {
             if (Registry.Commands.TryGetValue(command, out MeowCommand cmd)) cmd(ctx);
-            ctx.Ui.Refresh(ctx.St);
+            ctx.Ui.Refresh(ctx.State);
         }
 
         public static bool HandleChar(Ctx ctx, char c)
         {
-            MeowState st = ctx.St;
-            if (st.Mode == MeowMode.Insert) return false;
-            if (st.Mode == MeowMode.Keypad)
+            MeowState state = ctx.State;
+            if (state.Mode == MeowMode.Insert) return false;
+            if (state.Mode == MeowMode.Keypad)
             {
                 Keypad.Key(ctx, c);
-                st.LastCommand = "keypad";
-                ctx.Ui.Refresh(st);
+                state.LastCommand = "keypad";
+                ctx.Ui.Refresh(state);
                 return true;
             }
-            if (st.Avy != null)
+            if (state.Avy != null)
             {
                 Avy.Key(ctx, c);
-                st.LastCommand = "avy";
-                ctx.Ui.Refresh(st);
+                state.LastCommand = "avy";
+                ctx.Ui.Refresh(state);
                 return true;
             }
 
             ctx.Ui.HideWhichKey();
             ctx.Ui.ClearExpandHints();
 
-            Pending? pend = st.Pending;
+            Pending? pend = state.Pending;
             Rc.Binding repeatBinding = null;
             if (pend == null && RepeatMap != null) RepeatMap.TryGetValue(c, out repeatBinding);
             if (pend == null && repeatBinding == null) RepeatMap = null;
-            bool motionish = st.Mode == MeowMode.Motion;
+            bool motionish = state.Mode == MeowMode.Motion;
             Rc.Binding binding =
                 pend == null
                     ? repeatBinding ?? Resolve(ctx, c, motionish)
                     : null;
             string cmd = binding?.Command;
 
-            if (!st.Replaying && cmd != "repeat")
+            if (!state.Replaying && cmd != "repeat")
             {
-                if (pend == null && st.PendingCount == 0 && !st.Negative) st.Unit.Clear();
-                st.Unit.Add(c);
+                if (pend == null && state.PendingCount == 0 && !state.Negative) state.Unit.Clear();
+                state.Unit.Add(c);
             }
 
             if (pend != null)
             {
-                st.Pending = null;
+                state.Pending = null;
                 ResolvePending(ctx, pend.Value, c);
-                st.LastCommand = "pending";
+                state.LastCommand = "pending";
             }
             else if (binding != null)
             {
                 RunBinding(ctx, binding);
-                st.LastCommand =
-                    cmd ?? binding.Action ?? st.LastCommand;
+                state.LastCommand =
+                    cmd ?? binding.Action ?? state.LastCommand;
             }
             else
             {
-                st.LastCommand = null;
+                state.LastCommand = null;
             }
 
             bool awaitingMoreKeys =
-                st.Pending != null
-                    || (st.PendingCount != 0 && cmd != null && cmd.StartsWith("meow-expand-"))
-                    || (st.Negative && cmd == "meow-negative-argument")
+                state.Pending != null
+                    || (state.PendingCount != 0 && cmd != null && cmd.StartsWith("meow-expand-"))
+                    || (state.Negative && cmd == "meow-negative-argument")
                     || cmd == "meow-keypad";
-            if (!st.Replaying && cmd != "repeat" && !awaitingMoreKeys)
+            if (!state.Replaying && cmd != "repeat" && !awaitingMoreKeys)
             {
-                st.LastKeys = [.. st.Unit];
+                state.LastKeys = [.. state.Unit];
             }
 
-            ctx.Ui.Refresh(st);
+            ctx.Ui.Refresh(state);
             return true;
         }
 
         private static Rc.Binding Resolve(Ctx ctx, char c, bool motion)
         {
             if (c == ' ') return KeypadBinding;
-            if (ctx.St.NoremapDepth == 0)
+            if (ctx.State.NoremapDepth == 0)
             {
                 Rc.Config cfg = Rc.Cfg();
                 if ((motion ? cfg.Motion : cfg.Normal).TryGetValue(c, out Rc.Binding user)) return user;
@@ -150,17 +150,17 @@ namespace Notemeow.Core
 
         public static void RepeatLast(Ctx ctx)
         {
-            MeowState st = ctx.St;
-            IReadOnlyList<char> keys = st.LastKeys;
+            MeowState state = ctx.State;
+            IReadOnlyList<char> keys = state.LastKeys;
             if (keys.Count == 0) return;
-            st.Replaying = true;
+            state.Replaying = true;
             try
             {
                 foreach (char k in keys) HandleChar(ctx, k);
             }
             finally
             {
-                st.Replaying = false;
+                state.Replaying = false;
             }
         }
 
@@ -184,7 +184,7 @@ namespace Notemeow.Core
 
         private static void Dispatch(Ctx ctx, Rc.Binding b)
         {
-            MeowState st = ctx.St;
+            MeowState state = ctx.State;
             if (b.Command != null)
             {
                 if (Registry.Commands.TryGetValue(b.Command, out MeowCommand cmd)) cmd(ctx);
@@ -204,58 +204,58 @@ namespace Notemeow.Core
                 return;
             }
             if (b.Keys == null) return;
-            if (st.ReplayDepth >= MaxReplayDepth)
+            if (state.ReplayDepth >= MaxReplayDepth)
             {
                 ctx.Ui.Hint("notemeow: mapping recursion is too deep");
                 return;
             }
-            bool savedReplaying = st.Replaying;
-            st.Replaying = true;
-            st.ReplayDepth++;
-            if (!b.Recursive) st.NoremapDepth++;
+            bool savedReplaying = state.Replaying;
+            state.Replaying = true;
+            state.ReplayDepth++;
+            if (!b.Recursive) state.NoremapDepth++;
             try
             {
                 for (int i = 0; i < b.Keys.Length; i++) HandleChar(ctx, b.Keys[i]);
             }
             finally
             {
-                if (!b.Recursive) st.NoremapDepth--;
-                st.ReplayDepth--;
-                st.Replaying = savedReplaying;
+                if (!b.Recursive) state.NoremapDepth--;
+                state.ReplayDepth--;
+                state.Replaying = savedReplaying;
             }
         }
 
         public static bool EscapeKey(Ctx ctx)
         {
-            MeowState st = ctx.St;
-            if (st.Avy != null)
+            MeowState state = ctx.State;
+            if (state.Avy != null)
             {
                 Avy.Cancel(ctx);
-                ctx.Ui.Refresh(st);
+                ctx.Ui.Refresh(state);
                 return true;
             }
-            bool hadTransient = st.Pending != null || RepeatMap != null;
-            st.Pending = null;
+            bool hadTransient = state.Pending != null || RepeatMap != null;
+            state.Pending = null;
             RepeatMap = null;
             ctx.Ui.HideWhichKey();
             ctx.Ui.ClearExpandHints();
-            if (st.Mode == MeowMode.Insert)
+            if (state.Mode == MeowMode.Insert)
             {
                 ctx.SetMode(MeowMode.Normal);
-                ctx.Ui.Refresh(st);
+                ctx.Ui.Refresh(state);
                 return true;
             }
-            if (st.Mode == MeowMode.Keypad)
+            if (state.Mode == MeowMode.Keypad)
             {
                 Keypad.Exit(ctx);
-                ctx.Ui.Refresh(st);
+                ctx.Ui.Refresh(state);
                 return true;
             }
             List<SelRange> sels = ctx.Port.GetSelections();
             if (sels.Count > 1 || Selections.HasSelection(sels[0]))
             {
                 Selections.CancelAll(ctx);
-                ctx.Ui.Refresh(st);
+                ctx.Ui.Refresh(state);
                 return true;
             }
             return hadTransient;

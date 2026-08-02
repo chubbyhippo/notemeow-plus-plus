@@ -30,9 +30,9 @@ namespace Notemeow.Core.Tests
             Given("word", "<caret>hello world");
             WhenKeys("wG");
             ThenNoSelection();
-            Assert.NotNull(St.Grab);
-            Assert.Equal(0, St.Grab.Start);
-            Assert.Equal(5, St.Grab.End);
+            Assert.NotNull(State.Grab);
+            Assert.Equal(0, State.Grab.Start);
+            Assert.Equal(5, State.Grab.End);
         }
 
         [Fact(DisplayName =
@@ -48,7 +48,7 @@ namespace Notemeow.Core.Tests
             ThenText("three two one");
             ThenNoSelection();
             Assert.Equal(
-                "three", Editor.GetText()[St.Grab.Start..St.Grab.End]);
+                "three", Editor.GetText()[State.Grab.Start..State.Grab.End]);
         }
 
         [Fact(DisplayName =
@@ -57,9 +57,9 @@ namespace Notemeow.Core.Tests
         {
             Given("word", "<caret>hello world");
             WhenKeys("wG");
-            Assert.NotNull(St.Grab);
+            Assert.NotNull(State.Grab);
             WhenKeys("G");
-            Assert.Null(St.Grab);
+            Assert.Null(State.Grab);
         }
 
         [Fact(DisplayName = "given no grab when R then nothing changes")]
@@ -91,8 +91,8 @@ namespace Notemeow.Core.Tests
             GivenCaretAt(6);
             WhenKeys("wY");
             ThenNoSelection();
-            Assert.Equal(6, St.Grab.Start);
-            Assert.Equal(11, St.Grab.End);
+            Assert.Equal(6, State.Grab.Start);
+            Assert.Equal(11, State.Grab.End);
         }
 
         [Fact(DisplayName =

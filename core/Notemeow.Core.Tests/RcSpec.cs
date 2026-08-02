@@ -327,7 +327,7 @@ namespace Notemeow.Core.Tests
         {
             Given("three lines", "<caret>one\ntwo\nthree");
             GivenRc("mmap n meow-next");
-            St.Mode = MeowMode.Motion;
+            State.Mode = MeowMode.Motion;
             WhenKeys("n");
             Assert.Equal(1, CaretLine());
             WhenKeys("j");

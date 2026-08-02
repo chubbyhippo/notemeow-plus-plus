@@ -136,12 +136,12 @@ namespace Notemeow.Plugin
         {
             ulong id = (ulong)NppApi.SendMessage(
                 nppData.NppHandle, NppApi.NppmGetCurrentBufferId, IntPtr.Zero, IntPtr.Zero);
-            if (!States.TryGetValue(id, out MeowState st))
+            if (!States.TryGetValue(id, out MeowState state))
             {
-                st = new MeowState();
-                States[id] = st;
+                state = new MeowState();
+                States[id] = state;
             }
-            return st;
+            return state;
         }
 
         private static Ctx MakeCtx(IntPtr sciHwnd)
@@ -204,16 +204,16 @@ namespace Notemeow.Plugin
             return new Windmove.ViewLayout(true, stacked, onSecond);
         }
 
-        private static void ShowMode(MeowState st, IntPtr sci)
+        private static void ShowMode(MeowState state, IntPtr sci)
         {
-            string mode = st.Mode.ToString().ToUpperInvariant();
+            string mode = state.Mode.ToString().ToUpperInvariant();
             NppApi.SendMessageStr(
                 nppData.NppHandle,
                 NppApi.NppmSetStatusBar,
                 (IntPtr)NppApi.StatusBarDocType,
                 "MEOW " + mode);
             string typing =
-                st.Mode == MeowMode.Insert
+                state.Mode == MeowMode.Insert
                     ? IsOvertype(sci) ? "OVR" : "INS"
                     : mode[..3];
             NppApi.SendMessageStr(
@@ -221,7 +221,7 @@ namespace Notemeow.Plugin
                 NppApi.NppmSetStatusBar,
                 (IntPtr)NppApi.StatusBarTypingMode,
                 typing);
-            int style = st.Mode == MeowMode.Insert ? NppApi.CaretStyleLine : NppApi.CaretStyleBlock;
+            int style = state.Mode == MeowMode.Insert ? NppApi.CaretStyleLine : NppApi.CaretStyleBlock;
             NppApi.SendMessage(sci, (uint)NppApi.SciSetCaretStyle, (IntPtr)style, IntPtr.Zero);
         }
 
@@ -725,15 +725,15 @@ namespace Notemeow.Plugin
                 AvyOverlay.Hide();
             }
 
-            public void ModeChanged(MeowState st)
+            public void ModeChanged(MeowState state)
             {
-                ShowMode(st, sci);
+                ShowMode(state, sci);
             }
 
-            public void Refresh(MeowState st)
+            public void Refresh(MeowState state)
             {
-                ShowMode(st, sci);
-                port.HighlightGrab(st.Grab);
+                ShowMode(state, sci);
+                port.HighlightGrab(state.Grab);
             }
         }
     }

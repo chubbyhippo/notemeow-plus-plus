@@ -35,7 +35,7 @@ namespace Notemeow.Core
 
         private static void PendThing(Ctx ctx, Pending p)
         {
-            ctx.St.Pending = p;
+            ctx.State.Pending = p;
             ctx.Ui.ScheduleWhichKey("things", "");
         }
 
@@ -68,45 +68,45 @@ namespace Notemeow.Core
             }
         }
 
-        private static int[] EnclosingPair(string text, int s, int e)
+        private static int[] EnclosingPair(string text, int selStart, int selEnd)
         {
             const string opens = "([{";
             const string closes = ")]}";
-            var stack = new Stack<int>();
+            var openOffsets = new Stack<int>();
             int[] best = null;
             int i = 0;
             while (i < text.Length)
             {
-                char c = text[i];
-                if (c == '"' || c == '\'' || c == '`')
+                char ch = text[i];
+                if (ch == '"' || ch == '\'' || ch == '`')
                 {
                     int j = i + 1;
-                    while (j < text.Length && text[j] != c && text[j] != '\n')
+                    while (j < text.Length && text[j] != ch && text[j] != '\n')
                     {
                         if (text[j] == '\\') j++;
                         j++;
                     }
-                    if (j < text.Length && text[j] == c)
+                    if (j < text.Length && text[j] == ch)
                     {
                         i = j + 1;
                         continue;
                     }
                 }
-                if (opens.IndexOf(c) >= 0)
+                if (opens.IndexOf(ch) >= 0)
                 {
-                    stack.Push(i);
+                    openOffsets.Push(i);
                 }
-                else if (closes.IndexOf(c) >= 0)
+                else if (closes.IndexOf(ch) >= 0)
                 {
-                    int kind = closes.IndexOf(c);
-                    while (stack.Count > 0)
+                    int kind = closes.IndexOf(ch);
+                    while (openOffsets.Count > 0)
                     {
-                        int o = stack.Pop();
-                        if (opens.IndexOf(text[o]) == kind)
+                        int open = openOffsets.Pop();
+                        if (opens.IndexOf(text[open]) == kind)
                         {
-                            if (o < s && i + 1 >= e && (best == null || i - o < best[1] - best[0]))
+                            if (open < selStart && i + 1 >= selEnd && (best == null || i - open < best[1] - best[0]))
                             {
-                                best = [o, i];
+                                best = [open, i];
                             }
                             break;
                         }
@@ -121,11 +121,11 @@ namespace Notemeow.Core
         {
             string text = ctx.Port.GetText();
             SelRange sel = Selections.Primary(ctx);
-            bool active = ctx.St.SelType == SelType.Block && Selections.HasSelection(sel);
-            bool back = Selections.BackwardP(ctx) != (ctx.St.TakeCount(1) < 0);
-            int s = active ? sel.Lo() : sel.Active;
-            int e = active ? sel.Hi() : sel.Active;
-            int[] p = EnclosingPair(text, s, e);
+            bool active = ctx.State.SelType == SelType.Block && Selections.HasSelection(sel);
+            bool back = Selections.BackwardP(ctx) != (ctx.State.TakeCount(1) < 0);
+            int selStart = active ? sel.Lo() : sel.Active;
+            int selEnd = active ? sel.Hi() : sel.Active;
+            int[] p = EnclosingPair(text, selStart, selEnd);
             if (p == null)
             {
                 ctx.Ui.Hint("No enclosing block");
@@ -139,8 +139,8 @@ namespace Notemeow.Core
         {
             string text = ctx.Port.GetText();
             bool back =
-                (ctx.St.SelType == SelType.Block && Selections.BackwardP(ctx))
-                    || ctx.St.TakeCount(1) < 0;
+                (ctx.State.SelType == SelType.Block && Selections.BackwardP(ctx))
+                    || ctx.State.TakeCount(1) < 0;
             int caret = Selections.Primary(ctx).Active;
             int[] p = EnclosingPair(text, caret, caret);
             if (p == null)
@@ -155,31 +155,41 @@ namespace Notemeow.Core
         {
             string text = ctx.Port.GetText();
             if (text.Length == 0) return;
-            int n = ctx.St.TakeCount(1);
-            int ln = Text.LineOfOffset(text, Selections.Primary(ctx).Active);
-            if (n >= 0)
+            int count = ctx.State.TakeCount(1);
+            int caretLine = Text.LineOfOffset(text, Selections.Primary(ctx).Active);
+            if (count >= 0)
             {
-                int pl = ln - 1;
-                while (pl >= 0 && Things.Blank(text, pl)) pl--;
-                if (pl < 0) return;
-                int m = Text.LineEnd(text, pl);
-                int p = Text.LineStart(text, ln);
-                int eol = Text.LineEnd(text, ln);
-                while (p < eol && char.IsWhiteSpace(text[p])) p++;
-                Selections.Select(ctx, SelType.Join, m, p, true);
+                int prevLine = caretLine - 1;
+                while (prevLine >= 0 && Things.Blank(text, prevLine)) prevLine--;
+                if (prevLine < 0) return;
+                Selections.Select(
+                    ctx,
+                    SelType.Join,
+                    Text.LineEnd(text, prevLine),
+                    FirstNonBlankOffset(text, caretLine),
+                    true);
             }
             else
             {
-                int last = Text.LineCount(text) - 1;
-                int nl = ln + 1;
-                while (nl <= last && Things.Blank(text, nl)) nl++;
-                if (nl > last) return;
-                int m = Text.LineEnd(text, ln);
-                int p = Text.LineStart(text, nl);
-                int eol = Text.LineEnd(text, nl);
-                while (p < eol && char.IsWhiteSpace(text[p])) p++;
-                Selections.Select(ctx, SelType.Join, m, p, true);
+                int lastLine = Text.LineCount(text) - 1;
+                int nextLine = caretLine + 1;
+                while (nextLine <= lastLine && Things.Blank(text, nextLine)) nextLine++;
+                if (nextLine > lastLine) return;
+                Selections.Select(
+                    ctx,
+                    SelType.Join,
+                    Text.LineEnd(text, caretLine),
+                    FirstNonBlankOffset(text, nextLine),
+                    true);
             }
+        }
+
+        private static int FirstNonBlankOffset(string text, int line)
+        {
+            int offset = Text.LineStart(text, line);
+            int eol = Text.LineEnd(text, line);
+            while (offset < eol && char.IsWhiteSpace(text[offset])) offset++;
+            return offset;
         }
     }
 }

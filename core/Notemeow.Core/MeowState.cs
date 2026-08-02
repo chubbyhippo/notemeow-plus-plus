@@ -64,13 +64,13 @@ namespace Notemeow.Core
             return TakeCount(1);
         }
 
-        public int TakeCount(int def)
+        public int TakeCount(int fallback)
         {
-            int n = PendingCount == 0 ? def : PendingCount;
-            int r = Negative ? -n : n;
+            int magnitude = PendingCount == 0 ? fallback : PendingCount;
+            int signed = Negative ? -magnitude : magnitude;
             PendingCount = 0;
             Negative = false;
-            return r;
+            return signed;
         }
     }
 }

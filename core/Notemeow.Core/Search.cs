@@ -32,11 +32,11 @@ namespace Notemeow.Core
 
         private const int MaxSearchHistory = 50;
 
-        public static void Push(MeowState st, string pattern)
+        public static void Push(MeowState state, string pattern)
         {
-            st.SearchHistory.RemoveAll(p => p == pattern);
-            st.SearchHistory.Add(pattern);
-            while (st.SearchHistory.Count > MaxSearchHistory) st.SearchHistory.RemoveAt(0);
+            state.SearchHistory.RemoveAll(p => p == pattern);
+            state.SearchHistory.Add(pattern);
+            while (state.SearchHistory.Count > MaxSearchHistory) state.SearchHistory.RemoveAt(0);
         }
 
         private sealed class SearchMatch(int start, int end)
@@ -87,12 +87,12 @@ namespace Notemeow.Core
 
         private static void DoSearch(Ctx ctx)
         {
-            MeowState st = ctx.St;
+            MeowState state = ctx.State;
             SelRange sel = Selections.Primary(ctx);
             string pattern =
-                st.SearchHistory.Count == 0
+                state.SearchHistory.Count == 0
                     ? null
-                    : st.SearchHistory[st.SearchHistory.Count - 1];
+                    : state.SearchHistory[state.SearchHistory.Count - 1];
             if (Selections.HasSelection(sel))
             {
                 int lo = sel.Lo();
@@ -101,7 +101,7 @@ namespace Notemeow.Core
                 if (selText.Length != 0 && (pattern == null || !FullyMatches(pattern, selText)))
                 {
                     pattern = Text.EscapeRegExp(selText);
-                    Push(st, pattern);
+                    Push(state, pattern);
                 }
             }
             if (pattern == null)
@@ -109,12 +109,12 @@ namespace Notemeow.Core
                 ctx.Ui.Hint("No search pattern");
                 return;
             }
-            SearchWith(ctx, pattern, st.TakeCount(1) < 0 || Selections.BackwardP(ctx));
+            SearchWith(ctx, pattern, state.TakeCount(1) < 0 || Selections.BackwardP(ctx));
         }
 
         private static void Visit(Ctx ctx)
         {
-            bool backward = ctx.St.TakeCount(1) < 0;
+            bool backward = ctx.State.TakeCount(1) < 0;
             string input = ctx.Ui.Input("Visit (regexp):", null);
             if (input == null || input.Length == 0) return;
             string pattern = input;
@@ -126,7 +126,7 @@ namespace Notemeow.Core
             {
                 pattern = Text.EscapeRegExp(input);
             }
-            Push(ctx.St, pattern);
+            Push(ctx.State, pattern);
             SearchWith(ctx, pattern, backward);
         }
 

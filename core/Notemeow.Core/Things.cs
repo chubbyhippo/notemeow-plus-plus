@@ -58,12 +58,12 @@ namespace Notemeow.Core
             int start = -1;
             for (int i = offset - 1; i >= 0; i--)
             {
-                char c = text[i];
-                if (c == close)
+                char ch = text[i];
+                if (ch == close)
                 {
                     depth++;
                 }
-                else if (c == open)
+                else if (ch == open)
                 {
                     if (depth == 0)
                     {
@@ -78,12 +78,12 @@ namespace Notemeow.Core
             int end = -1;
             for (int j = offset; j < text.Length; j++)
             {
-                char c = text[j];
-                if (c == open && j != start)
+                char ch = text[j];
+                if (ch == open && j != start)
                 {
                     depth++;
                 }
-                else if (c == close)
+                else if (ch == close)
                 {
                     if (depth == 0)
                     {
@@ -99,31 +99,34 @@ namespace Notemeow.Core
 
         private static OffsetRange StringThing(string text, int offset, bool inner)
         {
-            int n = text.Length;
+            int length = text.Length;
             int i = 0;
-            while (i < n)
+            while (i < length)
             {
-                char c = text[i];
-                if (c == '"' || c == '\'' || c == '`')
+                char quote = text[i];
+                if (quote == '"' || quote == '\'' || quote == '`')
                 {
-                    bool triple = i + 2 < n && text[i + 1] == c && text[i + 2] == c;
+                    bool triple =
+                        i + 2 < length && text[i + 1] == quote && text[i + 2] == quote;
                     int len = triple ? 3 : 1;
                     int open = i;
                     int j = i + len;
                     int closeEnd = -1;
-                    while (j < n)
+                    while (j < length)
                     {
-                        char d = text[j];
-                        if (!triple && d == '\n') break;
-                        if (d == '\\')
+                        char ch = text[j];
+                        if (!triple && ch == '\n') break;
+                        if (ch == '\\')
                         {
                             j += 2;
                             continue;
                         }
                         bool closes =
                             !triple
-                                || (j + 2 < n && text[j + 1] == c && text[j + 2] == c);
-                        if (d == c && closes)
+                                || (j + 2 < length
+                                    && text[j + 1] == quote
+                                    && text[j + 2] == quote);
+                        if (ch == quote && closes)
                         {
                             closeEnd = j + len;
                             break;
@@ -151,17 +154,17 @@ namespace Notemeow.Core
 
         private static OffsetRange Symbol(string text, int offset)
         {
-            int o = offset;
-            if (o >= text.Length || !Text.IsSymbolChar(text[o]))
+            int inSymbol = offset;
+            if (inSymbol >= text.Length || !Text.IsSymbolChar(text[inSymbol]))
             {
-                if (o > 0 && Text.IsSymbolChar(text[o - 1])) o--;
+                if (inSymbol > 0 && Text.IsSymbolChar(text[inSymbol - 1])) inSymbol--;
                 else return null;
             }
-            int s = o;
-            int e = o;
-            while (s > 0 && Text.IsSymbolChar(text[s - 1])) s--;
-            while (e < text.Length && Text.IsSymbolChar(text[e])) e++;
-            return new OffsetRange(s, e);
+            int start = inSymbol;
+            int end = inSymbol;
+            while (start > 0 && Text.IsSymbolChar(text[start - 1])) start--;
+            while (end < text.Length && Text.IsSymbolChar(text[end])) end++;
+            return new OffsetRange(start, end);
         }
 
         private static OffsetRange Window(Ctx ctx, string text)
@@ -177,10 +180,10 @@ namespace Notemeow.Core
         {
             if (text.Length == 0) return null;
             int count = Text.LineCount(text);
-            int ln = Text.LineOfOffset(text, Text.Clamp(offset, 0, text.Length));
-            if (Blank(text, ln)) return null;
-            int first = ln;
-            int last = ln;
+            int caretLine = Text.LineOfOffset(text, Text.Clamp(offset, 0, text.Length));
+            if (Blank(text, caretLine)) return null;
+            int first = caretLine;
+            int last = caretLine;
             while (first > 0 && !Blank(text, first - 1)) first--;
             while (last < count - 1 && !Blank(text, last + 1)) last++;
             int start = Text.LineStart(text, first);
@@ -193,11 +196,11 @@ namespace Notemeow.Core
 
         private static OffsetRange Line(string text, int offset, bool inner)
         {
-            int ln = Text.LineOfOffset(text, Text.Clamp(offset, 0, text.Length));
-            int end = Text.LineEnd(text, ln);
+            int caretLine = Text.LineOfOffset(text, Text.Clamp(offset, 0, text.Length));
+            int end = Text.LineEnd(text, caretLine);
             return inner
-                ? new OffsetRange(Text.LineStart(text, ln), end)
-                : new OffsetRange(Text.LineStart(text, ln), Text.LineStart(text, ln + 1));
+                ? new OffsetRange(Text.LineStart(text, caretLine), end)
+                : new OffsetRange(Text.LineStart(text, caretLine), Text.LineStart(text, caretLine + 1));
         }
 
         private static OffsetRange Defun(Ctx ctx, string text, int offset)
@@ -219,34 +222,36 @@ namespace Notemeow.Core
         {
             if (text.Length == 0) return null;
             string enders = Text.SentenceEnders;
-            int s = Text.Clamp(offset, 0, text.Length - 1);
-            while (s > 0)
+            int start = Text.Clamp(offset, 0, text.Length - 1);
+            while (start > 0)
             {
-                char c = text[s - 1];
-                if (enders.IndexOf(c) >= 0 || (c == '\n' && s > 1 && text[s - 2] == '\n')) break;
-                s--;
+                char ch = text[start - 1];
+                if (enders.IndexOf(ch) >= 0
+                    || (ch == '\n' && start > 1 && text[start - 2] == '\n')) break;
+                start--;
             }
-            while (s < text.Length && char.IsWhiteSpace(text[s])) s++;
-            int e = Text.Clamp(offset, 0, text.Length);
-            while (e < text.Length
-                && enders.IndexOf(text[e]) < 0
-                && !(text[e] == '\n' && e + 1 < text.Length && text[e + 1] == '\n'))
+            while (start < text.Length && char.IsWhiteSpace(text[start])) start++;
+            int end = Text.Clamp(offset, 0, text.Length);
+            while (end < text.Length
+                && enders.IndexOf(text[end]) < 0
+                && !(text[end] == '\n' && end + 1 < text.Length && text[end + 1] == '\n'))
             {
-                e++;
+                end++;
             }
-            if (e < text.Length && enders.IndexOf(text[e]) >= 0) e++;
-            if (e <= s) return null;
-            if (inner) return new OffsetRange(s, e);
-            int be = e;
-            while (be < text.Length && text[be] == ' ') be++;
-            return new OffsetRange(s, be);
+            if (end < text.Length && enders.IndexOf(text[end]) >= 0) end++;
+            if (end <= start) return null;
+            if (inner) return new OffsetRange(start, end);
+            int withTrailingSpace = end;
+            while (withTrailingSpace < text.Length && text[withTrailingSpace] == ' ')
+                withTrailingSpace++;
+            return new OffsetRange(start, withTrailingSpace);
         }
 
         internal static bool Blank(string text, int line)
         {
-            int s = Text.LineStart(text, line);
-            int e = Text.LineEnd(text, line);
-            return text.Substring(s, e - s).Trim().Length == 0;
+            int start = Text.LineStart(text, line);
+            int end = Text.LineEnd(text, line);
+            return text.Substring(start, end - start).Trim().Length == 0;
         }
     }
 }

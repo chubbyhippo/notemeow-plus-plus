@@ -42,10 +42,10 @@ namespace Notemeow.Core
 
         private static void Recenter(Ctx ctx)
         {
-            MeowState st = ctx.St;
-            st.RecenterPhase = NextRecenterPhase(st.LastCommand, st.RecenterPhase);
-            st.LastCommand = RecenterCommand;
-            ctx.Ui.RevealCaret(RecenterPosition(st.RecenterPhase));
+            MeowState state = ctx.State;
+            state.RecenterPhase = NextRecenterPhase(state.LastCommand, state.RecenterPhase);
+            state.LastCommand = RecenterCommand;
+            ctx.Ui.RevealCaret(RecenterPosition(state.RecenterPhase));
         }
     }
 }

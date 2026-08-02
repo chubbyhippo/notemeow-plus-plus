@@ -29,7 +29,7 @@ namespace Notemeow.Core.Tests
         public void RecenterCycleFollowsEmacs()
         {
             Assert.Equal(
-                new[] { RevealAt.Center, RevealAt.Top, RevealAt.Bottom, RevealAt.Center },
+                [RevealAt.Center, RevealAt.Top, RevealAt.Bottom, RevealAt.Center],
                 new[]
                 {
                     View.RecenterPosition(0),

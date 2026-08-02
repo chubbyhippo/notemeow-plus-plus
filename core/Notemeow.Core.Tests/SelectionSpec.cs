@@ -362,7 +362,7 @@ namespace Notemeow.Core.Tests
         {
             Given("two words", "<caret>hello world");
             WhenKeys("wG");
-            St.SelectionHistory.Clear();
+            State.SelectionHistory.Clear();
             WhenKeys("z");
             ThenSelection("hello");
         }

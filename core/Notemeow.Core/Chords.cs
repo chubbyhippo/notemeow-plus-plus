@@ -33,7 +33,7 @@ namespace Notemeow.Core
 
         public static bool Dispatch(Ctx ctx, Chord chord)
         {
-            if (!Claims(ctx.St.Mode, chord)) return false;
+            if (!Claims(ctx.State.Mode, chord)) return false;
             Engine.RunBinding(ctx, BindingFor(chord));
             return true;
         }

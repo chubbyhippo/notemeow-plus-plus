@@ -189,11 +189,11 @@ namespace Notemeow.Core
         {
             unchecked
             {
-                int h = Ctrl ? 1 : 0;
-                h = h * 31 + (Alt ? 1 : 0);
-                h = h * 31 + (Shift ? 1 : 0);
-                h = h * 31 + Key;
-                return h;
+                int hash = Ctrl ? 1 : 0;
+                hash = hash * 31 + (Alt ? 1 : 0);
+                hash = hash * 31 + (Shift ? 1 : 0);
+                hash = hash * 31 + Key;
+                return hash;
             }
         }
     }

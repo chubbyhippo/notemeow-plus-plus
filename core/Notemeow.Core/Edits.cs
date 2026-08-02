@@ -73,13 +73,13 @@ namespace Notemeow.Core
             public SelRange Sel { get; } = sel;
         }
 
-        private delegate Computed Compute(SelRange sel, int lo, int hi);
+        private delegate Computed Compute(SelRange sel, int selStart, int selEnd);
 
-        private sealed class Item(SelRange sel, int index, int lo)
+        private sealed class Item(SelRange sel, int index, int selStart)
         {
             public SelRange Sel { get; } = sel;
             public int Index { get; } = index;
-            public int Lo { get; } = lo;
+            public int SelStart { get; } = selStart;
         }
 
         private static void EditCarets(Ctx ctx, Compute compute)
@@ -91,31 +91,33 @@ namespace Notemeow.Core
                 SelRange sel = sels[i];
                 order.Add(new Item(sel, i, sel.Lo()));
             }
-            order.Sort((a, b) => b.Lo.CompareTo(a.Lo));
+            order.Sort((left, right) => right.SelStart.CompareTo(left.SelStart));
             var edits = new List<TextEdit>();
             var results = new Computed[sels.Count];
             foreach (Item item in order)
             {
-                int hi = item.Sel.Hi();
-                Computed r = compute(item.Sel, item.Lo, hi);
-                if (r.Edit != null) edits.Add(r.Edit);
-                results[item.Index] = r;
+                int selEnd = item.Sel.Hi();
+                Computed computed = compute(item.Sel, item.SelStart, selEnd);
+                if (computed.Edit != null) edits.Add(computed.Edit);
+                results[item.Index] = computed;
             }
             var newSels = new SelRange[sels.Count];
             int delta = 0;
             for (int i = order.Count - 1; i >= 0; i--)
             {
                 Item item = order[i];
-                Computed r = results[item.Index];
-                newSels[item.Index] = new SelRange(r.Sel.Anchor + delta, r.Sel.Active + delta);
-                if (r.Edit != null)
+                Computed computed = results[item.Index];
+                newSels[item.Index] =
+                    new SelRange(computed.Sel.Anchor + delta, computed.Sel.Active + delta);
+                TextEdit edit = computed.Edit;
+                if (edit != null)
                 {
-                    delta += r.Edit.Text.Length - (r.Edit.End - r.Edit.Start);
+                    delta += edit.Text.Length - (edit.End - edit.Start);
                 }
             }
             if (edits.Count > 0)
             {
-                Grab.AdjustForEdits(ctx.St, edits);
+                Grab.AdjustForEdits(ctx.State, edits);
                 ctx.Port.Edit(edits);
             }
             ctx.Port.SetSelections([.. newSels]);
@@ -124,28 +126,28 @@ namespace Notemeow.Core
         private static void Insert(Ctx ctx)
         {
             var collapsed = new List<SelRange>();
-            foreach (SelRange s in ctx.Port.GetSelections())
+            foreach (SelRange sel in ctx.Port.GetSelections())
             {
-                int o = s.Lo();
-                collapsed.Add(new SelRange(o, o));
+                int start = sel.Lo();
+                collapsed.Add(new SelRange(start, start));
             }
             ctx.Port.SetSelections(collapsed);
-            ctx.St.SelType = SelType.None;
-            Selections.ResetSelectionMemory(ctx.St);
+            ctx.State.SelType = SelType.None;
+            Selections.ResetSelectionMemory(ctx.State);
             ctx.SetMode(MeowMode.Insert);
         }
 
         private static void Append(Ctx ctx)
         {
             var collapsed = new List<SelRange>();
-            foreach (SelRange s in ctx.Port.GetSelections())
+            foreach (SelRange sel in ctx.Port.GetSelections())
             {
-                int o = s.Hi();
-                collapsed.Add(new SelRange(o, o));
+                int end = sel.Hi();
+                collapsed.Add(new SelRange(end, end));
             }
             ctx.Port.SetSelections(collapsed);
-            ctx.St.SelType = SelType.None;
-            Selections.ResetSelectionMemory(ctx.St);
+            ctx.State.SelType = SelType.None;
+            Selections.ResetSelectionMemory(ctx.State);
             ctx.SetMode(MeowMode.Insert);
         }
 
@@ -156,7 +158,7 @@ namespace Notemeow.Core
             string text = ctx.Port.GetText();
             int eol = Text.LineEnd(text, Text.LineOfOffset(text, Selections.Primary(ctx).Active));
             var nl = new List<TextEdit> { new(eol, eol, "\n") };
-            Grab.AdjustForEdits(ctx.St, nl);
+            Grab.AdjustForEdits(ctx.State, nl);
             ctx.Port.Edit(nl);
             ctx.Port.SetSelections([new SelRange(eol + 1, eol + 1)]);
             ctx.SetMode(MeowMode.Insert);
@@ -168,7 +170,7 @@ namespace Notemeow.Core
             Selections.Collapse(ctx);
             int at = Selections.Primary(ctx).Active;
             var nl = new List<TextEdit> { new(at, at, "\n") };
-            Grab.AdjustForEdits(ctx.St, nl);
+            Grab.AdjustForEdits(ctx.State, nl);
             ctx.Port.Edit(nl);
             ctx.Port.SetSelections([new SelRange(at, at)]);
         }
@@ -185,7 +187,7 @@ namespace Notemeow.Core
             while (to < text.Length && Text.IsBlank(text[to])) to++;
             if (from == to && replacement.Length == 0) return;
             var edits = new List<TextEdit> { new(from, to, replacement) };
-            Grab.AdjustForEdits(ctx.St, edits);
+            Grab.AdjustForEdits(ctx.State, edits);
             ctx.Port.Edit(edits);
             int caret = from + replacement.Length;
             ctx.Port.SetSelections([new SelRange(caret, caret)]);
@@ -198,7 +200,7 @@ namespace Notemeow.Core
             string text = ctx.Port.GetText();
             int bol = Text.LineStart(text, Text.LineOfOffset(text, Selections.Primary(ctx).Active));
             var nl = new List<TextEdit> { new(bol, bol, "\n") };
-            Grab.AdjustForEdits(ctx.St, nl);
+            Grab.AdjustForEdits(ctx.State, nl);
             ctx.Port.Edit(nl);
             ctx.Port.SetSelections([new SelRange(bol, bol)]);
             ctx.SetMode(MeowMode.Insert);
@@ -227,7 +229,7 @@ namespace Notemeow.Core
             SelRange prim = Selections.Primary(ctx);
             if (!Selections.HasSelection(prim) && prim.Active >= text.Length) return;
             EditCarets(ctx, DeleteForward(text));
-            ctx.St.SelType = SelType.None;
+            ctx.State.SelType = SelType.None;
             ctx.SetMode(MeowMode.Insert);
         }
 
@@ -235,7 +237,7 @@ namespace Notemeow.Core
         {
             if (BlockedReadOnly(ctx)) return;
             EditCarets(ctx, DeleteForward(ctx.Port.GetText()));
-            ctx.St.SelType = SelType.None;
+            ctx.State.SelType = SelType.None;
         }
 
         private static void BackwardDelete(Ctx ctx)
@@ -256,19 +258,19 @@ namespace Notemeow.Core
                     }
                     return new Computed(null, new SelRange(lo, lo));
                 });
-            ctx.St.SelType = SelType.None;
+            ctx.State.SelType = SelType.None;
         }
 
         private static int[] KillRange(Ctx ctx, SelRange sel, string text)
         {
-            int lo = sel.Lo();
-            int hi = sel.Hi();
-            if (ctx.St.SelType == SelType.Line && sel.Active >= sel.Anchor && hi < text.Length)
+            int start = sel.Lo();
+            int end = sel.Hi();
+            if (ctx.State.SelType == SelType.Line && sel.Active >= sel.Anchor && end < text.Length)
             {
-                if (text[hi] == '\r') hi++;
-                if (hi < text.Length && text[hi] == '\n') hi++;
+                if (text[end] == '\r') end++;
+                if (end < text.Length && text[end] == '\n') end++;
             }
-            return [lo, hi];
+            return [start, end];
         }
 
         private static List<SelRange> RegionsInOrder(List<SelRange> sels)
@@ -288,9 +290,9 @@ namespace Notemeow.Core
             var joined = new StringBuilder();
             for (int i = 0; i < regions.Count; i++)
             {
-                int[] r = KillRange(ctx, regions[i], text);
+                int[] killed = KillRange(ctx, regions[i], text);
                 if (i > 0) joined.Append('\n');
-                joined.Append(text, r[0], r[1] - r[0]);
+                joined.Append(text, killed[0], killed[1] - killed[0]);
             }
             return joined.ToString();
         }
@@ -298,10 +300,10 @@ namespace Notemeow.Core
         private static void Kill(Ctx ctx)
         {
             if (!AllowModify(ctx)) return;
-            MeowState st = ctx.St;
+            MeowState state = ctx.State;
             string text = ctx.Port.GetText();
             SelRange prim = Selections.Primary(ctx);
-            if (st.SelType == SelType.Join && Selections.HasSelection(prim))
+            if (state.SelType == SelType.Join && Selections.HasSelection(prim))
             {
                 JoinKill(ctx);
                 return;
@@ -319,14 +321,14 @@ namespace Notemeow.Core
                         return new Computed(
                             new TextEdit(r[0], r[1], ""), new SelRange(r[0], r[0]));
                     });
-                st.SelType = SelType.None;
+                state.SelType = SelType.None;
                 return;
             }
             if (text.Length == 0) return;
             int caret = prim.Active;
-            int ln = Text.LineOfOffset(text, caret);
-            int eol = Text.LineEnd(text, ln);
-            int end = caret == eol ? Text.LineStart(text, ln + 1) : eol;
+            int line = Text.LineOfOffset(text, caret);
+            int eol = Text.LineEnd(text, line);
+            int end = caret == eol ? Text.LineStart(text, line + 1) : eol;
             if (end > caret)
             {
                 ctx.Clipboard.Write(text.Substring(caret, end - caret));
@@ -339,10 +341,10 @@ namespace Notemeow.Core
         {
             string text = ctx.Port.GetText();
             SelRange prim = Selections.Primary(ctx);
-            int s = prim.Lo();
-            int e = prim.Hi();
-            char before = s > 0 ? text[s - 1] : '\n';
-            char after = e < text.Length ? text[e] : '\n';
+            int start = prim.Lo();
+            int end = prim.Hi();
+            char before = start > 0 ? text[start - 1] : '\n';
+            char after = end < text.Length ? text[end] : '\n';
             bool space =
                 before != '\n'
                     && after != '\n'
@@ -350,10 +352,10 @@ namespace Notemeow.Core
                     && !char.IsWhiteSpace(after)
                     && ")]}.,;:".IndexOf(after) < 0
                     && "([{".IndexOf(before) < 0;
-            ctx.Port.Edit([new TextEdit(s, e, space ? " " : "")]);
-            ctx.Port.SetSelections([new SelRange(s, s)]);
-            ctx.St.SelType = SelType.None;
-            ctx.St.SelExpand = false;
+            ctx.Port.Edit([new TextEdit(start, end, space ? " " : "")]);
+            ctx.Port.SetSelections([new SelRange(start, start)]);
+            ctx.State.SelType = SelType.None;
+            ctx.State.SelExpand = false;
         }
 
         private static void Save(Ctx ctx)
@@ -376,8 +378,8 @@ namespace Notemeow.Core
                 collapsed.Add(new SelRange(caret, caret));
             }
             ctx.Port.SetSelections(collapsed);
-            ctx.St.SelType = SelType.None;
-            ctx.St.SelExpand = false;
+            ctx.State.SelType = SelType.None;
+            ctx.State.SelExpand = false;
         }
 
         private static void Yank(Ctx ctx)
@@ -408,7 +410,7 @@ namespace Notemeow.Core
                         : new Computed(
                             new TextEdit(lo, hi, clip),
                             new SelRange(lo + clip.Length, lo + clip.Length)));
-            ctx.St.SelType = SelType.None;
+            ctx.State.SelType = SelType.None;
         }
 
         private static string Casified(string slice, CaseOp op)
@@ -423,20 +425,20 @@ namespace Notemeow.Core
 
         private static string CapitalizedWords(string slice)
         {
-            Func<char, bool> pred = Text.CharPred(false);
+            Func<char, bool> isWord = Text.CharPred(false);
             var outText = new StringBuilder(slice.Length);
             bool inWord = false;
             for (int i = 0; i < slice.Length; i++)
             {
-                char c = slice[i];
-                if (pred(c))
+                char ch = slice[i];
+                if (isWord(ch))
                 {
-                    outText.Append(inWord ? char.ToLowerInvariant(c) : char.ToUpperInvariant(c));
+                    outText.Append(inWord ? char.ToLowerInvariant(ch) : char.ToUpperInvariant(ch));
                     inWord = true;
                 }
                 else
                 {
-                    outText.Append(c);
+                    outText.Append(ch);
                     inWord = false;
                 }
             }
@@ -446,72 +448,75 @@ namespace Notemeow.Core
         private static void CaseWord(Ctx ctx, CaseOp op)
         {
             if (BlockedReadOnly(ctx)) return;
-            int n = ctx.St.TakeCount(1);
-            if (n == 0) return;
+            int count = ctx.State.TakeCount(1);
+            if (count == 0) return;
             bool hadSelection = Selections.HasSelection(Selections.Primary(ctx));
             string text = ctx.Port.GetText();
-            Func<char, bool> pred = Text.CharPred(false);
+            Func<char, bool> isWord = Text.CharPred(false);
             EditCarets(
                 ctx,
-                (sel, lo, hi) =>
+                (sel, selStart, selEnd) =>
                 {
                     int from = sel.Active;
-                    int[] r = WordKillRange(text, from, n, pred);
-                    if (r[0] == r[1]) return new Computed(null, sel);
-                    int caret = n > 0 ? r[1] : from;
+                    int[] range = WordKillRange(text, from, count, isWord);
+                    if (range[0] == range[1]) return new Computed(null, sel);
+                    int caret = count > 0 ? range[1] : from;
                     return new Computed(
                         new TextEdit(
-                            r[0], r[1], Casified(text.Substring(r[0], r[1] - r[0]), op)),
+                            range[0],
+                            range[1],
+                            Casified(text.Substring(range[0], range[1] - range[0]), op)),
                         new SelRange(caret, caret));
                 });
             if (hadSelection) Selections.Collapse(ctx);
         }
 
-        private static int[] WordKillRange(string text, int from, int n, Func<char, bool> pred)
+        private static int[] WordKillRange(string text, int from, int count, Func<char, bool> isWord)
         {
             int target =
-                n > 0
-                    ? Text.Words.NextEnd(text, from, n, pred)
-                    : Text.Words.PrevStart(text, from, -n, pred);
+                count > 0
+                    ? Text.Words.NextEnd(text, from, count, isWord)
+                    : Text.Words.PrevStart(text, from, -count, isWord);
             return [Math.Min(from, target), Math.Max(from, target)];
         }
 
         private static void KillWord(Ctx ctx)
         {
             if (BlockedReadOnly(ctx)) return;
-            int n = ctx.St.TakeCount(1);
-            if (n == 0) return;
+            int count = ctx.State.TakeCount(1);
+            if (count == 0) return;
             string text = ctx.Port.GetText();
-            Func<char, bool> pred = Text.CharPred(false);
+            Func<char, bool> isWord = Text.CharPred(false);
             var killed = new List<int[]>();
             foreach (SelRange sel in ctx.Port.GetSelections())
             {
-                int[] r = WordKillRange(text, sel.Active, n, pred);
-                if (r[0] != r[1]) killed.Add(r);
+                int[] range = WordKillRange(text, sel.Active, count, isWord);
+                if (range[0] != range[1]) killed.Add(range);
             }
             if (killed.Count == 0) return;
-            killed.Sort((a, b) => a[0].CompareTo(b[0]));
+            killed.Sort((left, right) => left[0].CompareTo(right[0]));
             var joined = new StringBuilder();
             for (int i = 0; i < killed.Count; i++)
             {
                 if (i > 0) joined.Append('\n');
-                int[] r = killed[i];
-                joined.Append(text, r[0], r[1] - r[0]);
+                int[] range = killed[i];
+                joined.Append(text, range[0], range[1] - range[0]);
             }
             ctx.Clipboard.Write(joined.ToString());
             EditCarets(
                 ctx,
-                (sel, lo, hi) =>
+                (sel, selStart, selEnd) =>
                 {
-                    int[] r = WordKillRange(text, sel.Active, n, pred);
-                    if (r[0] == r[1])
+                    int[] range = WordKillRange(text, sel.Active, count, isWord);
+                    if (range[0] == range[1])
                     {
                         return new Computed(null, new SelRange(sel.Active, sel.Active));
                     }
-                    return new Computed(new TextEdit(r[0], r[1], ""), new SelRange(r[0], r[0]));
+                    return new Computed(
+                        new TextEdit(range[0], range[1], ""), new SelRange(range[0], range[0]));
                 });
-            ctx.St.SelType = SelType.None;
-            ctx.St.SelExpand = false;
+            ctx.State.SelType = SelType.None;
+            ctx.State.SelExpand = false;
         }
 
         private static void Undo(Ctx ctx)

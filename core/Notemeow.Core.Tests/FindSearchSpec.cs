@@ -143,7 +143,7 @@ namespace Notemeow.Core.Tests
         public void NonMatchingSelectionBecomesPattern()
         {
             Given("repeats", "foo <caret>bar foo bar");
-            St.SearchHistory.Add("zzz");
+            State.SearchHistory.Add("zzz");
             WhenKeys(",e");
             WhenKeys("n");
             ThenSelection("bar");

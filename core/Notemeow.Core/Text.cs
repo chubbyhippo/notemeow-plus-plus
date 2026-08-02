@@ -22,64 +22,64 @@ namespace Notemeow.Core
 {
     public static class Text
     {
-        public static int Clamp(int n, int lo, int hi)
+        public static int Clamp(int value, int min, int max)
         {
-            return Math.Min(Math.Max(n, lo), hi);
+            return Math.Min(Math.Max(value, min), max);
         }
 
-        public static string EscapeRegExp(string s)
+        public static string EscapeRegExp(string pattern)
         {
-            return Regex.Replace(s, "[.*+?^${}()|\\[\\]\\\\]", "\\$0");
+            return Regex.Replace(pattern, "[.*+?^${}()|\\[\\]\\\\]", "\\$0");
         }
 
         public static int LineOfOffset(string text, int offset)
         {
-            int ln = 0;
+            int line = 0;
             int end = Clamp(offset, 0, text.Length);
             for (int i = 0; i < end; i++)
             {
-                if (text[i] == '\n') ln++;
+                if (text[i] == '\n') line++;
             }
-            return ln;
+            return line;
         }
 
         public static int LineCount(string text)
         {
-            int n = 1;
+            int lines = 1;
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i] == '\n') n++;
+                if (text[i] == '\n') lines++;
             }
-            return n;
+            return lines;
         }
 
         public static int LineStart(string text, int line)
         {
             if (line <= 0) return 0;
-            int ln = 0;
+            int newlinesSeen = 0;
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i] == '\n' && ++ln == line) return i + 1;
+                if (text[i] == '\n' && ++newlinesSeen == line) return i + 1;
             }
             return text.Length;
         }
 
         public static int LineEnd(string text, int line)
         {
-            int s = LineStart(text, line);
-            int nl = text.IndexOf('\n', Math.Min(s, text.Length));
-            if (nl < 0) return text.Length;
-            return nl > s && text[nl - 1] == '\r' ? nl - 1 : nl;
+            int start = LineStart(text, line);
+            int newline = text.IndexOf('\n', Math.Min(start, text.Length));
+            if (newline < 0) return text.Length;
+            return newline > start && text[newline - 1] == '\r' ? newline - 1 : newline;
         }
 
-        public static bool IsWordChar(char c)
+        public static bool IsWordChar(char ch)
         {
-            return char.IsLetterOrDigit(c);
+            return char.IsLetterOrDigit(ch);
         }
 
-        public static bool IsSymbolChar(char c)
+        public static bool IsSymbolChar(char ch)
         {
-            return IsWordChar(c) || c == '_' || c == '$';
+            return IsWordChar(ch) || ch == '_' || ch == '$';
         }
 
         public static Func<char, bool> CharPred(bool symbol)
@@ -87,30 +87,30 @@ namespace Notemeow.Core
             return symbol ? (Func<char, bool>)IsSymbolChar : IsWordChar;
         }
 
-        public static int IndexOfChar(string text, char c, int from)
+        public static int IndexOfChar(string text, char ch, int from)
         {
             for (int i = Math.Max(from, 0); i < text.Length; i++)
             {
-                if (text[i] == c) return i;
+                if (text[i] == ch) return i;
             }
             return -1;
         }
 
-        public static int LastIndexOfChar(string text, char c, int from)
+        public static int LastIndexOfChar(string text, char ch, int from)
         {
             for (int i = Math.Min(from, text.Length - 1); i >= 0; i--)
             {
-                if (text[i] == c) return i;
+                if (text[i] == ch) return i;
             }
             return -1;
         }
 
         public static int NthCharTarget(
-            string text, char ch, int caret, int n, bool backward, bool till)
+            string text, char ch, int caret, int count, bool backward, bool till)
         {
             int found = -1;
             int from = backward ? (till ? caret - 2 : caret - 1) : (till ? caret + 1 : caret);
-            for (int k = 0; k < n; k++)
+            for (int step = 0; step < count; step++)
             {
                 found = backward ? LastIndexOfChar(text, ch, from) : IndexOfChar(text, ch, from);
                 if (found < 0) return -1;
@@ -123,15 +123,15 @@ namespace Notemeow.Core
 
         public const string SentenceEnders = ".!?";
 
-        private static bool IsSentenceGap(char c)
+        private static bool IsSentenceGap(char ch)
         {
-            return char.IsWhiteSpace(c) || SentenceEnders.IndexOf(c) >= 0;
+            return char.IsWhiteSpace(ch) || SentenceEnders.IndexOf(ch) >= 0;
         }
 
-        public static int NextSentenceEnd(string text, int from, int n)
+        public static int NextSentenceEnd(string text, int from, int count)
         {
             int i = Clamp(from, 0, text.Length);
-            for (int k = 0; k < n; k++)
+            for (int step = 0; step < count; step++)
             {
                 while (i < text.Length && SentenceEnders.IndexOf(text[i]) < 0) i++;
                 while (i < text.Length && SentenceEnders.IndexOf(text[i]) >= 0) i++;
@@ -140,10 +140,10 @@ namespace Notemeow.Core
             return i;
         }
 
-        public static int PrevSentenceStart(string text, int from, int n)
+        public static int PrevSentenceStart(string text, int from, int count)
         {
             int i = Clamp(from, 0, text.Length);
-            for (int k = 0; k < n; k++)
+            for (int step = 0; step < count; step++)
             {
                 while (i > 0 && IsSentenceGap(text[i - 1])) i--;
                 while (i > 0 && !IsSentenceGap(text[i - 1])) i--;
@@ -176,10 +176,10 @@ namespace Notemeow.Core
             return true;
         }
 
-        public static int NextParagraphEnd(string text, int from, int n)
+        public static int NextParagraphEnd(string text, int from, int count)
         {
             int pos = Clamp(from, 0, text.Length);
-            for (int k = 0; k < n; k++)
+            for (int step = 0; step < count; step++)
             {
                 int i = LineStartAt(text, pos);
                 while (i < text.Length && BlankLineAt(text, i)) i = FollowingLineStart(text, i);
@@ -189,10 +189,10 @@ namespace Notemeow.Core
             return pos;
         }
 
-        public static int PrevParagraphStart(string text, int from, int n)
+        public static int PrevParagraphStart(string text, int from, int count)
         {
             int pos = Clamp(from, 0, text.Length);
-            for (int k = 0; k < n; k++)
+            for (int step = 0; step < count; step++)
             {
                 if (pos > 0)
                 {
@@ -214,58 +214,55 @@ namespace Notemeow.Core
 
         public static class Words
         {
-            public static int NextEnd(string text, int from, int n, Func<char, bool> pred)
+            public static int NextEnd(string text, int from, int count, Func<char, bool> isWord)
             {
                 int i = Clamp(from, 0, text.Length);
-                for (int k = 0; k < n; k++)
+                for (int step = 0; step < count; step++)
                 {
-                    while (i < text.Length && !pred(text[i])) i++;
-                    while (i < text.Length && pred(text[i])) i++;
+                    while (i < text.Length && !isWord(text[i])) i++;
+                    while (i < text.Length && isWord(text[i])) i++;
                 }
                 return i;
             }
 
-            public static int PrevStart(string text, int from, int n, Func<char, bool> pred)
+            public static int PrevStart(string text, int from, int count, Func<char, bool> isWord)
             {
                 int i = Clamp(from, 0, text.Length);
-                for (int k = 0; k < n; k++)
+                for (int step = 0; step < count; step++)
                 {
-                    while (i > 0 && !pred(text[i - 1])) i--;
-                    while (i > 0 && pred(text[i - 1])) i--;
+                    while (i > 0 && !isWord(text[i - 1])) i--;
+                    while (i > 0 && isWord(text[i - 1])) i--;
                 }
                 return i;
             }
 
-            public static int FixSelectionMark(string text, int pos, int mark, Func<char, bool> pred)
+            public static int FixSelectionMark(
+                string text, int pos, int mark, Func<char, bool> isWord)
             {
                 int probe = Clamp(mark > pos ? pos : pos - 1, 0, Math.Max(text.Length - 1, 0));
-                int[] bounds = BoundsAt(text, probe, pred);
+                int[] bounds = BoundsAt(text, probe, isWord);
                 if (bounds == null) return mark;
                 return mark > pos ? Math.Min(mark, bounds[1]) : Math.Max(mark, bounds[0]);
             }
 
-            public static int[] BoundsAt(string text, int offset, Func<char, bool> pred)
+            public static int[] BoundsAt(string text, int offset, Func<char, bool> isWord)
             {
-                int o = offset;
-                if (o >= text.Length || !pred(text[o]))
-                {
-                    if (o > 0 && pred(text[o - 1]))
-                    {
-                        o--;
-                    }
-                    else
-                    {
-                        int f = o;
-                        while (f < text.Length && !pred(text[f])) f++;
-                        if (f >= text.Length) return null;
-                        o = f;
-                    }
-                }
-                int s = o;
-                int e = o;
-                while (s > 0 && pred(text[s - 1])) s--;
-                while (e < text.Length && pred(text[e])) e++;
-                return [s, e];
+                int inWord = OffsetInWord(text, offset, isWord);
+                if (inWord < 0) return null;
+                int start = inWord;
+                int end = inWord;
+                while (start > 0 && isWord(text[start - 1])) start--;
+                while (end < text.Length && isWord(text[end])) end++;
+                return [start, end];
+            }
+
+            private static int OffsetInWord(string text, int offset, Func<char, bool> isWord)
+            {
+                if (offset < text.Length && isWord(text[offset])) return offset;
+                if (offset > 0 && isWord(text[offset - 1])) return offset - 1;
+                int scan = offset;
+                while (scan < text.Length && !isWord(text[scan])) scan++;
+                return scan < text.Length ? scan : -1;
             }
         }
 

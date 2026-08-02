@@ -27,21 +27,21 @@ namespace Notemeow.Core.Tests
         protected FakeEditor Editor;
         protected FakeClipboard Clip;
         protected FakeUi Ui;
-        protected MeowState St;
+        protected MeowState State;
 
         protected SpecDsl()
         {
             Editor = new FakeEditor();
             Clip = new FakeClipboard();
             Ui = new FakeUi();
-            St = new MeowState();
+            State = new MeowState();
             Rc.SetForTest(new Rc.Config());
             Engine.RepeatMap = null;
         }
 
         protected Ctx Ctx()
         {
-            return new Ctx(Editor, Clip, Ui, St);
+            return new Ctx(Editor, Clip, Ui, State);
         }
 
         protected void Given(string _, string textWithCaret)
@@ -51,7 +51,7 @@ namespace Notemeow.Core.Tests
             Editor.Text.Append(textWithCaret.Replace("<caret>", ""));
             int off = Math.Max(at, 0);
             Editor.Sels = [new(off, off)];
-            St = new MeowState();
+            State = new MeowState();
         }
 
         protected static void GivenRc(string text)
@@ -150,12 +150,12 @@ namespace Notemeow.Core.Tests
 
         protected void ThenMode(MeowMode expected)
         {
-            Assert.Equal(expected, St.Mode);
+            Assert.Equal(expected, State.Mode);
         }
 
         protected void ThenSelType(SelType expected)
         {
-            Assert.Equal(expected, St.SelType);
+            Assert.Equal(expected, State.SelType);
         }
 
         protected void ThenClipboard(string expected)

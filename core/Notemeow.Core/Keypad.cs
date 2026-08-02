@@ -22,42 +22,42 @@ namespace Notemeow.Core
 {
     public static class Keypad
     {
-        public static void Key(Ctx ctx, char c)
+        public static void Key(Ctx ctx, char ch)
         {
-            MeowState st = ctx.St;
+            MeowState state = ctx.State;
             ctx.Ui.HideWhichKey();
             Dictionary<string, Rc.Binding> keypad = Rc.Keypad();
-            string buf = st.Keypad.ToString();
+            string buf = state.Keypad.ToString();
 
             if (buf == "/")
             {
-                Describe(ctx, c);
+                Describe(ctx, ch);
                 Exit(ctx);
                 return;
             }
             if (buf.Length == 0)
             {
-                if (c >= '0' && c <= '9')
+                if (ch >= '0' && ch <= '9')
                 {
-                    st.PendingCount = st.PendingCount * 10 + (c - '0');
+                    state.PendingCount = state.PendingCount * 10 + (ch - '0');
                     Exit(ctx);
                     return;
                 }
-                if (c == '?')
+                if (ch == '?')
                 {
                     Exit(ctx);
                     ctx.Ui.Info("Meow Cheatsheet", Cheatsheet);
                     return;
                 }
-                if (c == '/')
+                if (ch == '/')
                 {
-                    st.Keypad.Append('/');
+                    state.Keypad.Append('/');
                     return;
                 }
             }
 
-            st.Keypad.Append(c);
-            string cur = st.Keypad.ToString();
+            state.Keypad.Append(ch);
+            string cur = state.Keypad.ToString();
             if (keypad.TryGetValue(cur, out Rc.Binding binding))
             {
                 Exit(ctx);
@@ -87,7 +87,7 @@ namespace Notemeow.Core
         public static void Exit(Ctx ctx)
         {
             ctx.Ui.HideWhichKey();
-            ctx.SetMode(ctx.St.KeypadPreviousState);
+            ctx.SetMode(ctx.State.KeypadPreviousState);
         }
 
         private static string Spaced(string seq)
@@ -101,14 +101,14 @@ namespace Notemeow.Core
             return outText.ToString();
         }
 
-        private static void Describe(Ctx ctx, char c)
+        private static void Describe(Ctx ctx, char ch)
         {
             Dictionary<string, string> descs = Rc.KeypadDescs();
             var rows = new List<string>();
             var seqs = new List<string>();
             foreach (var e in Rc.Keypad())
             {
-                if (e.Key.StartsWith(c.ToString())) seqs.Add(e.Key);
+                if (e.Key.StartsWith(ch.ToString())) seqs.Add(e.Key);
             }
             seqs.Sort(System.StringComparer.Ordinal);
             Dictionary<string, Rc.Binding> keypad = Rc.Keypad();
@@ -122,8 +122,8 @@ namespace Notemeow.Core
             }
             string entries = string.Join("\n", rows);
             ctx.Ui.Info(
-                "Meow Describe: SPC " + c,
-                entries.Length == 0 ? "SPC " + c + " is undefined" : entries);
+                "Meow Describe: SPC " + ch,
+                entries.Length == 0 ? "SPC " + ch + " is undefined" : entries);
         }
 
         public const string Cheatsheet =
@@ -138,7 +138,7 @@ namespace Notemeow.Core
             + "  1-9, 0   expand selection by N units (0 = 10); without selection: count\n"
             + "  -        negative argument              ;        reverse selection\n"
             + "  i / a    insert at start / end          I / A    open line above / below\n"
-            + "  c        change                         s        kill (cut)\n"
+            + "  ch        change                         s        kill (cut)\n"
             + "  d / D    delete char/sel fwd / back     y        save (copy)\n"
             + "  p        yank (paste at point)          r        replace selection with clipboard\n"
             + "  u        undo                           '        repeat last command\n"

@@ -34,8 +34,8 @@ namespace Notemeow.Core
             foreach (var e in Avy.Commands) commands[e.Key] = e.Value;
             foreach (var e in Edits.Commands) commands[e.Key] = e.Value;
             foreach (var e in View.Commands) commands[e.Key] = e.Value;
-            commands["meow-negative-argument"] = ctx => ctx.St.Negative = true;
-            commands["negative-argument"] = ctx => ctx.St.Negative = true;
+            commands["meow-negative-argument"] = ctx => ctx.State.Negative = true;
+            commands["negative-argument"] = ctx => ctx.State.Negative = true;
             commands["meow-quit"] = ctx => ctx.Port.CloseEditor();
             commands["meow-keypad"] = Engine.EnterKeypad;
             commands["repeat"] = Engine.RepeatLast;

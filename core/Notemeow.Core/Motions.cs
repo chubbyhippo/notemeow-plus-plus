@@ -28,47 +28,47 @@ namespace Notemeow.Core
         {
             var commands = new Dictionary<string, MeowCommand>
             {
-                ["meow-left"] = ctx => MoveChar(ctx, -ctx.St.TakeCount(1)),
-                ["meow-right"] = ctx => MoveChar(ctx, ctx.St.TakeCount(1)),
-                ["meow-next"] = ctx => MoveLine(ctx, ctx.St.TakeCount(1)),
-                ["meow-prev"] = ctx => MoveLine(ctx, -ctx.St.TakeCount(1)),
-                ["meow-left-expand"] = ctx => MoveExpand(ctx, -ctx.St.TakeCount(1), 0),
-                ["meow-right-expand"] = ctx => MoveExpand(ctx, ctx.St.TakeCount(1), 0),
-                ["meow-next-expand"] = ctx => MoveExpand(ctx, 0, ctx.St.TakeCount(1)),
-                ["meow-prev-expand"] = ctx => MoveExpand(ctx, 0, -ctx.St.TakeCount(1)),
-                ["meow-next-word"] = ctx => WordMotion(ctx, false, ctx.St.TakeCount(1)),
-                ["meow-next-symbol"] = ctx => WordMotion(ctx, true, ctx.St.TakeCount(1)),
-                ["meow-back-word"] = ctx => WordMotion(ctx, false, -ctx.St.TakeCount(1)),
-                ["meow-back-symbol"] = ctx => WordMotion(ctx, true, -ctx.St.TakeCount(1)),
+                ["meow-left"] = ctx => MoveChar(ctx, -ctx.State.TakeCount(1)),
+                ["meow-right"] = ctx => MoveChar(ctx, ctx.State.TakeCount(1)),
+                ["meow-next"] = ctx => MoveLine(ctx, ctx.State.TakeCount(1)),
+                ["meow-prev"] = ctx => MoveLine(ctx, -ctx.State.TakeCount(1)),
+                ["meow-left-expand"] = ctx => MoveExpand(ctx, -ctx.State.TakeCount(1), 0),
+                ["meow-right-expand"] = ctx => MoveExpand(ctx, ctx.State.TakeCount(1), 0),
+                ["meow-next-expand"] = ctx => MoveExpand(ctx, 0, ctx.State.TakeCount(1)),
+                ["meow-prev-expand"] = ctx => MoveExpand(ctx, 0, -ctx.State.TakeCount(1)),
+                ["meow-next-word"] = ctx => WordMotion(ctx, false, ctx.State.TakeCount(1)),
+                ["meow-next-symbol"] = ctx => WordMotion(ctx, true, ctx.State.TakeCount(1)),
+                ["meow-back-word"] = ctx => WordMotion(ctx, false, -ctx.State.TakeCount(1)),
+                ["meow-back-symbol"] = ctx => WordMotion(ctx, true, -ctx.State.TakeCount(1)),
                 ["meow-mark-word"] = ctx => MarkWord(ctx, false),
                 ["meow-mark-symbol"] = ctx => MarkWord(ctx, true),
                 ["meow-line"] = Line,
                 ["meow-goto-line"] = GotoLine,
-                ["meow-find"] = ctx => ctx.St.Pending = Pending.Find,
-                ["meow-till"] = ctx => ctx.St.Pending = Pending.Till,
-                ["forward-char"] = ctx => CharOrExpand(ctx, ctx.St.TakeCount(1)),
-                ["backward-char"] = ctx => CharOrExpand(ctx, -ctx.St.TakeCount(1)),
+                ["meow-find"] = ctx => ctx.State.Pending = Pending.Find,
+                ["meow-till"] = ctx => ctx.State.Pending = Pending.Till,
+                ["forward-char"] = ctx => CharOrExpand(ctx, ctx.State.TakeCount(1)),
+                ["backward-char"] = ctx => CharOrExpand(ctx, -ctx.State.TakeCount(1)),
                 ["next-line"] = ctx =>
                 {
-                    LineOrExpand(ctx, ctx.St.TakeCount(1));
-                    ctx.St.LastCommand = "next-line";
+                    LineOrExpand(ctx, ctx.State.TakeCount(1));
+                    ctx.State.LastCommand = "next-line";
                 },
                 ["previous-line"] = ctx =>
                 {
-                    LineOrExpand(ctx, -ctx.St.TakeCount(1));
-                    ctx.St.LastCommand = "previous-line";
+                    LineOrExpand(ctx, -ctx.State.TakeCount(1));
+                    ctx.State.LastCommand = "previous-line";
                 },
                 ["move-beginning-of-line"] = ctx => MoveToOrExpand(ctx, SelType.Char, LineStartTarget),
                 ["move-end-of-line"] = ctx => MoveToOrExpand(ctx, SelType.Char, LineEndTarget),
                 ["back-to-indentation"] = ctx => MoveToOrExpand(ctx, SelType.Char, IndentationTarget),
-                ["forward-word"] = ctx => WordOrExpand(ctx, ctx.St.TakeCount(1)),
-                ["backward-word"] = ctx => WordOrExpand(ctx, -ctx.St.TakeCount(1)),
-                ["forward-sentence"] = ctx => SentenceOrExpand(ctx, ctx.St.TakeCount(1)),
-                ["backward-sentence"] = ctx => SentenceOrExpand(ctx, -ctx.St.TakeCount(1)),
+                ["forward-word"] = ctx => WordOrExpand(ctx, ctx.State.TakeCount(1)),
+                ["backward-word"] = ctx => WordOrExpand(ctx, -ctx.State.TakeCount(1)),
+                ["forward-sentence"] = ctx => SentenceOrExpand(ctx, ctx.State.TakeCount(1)),
+                ["backward-sentence"] = ctx => SentenceOrExpand(ctx, -ctx.State.TakeCount(1)),
                 ["beginning-of-buffer"] = ctx => BufferBoundary(ctx, true),
                 ["end-of-buffer"] = ctx => BufferBoundary(ctx, false),
-                ["forward-paragraph"] = ctx => ParagraphOrExpand(ctx, ctx.St.TakeCount(1)),
-                ["backward-paragraph"] = ctx => ParagraphOrExpand(ctx, -ctx.St.TakeCount(1)),
+                ["forward-paragraph"] = ctx => ParagraphOrExpand(ctx, ctx.State.TakeCount(1)),
+                ["backward-paragraph"] = ctx => ParagraphOrExpand(ctx, -ctx.State.TakeCount(1)),
             };
             return commands;
         }
@@ -120,49 +120,49 @@ namespace Notemeow.Core
             {
                 Selections.RecordSelect(
                     ctx, type, moved[0].Anchor, moved[0].Active, true, before);
-                ctx.St.SelType = type;
-                ctx.St.SelExpand = true;
+                ctx.State.SelType = type;
+                ctx.State.SelExpand = true;
             }
         }
 
-        private static void WordOrExpand(Ctx ctx, int n)
+        private static void WordOrExpand(Ctx ctx, int count)
         {
-            Func<char, bool> pred = Text.CharPred(false);
+            Func<char, bool> isWord = Text.CharPred(false);
             MoveToOrExpand(
                 ctx,
                 SelType.Word,
                 (text, off) =>
-                    n >= 0
-                        ? Text.Words.NextEnd(text, off, n, pred)
-                        : Text.Words.PrevStart(text, off, -n, pred));
+                    count >= 0
+                        ? Text.Words.NextEnd(text, off, count, isWord)
+                        : Text.Words.PrevStart(text, off, -count, isWord));
         }
 
-        private static void SentenceOrExpand(Ctx ctx, int n)
+        private static void SentenceOrExpand(Ctx ctx, int count)
         {
             MoveToOrExpand(
                 ctx,
                 SelType.Char,
                 (text, off) =>
-                    n >= 0
-                        ? Text.NextSentenceEnd(text, off, n)
-                        : Text.PrevSentenceStart(text, off, -n));
+                    count >= 0
+                        ? Text.NextSentenceEnd(text, off, count)
+                        : Text.PrevSentenceStart(text, off, -count));
         }
 
-        private static void ParagraphOrExpand(Ctx ctx, int n)
+        private static void ParagraphOrExpand(Ctx ctx, int count)
         {
             MoveToOrExpand(
                 ctx,
                 SelType.Char,
                 (text, off) =>
-                    n >= 0
-                        ? Text.NextParagraphEnd(text, off, n)
-                        : Text.PrevParagraphStart(text, off, -n));
+                    count >= 0
+                        ? Text.NextParagraphEnd(text, off, count)
+                        : Text.PrevParagraphStart(text, off, -count));
         }
 
         private static void BufferBoundary(Ctx ctx, bool top)
         {
-            bool counted = ctx.St.PendingCount != 0 || ctx.St.Negative;
-            int n = ctx.St.TakeCount(1);
+            bool counted = ctx.State.PendingCount != 0 || ctx.State.Negative;
+            int n = ctx.State.TakeCount(1);
             MoveToOrExpand(
                 ctx,
                 SelType.Char,
@@ -196,7 +196,7 @@ namespace Notemeow.Core
 
         private static bool CharSelActive(Ctx ctx)
         {
-            return ctx.St.SelType == SelType.Char
+            return ctx.State.SelType == SelType.Char
                 && Selections.HasSelection(Selections.Primary(ctx));
         }
 
@@ -231,16 +231,16 @@ namespace Notemeow.Core
 
         private static int GoalColumn(Ctx ctx)
         {
-            MeowState st = ctx.St;
-            if (st.GoalColumn == null
-                || st.LastCommand == null
-                || !Vertical.Contains(st.LastCommand))
+            MeowState state = ctx.State;
+            if (state.GoalColumn == null
+                || state.LastCommand == null
+                || !Vertical.Contains(state.LastCommand))
             {
                 string text = ctx.Port.GetText();
                 int p = Selections.Primary(ctx).Active;
-                st.GoalColumn = p - Text.LineStart(text, Text.LineOfOffset(text, p));
+                state.GoalColumn = p - Text.LineStart(text, Text.LineOfOffset(text, p));
             }
-            return st.GoalColumn.Value;
+            return state.GoalColumn.Value;
         }
 
         private static void MoveChar(Ctx ctx, int dx)
@@ -286,8 +286,8 @@ namespace Notemeow.Core
             ctx.Port.SetSelections(moved);
             Selections.RecordSelect(
                 ctx, SelType.Char, moved[0].Anchor, moved[0].Active, true, before);
-            ctx.St.SelType = SelType.Char;
-            ctx.St.SelExpand = true;
+            ctx.State.SelType = SelType.Char;
+            ctx.State.SelExpand = true;
         }
 
         private static void WordMotion(Ctx ctx, bool symbol, int n)
@@ -298,9 +298,9 @@ namespace Notemeow.Core
             SelRange sel = Selections.Primary(ctx);
             int lo = sel.Lo();
             int hi = sel.Hi();
-            if (!(Selections.HasSelection(sel) && ctx.St.SelType == type)) Selections.Cancel(ctx);
+            if (!(Selections.HasSelection(sel) && ctx.State.SelType == type)) Selections.Cancel(ctx);
             bool extend =
-                ctx.St.SelExpand && ctx.St.SelType == type && Selections.HasSelection(sel);
+                ctx.State.SelExpand && ctx.State.SelType == type && Selections.HasSelection(sel);
             int from = extend ? (n < 0 ? lo : hi) : sel.Active;
             int target =
                 n > 0
@@ -316,7 +316,7 @@ namespace Notemeow.Core
 
         private static void MarkWord(Ctx ctx, bool symbol)
         {
-            bool neg = ctx.St.TakeCount(1) < 0;
+            bool neg = ctx.State.TakeCount(1) < 0;
             string text = ctx.Port.GetText();
             int[] b =
                 Text.Words.BoundsAt(text, Selections.Primary(ctx).Active, Text.CharPred(symbol));
@@ -332,17 +332,17 @@ namespace Notemeow.Core
             string quoted = Text.EscapeRegExp(text.Substring(s, e - s));
             string pattern =
                 symbol ? "(?<![\\w$])" + quoted + "(?![\\w$])" : "\\b" + quoted + "\\b";
-            Search.Push(ctx.St, pattern);
+            Search.Push(ctx.State, pattern);
         }
 
         private static void Line(Ctx ctx)
         {
             string text = ctx.Port.GetText();
             if (text.Length == 0) return;
-            int n = ctx.St.TakeCount(1);
+            int n = ctx.State.TakeCount(1);
             int lastLine = Text.LineCount(text) - 1;
-            if (ctx.St.SelType == SelType.Line
-                && ctx.St.SelExpand
+            if (ctx.State.SelType == SelType.Line
+                && ctx.State.SelExpand
                 && Selections.HasSelection(Selections.Primary(ctx)))
             {
                 int caretLn = Text.LineOfOffset(text, Selections.Primary(ctx).Active);
@@ -397,7 +397,7 @@ namespace Notemeow.Core
 
         public static void FindTill(Ctx ctx, char ch, bool till)
         {
-            int n = ctx.St.TakeCount(1);
+            int n = ctx.State.TakeCount(1);
             string text = ctx.Port.GetText();
             int caret = Selections.Primary(ctx).Active;
             int target = Text.NthCharTarget(text, ch, caret, Math.Abs(n), n < 0, till);
@@ -406,7 +406,7 @@ namespace Notemeow.Core
                 ctx.Ui.Hint("char not found: " + ch);
                 return;
             }
-            ctx.St.LastFind = ch;
+            ctx.State.LastFind = ch;
             Selections.Select(ctx, till ? SelType.Till : SelType.Find, caret, target, false);
         }
     }

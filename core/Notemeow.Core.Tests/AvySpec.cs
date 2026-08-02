@@ -36,7 +36,7 @@ namespace Notemeow.Core.Tests
             Timeout();
             WhenKeys("s");
             ThenCaretAt(8);
-            Assert.Null(St.Avy);
+            Assert.Null(State.Avy);
         }
 
         [Fact(DisplayName = "given a single candidate then avy jumps immediately (avy-single-candidate-jump)")]
@@ -47,7 +47,7 @@ namespace Notemeow.Core.Tests
             WhenKeys("gam");
             Timeout();
             ThenCaretAt(11);
-            Assert.Null(St.Avy);
+            Assert.Null(State.Avy);
         }
 
         [Fact(DisplayName = "given no candidates then the session ends where it started")]
@@ -58,7 +58,7 @@ namespace Notemeow.Core.Tests
             WhenKeys("zz");
             Timeout();
             ThenCaretAt(0);
-            Assert.Null(St.Avy);
+            Assert.Null(State.Avy);
             WhenKeys("l");
             ThenCaretAt(1);
         }
@@ -94,7 +94,7 @@ namespace Notemeow.Core.Tests
             WhenKeys("xx");
             Timeout();
             WhenKeys("z");
-            Assert.NotNull(St.Avy);
+            Assert.NotNull(State.Avy);
             WhenKeys("d");
             ThenCaretAt(6);
         }
@@ -109,7 +109,7 @@ namespace Notemeow.Core.Tests
             WhenKeys("e");
             Timeout();
             WhenKeys("l");
-            Assert.NotNull(St.Avy);
+            Assert.NotNull(State.Avy);
             WhenKeys("s");
             ThenCaretAt(18);
         }
@@ -121,9 +121,9 @@ namespace Notemeow.Core.Tests
             WhenKeys("S");
             WhenKeys("foo");
             Timeout();
-            Assert.NotNull(St.Avy);
+            Assert.NotNull(State.Avy);
             Assert.True(PressEsc());
-            Assert.Null(St.Avy);
+            Assert.Null(State.Avy);
             ThenCaretAt(0);
         }
 
@@ -132,12 +132,12 @@ namespace Notemeow.Core.Tests
         {
             Given("words", "<caret>foo foo foo");
             WhenKeys("S");
-            Assert.False(Avy.AwaitingTimeout(St));
+            Assert.False(Avy.AwaitingTimeout(State));
             WhenKeys("f");
-            Assert.True(Avy.AwaitingTimeout(St));
+            Assert.True(Avy.AwaitingTimeout(State));
             Timeout();
-            Assert.False(Avy.AwaitingTimeout(St));
-            Assert.NotNull(St.Avy);
+            Assert.False(Avy.AwaitingTimeout(State));
+            Assert.NotNull(State.Avy);
         }
 
         [Fact(DisplayName = "given Q then visible lines are labeled and a key jumps to that line")]
@@ -145,10 +145,10 @@ namespace Notemeow.Core.Tests
         {
             Given("four lines", "one\ntwo\nthr<caret>ee\nfour");
             WhenKeys("Q");
-            Assert.NotNull(St.Avy);
+            Assert.NotNull(State.Avy);
             WhenKeys("f");
             ThenCaretAt(14);
-            Assert.Null(St.Avy);
+            Assert.Null(State.Avy);
         }
 
         [Fact(DisplayName = "given Q then a digit switches to the goto-line number prompt")]
@@ -158,7 +158,7 @@ namespace Notemeow.Core.Tests
             GivenMinibufferAnswers("3");
             WhenKeys("Q3");
             ThenCaretAt(8);
-            Assert.Null(St.Avy);
+            Assert.Null(State.Avy);
         }
 
         [Fact(DisplayName = "the avy-subdiv distribution matches avy 0-5-0")]

@@ -170,12 +170,12 @@ namespace Notemeow.Core.Tests
         {
         }
 
-        public void ModeChanged(MeowState st)
+        public void ModeChanged(MeowState state)
         {
-            Modes.Add(st.Mode);
+            Modes.Add(state.Mode);
         }
 
-        public void Refresh(MeowState st)
+        public void Refresh(MeowState state)
         {
         }
     }

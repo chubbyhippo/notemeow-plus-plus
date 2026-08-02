@@ -31,26 +31,26 @@ namespace Notemeow.Core
 
         public static List<int> ExpandHintPositions(Ctx ctx, int count)
         {
-            MeowState st = ctx.St;
+            MeowState state = ctx.State;
             string text = ctx.Port.GetText();
             SelRange sel = ctx.Port.GetSelections()[0];
             if (sel.Anchor == sel.Active) return [];
             int caret = sel.Active;
             bool backward = caret < sel.Anchor;
             var outPositions = new List<int>();
-            switch (st.SelType)
+            switch (state.SelType)
             {
                 case SelType.Word:
                 case SelType.Symbol:
                     {
-                        Func<char, bool> pred = Text.CharPred(st.SelType == SelType.Symbol);
+                        Func<char, bool> isWord = Text.CharPred(state.SelType == SelType.Symbol);
                         int i = caret;
-                        for (int k = 0; k < count; k++)
+                        for (int step = 0; step < count; step++)
                         {
                             i =
                                 backward
-                                    ? Text.Words.PrevStart(text, i, 1, pred)
-                                    : Text.Words.NextEnd(text, i, 1, pred);
+                                    ? Text.Words.PrevStart(text, i, 1, isWord)
+                                    : Text.Words.NextEnd(text, i, 1, isWord);
                             if (backward ? i <= 0 : i >= text.Length) break;
                             outPositions.Add(i);
                         }
@@ -58,27 +58,28 @@ namespace Notemeow.Core
                     }
                 case SelType.Line:
                     {
-                        int ln = Text.LineOfOffset(text, caret);
-                        for (int k = 0; k < count; k++)
+                        int line = Text.LineOfOffset(text, caret);
+                        for (int step = 0; step < count; step++)
                         {
-                            ln += backward ? -1 : 1;
-                            if (ln < 0 || ln > Text.LineCount(text) - 1) break;
+                            line += backward ? -1 : 1;
+                            if (line < 0 || line > Text.LineCount(text) - 1) break;
                             outPositions.Add(
-                                backward ? Text.LineStart(text, ln) : Text.LineEnd(text, ln));
+                                backward ? Text.LineStart(text, line) : Text.LineEnd(text, line));
                         }
                         break;
                     }
                 case SelType.Find:
                 case SelType.Till:
                     {
-                        char? c = st.LastFind;
-                        if (c == null) return outPositions;
-                        bool till = st.SelType == SelType.Till;
-                        for (int k = 1; k <= count; k++)
+                        char? findChar = state.LastFind;
+                        if (findChar == null) return outPositions;
+                        bool till = state.SelType == SelType.Till;
+                        for (int nth = 1; nth <= count; nth++)
                         {
-                            int t = Text.NthCharTarget(text, c.Value, caret, k, backward, till);
-                            if (t < 0) break;
-                            outPositions.Add(t);
+                            int target =
+                                Text.NthCharTarget(text, findChar.Value, caret, nth, backward, till);
+                            if (target < 0) break;
+                            outPositions.Add(target);
                         }
                         break;
                     }

@@ -35,39 +35,39 @@ namespace Notemeow.Core
 
         public static void Clear(Ctx ctx)
         {
-            ctx.St.Grab = null;
+            ctx.State.Grab = null;
         }
 
         private static void Set(Ctx ctx, int start, int end)
         {
-            ctx.St.Grab = new OffsetRange(start, end);
+            ctx.State.Grab = new OffsetRange(start, end);
         }
 
-        public static void AdjustForEdits(MeowState st, List<TextEdit> edits)
+        public static void AdjustForEdits(MeowState state, List<TextEdit> edits)
         {
-            OffsetRange g = st.Grab;
+            OffsetRange g = state.Grab;
             if (g == null) return;
-            int gs = g.Start;
-            int ge = g.End;
+            int grabStart = g.Start;
+            int grabEnd = g.End;
             var ordered = new List<TextEdit>(edits);
             ordered.Sort((a, b) => b.Start.CompareTo(a.Start));
             foreach (TextEdit e in ordered)
             {
                 int delta = e.Text.Length - (e.End - e.Start);
-                if (gs >= e.End)
+                if (grabStart >= e.End)
                 {
-                    gs += delta;
-                    ge += delta;
+                    grabStart += delta;
+                    grabEnd += delta;
                 }
                 else
                 {
-                    if (ge >= e.End) ge += delta;
-                    else if (ge > e.Start) ge = e.Start;
-                    if (gs > e.Start) gs = e.Start;
+                    if (grabEnd >= e.End) grabEnd += delta;
+                    else if (grabEnd > e.Start) grabEnd = e.Start;
+                    if (grabStart > e.Start) grabStart = e.Start;
                 }
             }
-            if (ge < gs) ge = gs;
-            st.Grab = new OffsetRange(gs, ge);
+            if (grabEnd < grabStart) grabEnd = grabStart;
+            state.Grab = new OffsetRange(grabStart, grabEnd);
         }
 
         private static void DoGrab(Ctx ctx)
@@ -97,8 +97,8 @@ namespace Notemeow.Core
         private static void Swap(Ctx ctx)
         {
             if (Edits.BlockedReadOnly(ctx)) return;
-            MeowState st = ctx.St;
-            OffsetRange g = st.Grab;
+            MeowState state = ctx.State;
+            OffsetRange g = state.Grab;
             SelRange sel = Selections.Primary(ctx);
             if (g == null)
             {
@@ -110,44 +110,44 @@ namespace Notemeow.Core
                 ctx.Ui.Hint("meow-swap-grab needs a selection");
                 return;
             }
-            int gs = g.Start;
-            int ge = g.End;
-            int ss = sel.Lo();
-            int se = sel.Hi();
-            if (Math.Max(gs, ss) < Math.Min(ge, se) && !(gs == ss && ge == se))
+            int grabStart = g.Start;
+            int grabEnd = g.End;
+            int selStart = sel.Lo();
+            int selEnd = sel.Hi();
+            if (Math.Max(grabStart, selStart) < Math.Min(grabEnd, selEnd) && !(grabStart == selStart && grabEnd == selEnd))
             {
                 ctx.Ui.Hint("Selection overlaps the grab");
                 return;
             }
             string text = ctx.Port.GetText();
-            string grabText = text.Substring(gs, ge - gs);
-            string selText = text.Substring(ss, se - ss);
-            st.Grab = null;
+            string grabText = text.Substring(grabStart, grabEnd - grabStart);
+            string selText = text.Substring(selStart, selEnd - selStart);
+            state.Grab = null;
             ctx.Port.Edit(
                 [
-                    new TextEdit(ss, se, grabText),
-                    new TextEdit(gs, ge, selText),
+                    new TextEdit(selStart, selEnd, grabText),
+                    new TextEdit(grabStart, grabEnd, selText),
                 ]);
-            if (gs <= ss)
+            if (grabStart <= selStart)
             {
-                int delta = selText.Length - (ge - gs);
-                Set(ctx, gs, gs + selText.Length);
-                int caret = ss + delta + grabText.Length;
+                int delta = selText.Length - (grabEnd - grabStart);
+                Set(ctx, grabStart, grabStart + selText.Length);
+                int caret = selStart + delta + grabText.Length;
                 ctx.Port.SetSelections([new SelRange(caret, caret)]);
             }
             else
             {
-                int delta = grabText.Length - (se - ss);
-                Set(ctx, gs + delta, gs + delta + selText.Length);
-                int caret = ss + grabText.Length;
+                int delta = grabText.Length - (selEnd - selStart);
+                Set(ctx, grabStart + delta, grabStart + delta + selText.Length);
+                int caret = selStart + grabText.Length;
                 ctx.Port.SetSelections([new SelRange(caret, caret)]);
             }
-            st.SelType = SelType.None;
+            state.SelType = SelType.None;
         }
 
         public static bool Pop(Ctx ctx)
         {
-            OffsetRange g = ctx.St.Grab;
+            OffsetRange g = ctx.State.Grab;
             if (g == null) return false;
             int start = g.Start;
             int end = g.End;
@@ -158,17 +158,17 @@ namespace Notemeow.Core
 
         public static void Beacon(Ctx ctx)
         {
-            MeowState st = ctx.St;
-            OffsetRange g = st.Grab;
+            MeowState state = ctx.State;
+            OffsetRange g = state.Grab;
             if (g == null || g.End <= g.Start) return;
             SelRange sel = Selections.Primary(ctx);
             if (!Selections.HasSelection(sel)) return;
-            int ss = sel.Lo();
-            int se = sel.Hi();
-            if (ss < g.Start || se > g.End || se == ss) return;
+            int selStart = sel.Lo();
+            int selEnd = sel.Hi();
+            if (selStart < g.Start || selEnd > g.End || selEnd == selStart) return;
             string text = ctx.Port.GetText();
             var sels = new List<SelRange>();
-            switch (st.SelType)
+            switch (state.SelType)
             {
                 case SelType.Word:
                 case SelType.Symbol:
@@ -177,10 +177,10 @@ namespace Notemeow.Core
                 case SelType.Till:
                 case SelType.Char:
                     {
-                        string selText = text.Substring(ss, se - ss);
+                        string selText = text.Substring(selStart, selEnd - selStart);
                         if (selText.Trim().Length == 0) return;
                         bool bounded =
-                            st.SelType == SelType.Word || st.SelType == SelType.Symbol;
+                            state.SelType == SelType.Word || state.SelType == SelType.Symbol;
                         string pat =
                             bounded
                                 ? "\\b" + Text.EscapeRegExp(selText) + "\\b"
@@ -202,16 +202,16 @@ namespace Notemeow.Core
                         {
                             Match m = re.Match(region, from);
                             if (!m.Success) break;
-                            int rs = m.Index;
+                            int matchStart = m.Index;
                             int reEnd = m.Index + m.Length;
-                            if (reEnd == rs)
+                            if (reEnd == matchStart)
                             {
                                 from = reEnd + 1;
                                 continue;
                             }
-                            int s0 = g.Start + rs;
+                            int s0 = g.Start + matchStart;
                             int e0 = g.Start + reEnd;
-                            if (s0 != ss)
+                            if (s0 != selStart)
                             {
                                 sels.Add(new SelRange(s0, e0));
                                 if (++added >= MaxBeacons) break;
@@ -219,7 +219,7 @@ namespace Notemeow.Core
                             from = reEnd;
                         }
                         if (sels.Count == 0) return;
-                        sels.Insert(0, new SelRange(ss, se));
+                        sels.Insert(0, new SelRange(selStart, selEnd));
                         break;
                     }
                 case SelType.Line:
@@ -227,10 +227,10 @@ namespace Notemeow.Core
                         int first = Text.LineOfOffset(text, g.Start);
                         int last = Text.LineOfOffset(text, Math.Max(g.End - 1, g.Start));
                         if (last <= first) return;
-                        for (int ln = first; ln <= last; ln++)
+                        for (int line = first; line <= last; line++)
                         {
                             sels.Add(
-                                new SelRange(Text.LineStart(text, ln), Text.LineEnd(text, ln)));
+                                new SelRange(Text.LineStart(text, line), Text.LineEnd(text, line)));
                         }
                         break;
                     }

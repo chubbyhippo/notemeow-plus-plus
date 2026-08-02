@@ -166,7 +166,7 @@ namespace Notemeow.Core.Tests
             WhenKeys("x");
             ThenSelection("two");
             WhenKeys(".");
-            Assert.Equal(Pending.Bounds, St.Pending);
+            Assert.Equal(Pending.Bounds, State.Pending);
             ThenCaretLine(1);
         }
 
@@ -180,7 +180,7 @@ namespace Notemeow.Core.Tests
             PressEsc();
             Assert.Null(Engine.RepeatMap);
             WhenKeys(".");
-            Assert.Equal(Pending.Bounds, St.Pending);
+            Assert.Equal(Pending.Bounds, State.Pending);
             ThenCaretLine(1);
         }
 
@@ -213,7 +213,7 @@ namespace Notemeow.Core.Tests
             GivenRc(NavRc);
             WhenKeys(" tn");
             ThenCaretLine(1);
-            St = new MeowState();
+            State = new MeowState();
             WhenKeys(".");
             ThenCaretLine(2);
         }
