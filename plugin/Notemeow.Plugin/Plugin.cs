@@ -194,8 +194,8 @@ namespace Notemeow.Plugin
             IntPtr second = nppData.ScintillaSecondHandle;
             bool twoViews = NppApi.IsWindowVisible(main) && NppApi.IsWindowVisible(second);
             if (!twoViews) return new Windmove.ViewLayout(false, false, false);
-            NppApi.GetWindowRect(main, out NppApi.Rect mainRect);
-            NppApi.GetWindowRect(second, out NppApi.Rect secondRect);
+            NppApi.GetWindowRect(main, out Win32.RECT mainRect);
+            NppApi.GetWindowRect(second, out Win32.RECT secondRect);
             bool stacked = mainRect.Top != secondRect.Top;
             bool onSecond =
                 ActiveScintilla() == main
@@ -535,14 +535,27 @@ namespace Notemeow.Plugin
                     IntPtr handle = NppApi.GlobalAlloc(NppApi.GmemMoveable, (UIntPtr)bytes);
                     if (handle == IntPtr.Zero) return;
                     IntPtr ptr = NppApi.GlobalLock(handle);
-                    if (ptr == IntPtr.Zero) return;
-                    fixed (char* src = text)
+                    if (ptr == IntPtr.Zero)
                     {
-                        Buffer.MemoryCopy(src, (void*)ptr, bytes, text.Length * 2);
+                        NppApi.GlobalFree(handle);
+                        return;
                     }
-                    Marshal.WriteInt16(ptr, text.Length * 2, 0);
-                    NppApi.GlobalUnlock(handle);
-                    NppApi.SetClipboardData(NppApi.CfUnicodeText, handle);
+                    try
+                    {
+                        fixed (char* src = text)
+                        {
+                            Buffer.MemoryCopy(src, (void*)ptr, bytes, text.Length * 2);
+                        }
+                        Marshal.WriteInt16(ptr, text.Length * 2, 0);
+                    }
+                    finally
+                    {
+                        NppApi.GlobalUnlock(handle);
+                    }
+                    if (NppApi.SetClipboardData(NppApi.CfUnicodeText, handle) == IntPtr.Zero)
+                    {
+                        NppApi.GlobalFree(handle);
+                    }
                 }
                 finally
                 {
@@ -608,51 +621,26 @@ namespace Notemeow.Plugin
                 return InputBox.Show(npp, prompt, initial);
             }
 
+            private static readonly Dictionary<string, Action<NppUi>> PseudoCommands = new()
+            {
+                ["notemeow.editRc"] = _ => EditRc(),
+                ["notemeow.reloadRc"] = _ => ReloadRc(),
+                ["notemeow.aceWindow"] = ui => ui.AceWindowRun(),
+                ["notemeow.aceResize"] =
+                    ui => ui.Hint("ace-resize has no Notepad++ split-resize API"),
+                ["notemeow.windmoveLeft"] = ui => ui.WindmoveTo(Windmove.Dir.Left),
+                ["notemeow.windmoveDown"] = ui => ui.WindmoveTo(Windmove.Dir.Down),
+                ["notemeow.windmoveUp"] = ui => ui.WindmoveTo(Windmove.Dir.Up),
+                ["notemeow.windmoveRight"] = ui => ui.WindmoveTo(Windmove.Dir.Right),
+                [Windmove.FocusOtherView] =
+                    ui => ui.RunCommand("IDM_VIEW_SWITCHTO_OTHER_VIEW"),
+            };
+
             public void RunCommand(string idText)
             {
-                if (idText == "notemeow.editRc")
+                if (PseudoCommands.TryGetValue(idText, out Action<NppUi> pseudo))
                 {
-                    EditRc();
-                    return;
-                }
-                if (idText == "notemeow.reloadRc")
-                {
-                    ReloadRc();
-                    return;
-                }
-                if (idText == "notemeow.aceWindow")
-                {
-                    AceWindowRun();
-                    return;
-                }
-                if (idText == "notemeow.aceResize")
-                {
-                    Hint("ace-resize has no Notepad++ split-resize API");
-                    return;
-                }
-                if (idText == "notemeow.windmoveLeft")
-                {
-                    WindmoveTo(Windmove.Dir.Left);
-                    return;
-                }
-                if (idText == "notemeow.windmoveDown")
-                {
-                    WindmoveTo(Windmove.Dir.Down);
-                    return;
-                }
-                if (idText == "notemeow.windmoveUp")
-                {
-                    WindmoveTo(Windmove.Dir.Up);
-                    return;
-                }
-                if (idText == "notemeow.windmoveRight")
-                {
-                    WindmoveTo(Windmove.Dir.Right);
-                    return;
-                }
-                if (idText == Windmove.FocusOtherView)
-                {
-                    RunCommand("IDM_VIEW_SWITCHTO_OTHER_VIEW");
+                    pseudo(this);
                     return;
                 }
                 if (!NppMenuIds.TryGet(idText, out int id) && !int.TryParse(idText, out id))

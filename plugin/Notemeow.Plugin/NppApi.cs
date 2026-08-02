@@ -106,22 +106,13 @@ namespace Notemeow.Plugin
             return (blue << 16) | (green << 8) | red;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct Rect
-        {
-            public int Left;
-            public int Top;
-            public int Right;
-            public int Bottom;
-        }
-
         [LibraryImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool IsWindowVisible(IntPtr hwnd);
 
         [LibraryImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static partial bool GetWindowRect(IntPtr hwnd, out Rect rc);
+        internal static partial bool GetWindowRect(IntPtr hwnd, out Win32.RECT rc);
 
         [LibraryImport("user32.dll")]
         internal static partial nuint SetTimer(IntPtr hwnd, nuint id, uint elapseMs, IntPtr callback);
@@ -229,6 +220,9 @@ namespace Notemeow.Plugin
 
         [LibraryImport("kernel32.dll")]
         internal static partial IntPtr GlobalLock(IntPtr handle);
+
+        [LibraryImport("kernel32.dll")]
+        internal static partial IntPtr GlobalFree(IntPtr handle);
 
         [LibraryImport("kernel32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]

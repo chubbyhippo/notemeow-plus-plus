@@ -266,21 +266,23 @@ namespace Notemeow.Plugin
             return null;
         }
 
-        private bool grabIndicatorReady;
+        private static readonly HashSet<(IntPtr Scintilla, int Indicator)> StyledIndicators = [];
+
+        private bool NeedsIndicatorStyle(int indicator)
+        {
+            return StyledIndicators.Add((sci, indicator));
+        }
 
         internal void HighlightGrab(OffsetRange grab)
         {
-            if (!grabIndicatorReady)
+            if (NeedsIndicatorStyle(NppApi.GrabIndicator))
             {
                 Send(NppApi.SciIndicSetStyle, NppApi.GrabIndicator, NppApi.IndicStraightBox);
                 Send(NppApi.SciIndicSetAlpha, NppApi.GrabIndicator, 60);
                 Send(NppApi.SciIndicSetUnder, NppApi.GrabIndicator, 1);
-                grabIndicatorReady = true;
             }
             Send(NppApi.SciIndicSetFore, NppApi.GrabIndicator, NppApi.BgrFromRgb(Rc.GrabColor()));
-            int len = (int)Send(NppApi.SciGetLength);
-            Send(NppApi.SciSetIndicatorCurrent, NppApi.GrabIndicator);
-            Send(NppApi.SciIndicatorClearRange, 0, len);
+            ClearIndicator(NppApi.GrabIndicator);
             if (grab == null || grab.End <= grab.Start) return;
             Mapping m = Load();
             int sb = ToByte(m, grab.Start);
@@ -288,21 +290,16 @@ namespace Notemeow.Plugin
             Send(NppApi.SciIndicatorFillRange, sb, eb - sb);
         }
 
-        private bool matchIndicatorReady;
-
         internal void HighlightMatches(List<OffsetRange> ranges)
         {
-            if (!matchIndicatorReady)
+            if (NeedsIndicatorStyle(NppApi.AvyMatchIndicator))
             {
                 Send(NppApi.SciIndicSetStyle, NppApi.AvyMatchIndicator, NppApi.IndicStraightBox);
                 Send(NppApi.SciIndicSetFore, NppApi.AvyMatchIndicator, 0x00D7FF);
                 Send(NppApi.SciIndicSetAlpha, NppApi.AvyMatchIndicator, 70);
                 Send(NppApi.SciIndicSetUnder, NppApi.AvyMatchIndicator, 1);
-                matchIndicatorReady = true;
             }
-            int len = (int)Send(NppApi.SciGetLength);
-            Send(NppApi.SciSetIndicatorCurrent, NppApi.AvyMatchIndicator);
-            Send(NppApi.SciIndicatorClearRange, 0, len);
+            ClearIndicator(NppApi.AvyMatchIndicator);
             if (ranges == null || ranges.Count == 0) return;
             Mapping m = Load();
             foreach (OffsetRange r in ranges)
@@ -315,8 +312,13 @@ namespace Notemeow.Plugin
 
         internal void ClearMatches()
         {
+            ClearIndicator(NppApi.AvyMatchIndicator);
+        }
+
+        private void ClearIndicator(int indicator)
+        {
             int len = (int)Send(NppApi.SciGetLength);
-            Send(NppApi.SciSetIndicatorCurrent, NppApi.AvyMatchIndicator);
+            Send(NppApi.SciSetIndicatorCurrent, indicator);
             Send(NppApi.SciIndicatorClearRange, 0, len);
         }
 
