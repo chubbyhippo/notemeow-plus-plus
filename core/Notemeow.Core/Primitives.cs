@@ -24,9 +24,9 @@ namespace Notemeow.Core
         public int Anchor { get; } = anchor;
         public int Active { get; } = active;
 
-        public int Lo() => Math.Min(Anchor, Active);
+        public int SelStart() => Math.Min(Anchor, Active);
 
-        public int Hi() => Math.Max(Anchor, Active);
+        public int SelEnd() => Math.Max(Anchor, Active);
 
         public override bool Equals(object obj)
         {

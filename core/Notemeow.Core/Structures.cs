@@ -123,8 +123,8 @@ namespace Notemeow.Core
             SelRange sel = Selections.Primary(ctx);
             bool active = ctx.State.SelType == SelType.Block && Selections.HasSelection(sel);
             bool back = Selections.BackwardP(ctx) != (ctx.State.TakeCount(1) < 0);
-            int selStart = active ? sel.Lo() : sel.Active;
-            int selEnd = active ? sel.Hi() : sel.Active;
+            int selStart = active ? sel.SelStart() : sel.Active;
+            int selEnd = active ? sel.SelEnd() : sel.Active;
             int[] p = EnclosingPair(text, selStart, selEnd);
             if (p == null)
             {

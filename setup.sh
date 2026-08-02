@@ -27,7 +27,7 @@ usage() {
   echo "       ./setup.sh --core-only  only the lint gates and the engine behavior suite (no Notepad++ needed)"
   echo "       ./setup.sh --lint-only  only the analyzer and code-style gates"
   echo "       ./setup.sh --build-only build the DLL, install nothing"
-  echo "       ./setup.sh --skip-build install the already-built DLL"
+  echo "       ./setup.sh --skip-build install the already-built DLL, no lint gates"
   echo "       ./setup.sh -h           show this help and exit"
 }
 
@@ -122,19 +122,20 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-run_lint
-
 if [ "$lint_only" -eq 1 ]; then
+  run_lint
   exit 0
 fi
 
-run_suite
-
 if [ "$core_only" -eq 1 ]; then
+  run_lint
+  run_suite
   exit 0
 fi
 
 if [ "$do_build" -eq 1 ]; then
+  run_lint
+  run_suite
   build_plugin
 fi
 

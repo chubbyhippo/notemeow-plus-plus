@@ -46,7 +46,6 @@ namespace Notemeow.Plugin
 
         internal const int IdmFileClose = 40000 + 1000 + 3;
 
-        internal const int SciInsertText = 2003;
         internal const int SciGetLength = 2006;
         internal const int SciBeginUndoAction = 2078;
         internal const int SciEndUndoAction = 2079;
@@ -73,7 +72,6 @@ namespace Notemeow.Plugin
         internal const int SciGetMainSelection = 2575;
         internal const int SciGetSelectionNCaret = 2577;
         internal const int SciGetSelectionNAnchor = 2579;
-        internal const int SciDeleteRange = 2645;
         internal const int SciSetTargetRange = 2686;
         internal const int SciSetCaretStyle = 2512;
         internal const int SciPointXFromPosition = 2164;

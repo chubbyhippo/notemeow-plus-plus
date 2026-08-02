@@ -59,11 +59,6 @@ namespace Notemeow.Core
         public int ReplayDepth;
         public int NoremapDepth;
 
-        public int TakeCount()
-        {
-            return TakeCount(1);
-        }
-
         public int TakeCount(int fallback)
         {
             int magnitude = PendingCount == 0 ? fallback : PendingCount;

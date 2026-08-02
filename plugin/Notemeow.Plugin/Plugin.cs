@@ -485,7 +485,7 @@ namespace Notemeow.Plugin
             NppApi.MessageBox(
                 nppData.NppHandle,
                 "notemeow++ — meow modal editing for Notepad++\n"
-                    + "Engine: Notemeow.Core (310 behavior specs)\n"
+                    + "Engine: Notemeow.Core (339 behavior specs)\n"
                     + "License: GPL-3.0-or-later",
                 "About notemeow++",
                 0);
@@ -583,9 +583,9 @@ namespace Notemeow.Plugin
                 long caret = (long)NppApi.SendMessage(
                     sci, (uint)NppApi.SciGetCurrentPos, IntPtr.Zero, IntPtr.Zero);
                 long docLine = (long)NppApi.SendMessage(
-                    sci, (uint)NppApi.SciLineFromPosition, (IntPtr)caret, IntPtr.Zero);
+                    sci, (uint)NppApi.SciLineFromPosition, checked((IntPtr)caret), IntPtr.Zero);
                 long caretVisible = (long)NppApi.SendMessage(
-                    sci, (uint)NppApi.SciVisibleFromDocLine, (IntPtr)docLine, IntPtr.Zero);
+                    sci, (uint)NppApi.SciVisibleFromDocLine, checked((IntPtr)docLine), IntPtr.Zero);
                 long onScreen = (long)NppApi.SendMessage(
                     sci, (uint)NppApi.SciLinesOnScreen, IntPtr.Zero, IntPtr.Zero);
                 long top = at switch
@@ -595,7 +595,7 @@ namespace Notemeow.Plugin
                     _ => caretVisible - onScreen / 2,
                 };
                 NppApi.SendMessage(
-                    sci, (uint)NppApi.SciSetFirstVisibleLine, (IntPtr)Math.Max(0, top), IntPtr.Zero);
+                    sci, (uint)NppApi.SciSetFirstVisibleLine, checked((IntPtr)Math.Max(0, top)), IntPtr.Zero);
             }
 
             public void Info(string title, string body)
@@ -674,7 +674,7 @@ namespace Notemeow.Plugin
                 int windowCount = CurrentViewLayout().TwoViews ? 2 : 1;
                 if (AceWindow.PlanFor(windowCount) == AceWindow.Plan.Other)
                 {
-                    RunCommand("notemeow.focusOtherView");
+                    RunCommand(Windmove.FocusOtherView);
                 }
             }
 

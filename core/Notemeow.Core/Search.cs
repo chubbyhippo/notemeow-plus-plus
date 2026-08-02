@@ -95,8 +95,8 @@ namespace Notemeow.Core
                     : state.SearchHistory[state.SearchHistory.Count - 1];
             if (Selections.HasSelection(sel))
             {
-                int lo = sel.Lo();
-                int hi = sel.Hi();
+                int lo = sel.SelStart();
+                int hi = sel.SelEnd();
                 string selText = ctx.Port.GetText().Substring(lo, hi - lo);
                 if (selText.Length != 0 && (pattern == null || !FullyMatches(pattern, selText)))
                 {

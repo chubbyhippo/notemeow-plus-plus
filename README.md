@@ -152,12 +152,12 @@ cd notemeow-plus-plus
 ./setup.sh --core-only      # the lint gates and the behavior suite (no Notepad++ needed)
 ./setup.sh --lint-only      # only the analyzer and code-style gates
 ./setup.sh --build-only     # build the DLL via the Windows .NET SDK, install nothing
-./setup.sh --skip-build     # install the already-built DLL
+./setup.sh --skip-build     # install the already-built DLL, no lint gates
 ```
 
 | Gate | Detail |
 |---|---|
-| Every path lints first | `dotnet format --verify-no-changes --severity info` over all three projects, plus a managed build of the adapter |
+| Every building path lints first | `dotnet format --verify-no-changes --severity info` over all three projects, plus a managed build of the adapter; `--skip-build` installs an already-built DLL and gates nothing |
 | `Directory.Build.props` | `TreatWarningsAsErrors`, `EnableNETAnalyzers`, `AnalysisLevel latest`, `EnforceCodeStyleInBuild` — pure defaults, no rule-config file, no baseline, no suppressions, zero findings |
 
 | Host note | Value |

@@ -89,14 +89,14 @@ namespace Notemeow.Core
             for (int i = 0; i < sels.Count; i++)
             {
                 SelRange sel = sels[i];
-                order.Add(new Item(sel, i, sel.Lo()));
+                order.Add(new Item(sel, i, sel.SelStart()));
             }
             order.Sort((left, right) => right.SelStart.CompareTo(left.SelStart));
             var edits = new List<TextEdit>();
             var results = new Computed[sels.Count];
             foreach (Item item in order)
             {
-                int selEnd = item.Sel.Hi();
+                int selEnd = item.Sel.SelEnd();
                 Computed computed = compute(item.Sel, item.SelStart, selEnd);
                 if (computed.Edit != null) edits.Add(computed.Edit);
                 results[item.Index] = computed;
@@ -128,7 +128,7 @@ namespace Notemeow.Core
             var collapsed = new List<SelRange>();
             foreach (SelRange sel in ctx.Port.GetSelections())
             {
-                int start = sel.Lo();
+                int start = sel.SelStart();
                 collapsed.Add(new SelRange(start, start));
             }
             ctx.Port.SetSelections(collapsed);
@@ -142,7 +142,7 @@ namespace Notemeow.Core
             var collapsed = new List<SelRange>();
             foreach (SelRange sel in ctx.Port.GetSelections())
             {
-                int end = sel.Hi();
+                int end = sel.SelEnd();
                 collapsed.Add(new SelRange(end, end));
             }
             ctx.Port.SetSelections(collapsed);
@@ -263,8 +263,8 @@ namespace Notemeow.Core
 
         private static int[] KillRange(Ctx ctx, SelRange sel, string text)
         {
-            int start = sel.Lo();
-            int end = sel.Hi();
+            int start = sel.SelStart();
+            int end = sel.SelEnd();
             if (ctx.State.SelType == SelType.Line && sel.Active >= sel.Anchor && end < text.Length)
             {
                 if (text[end] == '\r') end++;
@@ -281,7 +281,7 @@ namespace Notemeow.Core
                 if (s.Anchor != s.Active) regions.Add(s);
             }
             regions.Sort(
-                (a, b) => a.Lo().CompareTo(b.Lo()));
+                (a, b) => a.SelStart().CompareTo(b.SelStart()));
             return regions;
         }
 
@@ -341,8 +341,8 @@ namespace Notemeow.Core
         {
             string text = ctx.Port.GetText();
             SelRange prim = Selections.Primary(ctx);
-            int start = prim.Lo();
-            int end = prim.Hi();
+            int start = prim.SelStart();
+            int end = prim.SelEnd();
             char before = start > 0 ? text[start - 1] : '\n';
             char after = end < text.Length ? text[end] : '\n';
             bool space =
